@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+const DEFAULT_LIMIT = 300;
+const DEFAULT_QUALITY = '720p';
+const DEFAULT_MODE = 'all';
+
 spl_autoload_register('classes');
 
 if (($_GET['clearcache'] ?? '') === '1' || ($_SERVER['HTTP_CACHE_CONTROL'] ?? '') === 'no-cache') {
@@ -251,11 +255,11 @@ function output_feed(
 ) {
     $authToken = $get['authToken'] ?? basename($path) ?: '';
     $channels = $get['channels'] ?? '';
-    $mode = $get['mode'] ?? 'all';
+    $mode = $get['mode'] ?? DEFAULT_MODE;
     $frontend = 'https://' . ($get['frontend'] ?? "piped.kavin.rocks");
     $format = $get['format'] ?? 'MPEG_4';
-    $quality = $get['quality'] ?? '720p';
-    $limit = (int)($get['limit'] ?? 300);
+    $quality = $get['quality'] ?? DEFAULT_QUALITY;
+    $limit = (int)($get['limit'] ?? DEFAULT_LIMIT);
 
     $feedUrl = "/feed?authToken=$authToken";
     if (!$authToken) {
@@ -265,12 +269,17 @@ function output_feed(
     $channel = new Channel();
     $channel->setLanguage($get['language'] ?? 'en');
     $channel->setTitle($get['title'] ?? $modeTitles[$mode] ?? 'YouTube');
-    $channel->setDescription($get['description'] ?? 'YouTube RSS-Podcast from ' . $frontend);
+    $channel->setDescription($get['description'] ?? 'YouTube RSS-Podcast von ' . $frontend);
     $channel->setCopyright($get['copyright'] ?? '&copy; YouTube');
     $channel->setCover($get['cover'] ?? url('/logo.jpg'));
     $channel->setFrontend($frontend);
     $channel->setFeedUrl($api . $feedUrl);
-    $channel->setItems(fetch_items(fetch($api . $feedUrl), $limit, $api, $format, $quality, $frontend, $mode));
+    $videos = fetch($api . $feedUrl);
+    if (empty($videos)) {
+        http_response_code(404);
+        return;
+    }
+    $channel->setItems(fetch_items($videos, $limit, $api, $format, $quality, $frontend, $mode));
 
     header('content-type: application/xml');
     echo <<<XML
