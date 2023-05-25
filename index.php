@@ -2,366 +2,38 @@
 
 declare(strict_types=1);
 
-date_default_timezone_set('UTC');
-
-class Channel
-{
-    private string $title = '';
-    private string $frontend = '';
-    private string $language = '';
-    private string $description = '';
-    private string $feedUrl = '';
-    private string $copyright = '';
-    private string $cover = '';
-    private string $items = '';
-
-    /**
-     * @param string $title
-     * @return Channel
-     */
-    public function setTitle(string $title): Channel
-    {
-        $this->title = $title;
-        return $this;
-    }
-
-    /**
-     * @param string $frontend
-     * @return Channel
-     */
-    public function setFrontend(string $frontend): Channel
-    {
-        $this->frontend = htmlentities($frontend);
-        return $this;
-    }
-
-    /**
-     * @param string $language
-     * @return Channel
-     */
-    public function setLanguage(string $language): Channel
-    {
-        $this->language = $language;
-        return $this;
-    }
-
-    /**
-     * @param string $description
-     * @return Channel
-     */
-    public function setDescription(string $description): Channel
-    {
-        $this->description = $description;
-        return $this;
-    }
-
-    /**
-     * @param string $feedUrl
-     * @return Channel
-     */
-    public function setFeedUrl(string $feedUrl): Channel
-    {
-        $this->feedUrl = $feedUrl;
-        return $this;
-    }
-
-    /**
-     * @param string $copyright
-     * @return Channel
-     */
-    public function setCopyright(string $copyright): Channel
-    {
-        $this->copyright = $copyright;
-        return $this;
-    }
-
-    /**
-     * @param string $cover
-     * @return Channel
-     */
-    public function setCover(string $cover): Channel
-    {
-        $this->cover = htmlentities($cover);
-        return $this;
-    }
-
-    /**
-     * @param string $items
-     * @return Channel
-     */
-    public function setItems(string $items): Channel
-    {
-        $this->items = $items;
-        return $this;
-    }
-
-
-    public function __toString()
-    {
-        return <<<XML
-  <channel>
-   <title><![CDATA[$this->title]]></title>   
-   <link>$this->frontend</link>   
-   <language>$this->language</language>   
-   <description><![CDATA[$this->description<br>Feed: $this->feedUrl]]></description>   
-   <copyright><![CDATA[$this->copyright]]></copyright>   
-   <image>
-    <title><![CDATA[$this->title]]></title>
-    <url>$this->title</url>
-    <link>$this->frontend</link>
-   </image>
-   <itunes:image href="$this->cover"/>
-   <podcast:medium>video</podcast:medium>
-   $this->items
-  </channel>  
-XML;
-    }
-}
-
-class Item
-{
-    private string $title = '';
-    private string $episodeType = '';
-    private string $summary = '';
-    private string $uploaderUrl = '';
-    private string $description = '';
-    private string $thumbnail = '';
-    private string $duration = '';
-    private string $chaptersUrl = '';
-    private string $uploaderName = '';
-    private string $date;
-    private string $videoId;
-    private string $videoUrl;
-    private string $size;
-    private string $mimeType;
-    private string $url = '';
-
-    /**
-     * @param string $title
-     * @return Item
-     */
-    public function setTitle(string $title): Item
-    {
-        $this->title = $title;
-        return $this;
-    }
-
-    /**
-     * @param string $episodeType
-     * @return Item
-     */
-    public function setEpisodeType(string $episodeType): Item
-    {
-        $this->episodeType = $episodeType;
-        return $this;
-    }
-
-    /**
-     * @param string $summary
-     * @return Item
-     */
-    public function setSummary(string $summary): Item
-    {
-        $this->summary = $summary;
-        return $this;
-    }
-
-    /**
-     * @param string $uploaderUrl
-     * @return Item
-     */
-    public function setUploaderUrl(string $uploaderUrl): Item
-    {
-        $this->uploaderUrl = htmlentities($uploaderUrl);
-        return $this;
-    }
-
-    /**
-     * @param string $description
-     * @return Item
-     */
-    public function setDescription(string $description): Item
-    {
-        $this->description = $description;
-        return $this;
-    }
-
-    /**
-     * @param string $thumbnail
-     * @return Item
-     */
-    public function setThumbnail(string $thumbnail): Item
-    {
-        $this->thumbnail = htmlentities($thumbnail);
-        return $this;
-    }
-
-    /**
-     * @param string $duration
-     * @return Item
-     */
-    public function setDuration(string $duration): Item
-    {
-        $this->duration = $duration;
-        return $this;
-    }
-
-    /**
-     * @param string $chaptersUrl
-     * @return Item
-     */
-    public function setChaptersUrl(string $chaptersUrl): Item
-    {
-        $this->chaptersUrl = htmlentities($chaptersUrl);
-        return $this;
-    }
-
-    /**
-     * @param string $uploaderName
-     * @return Item
-     */
-    public function setUploaderName(string $uploaderName): Item
-    {
-        $this->uploaderName = htmlentities($uploaderName);
-        return $this;
-    }
-
-    /**
-     * @param string $date
-     * @return Item
-     */
-    public function setDate(string $date): Item
-    {
-        $this->date = $date;
-        return $this;
-    }
-
-    /**
-     * @param string $url
-     * @return Item
-     */
-    public function setUrl(string $url): Item
-    {
-        $this->url = htmlentities($url);
-        return $this;
-    }
-
-
-    /**
-     * @param string $videoId
-     * @return Item
-     */
-    public function setVideoId(string $videoId): Item
-    {
-        $this->videoId = $videoId;
-        return $this;
-    }
-
-    /**
-     * @param string $videoUrl
-     * @return Item
-     */
-    public function setVideoUrl(string $videoUrl): Item
-    {
-        $this->videoUrl = htmlentities($videoUrl);
-        return $this;
-    }
-
-    /**
-     * @param string $size
-     * @return Item
-     */
-    public function setSize(string $size): Item
-    {
-        $this->size = $size;
-        return $this;
-    }
-
-    /**
-     * @param string $mimeType
-     * @return Item
-     */
-    public function setMimeType(string $mimeType): Item
-    {
-        $this->mimeType = $mimeType;
-        return $this;
-    }
-
-    public function __toString()
-    {
-        return <<<XML
-<item>
-    <title><![CDATA[$this->title]]></title>   
-    <itunes:episodeType>$this->episodeType</itunes:episodeType>
-    <itunes:summary><![CDATA[$this->summary]]></itunes:summary>  
-    <description><![CDATA[<center>$this->summary
-    <br><a href="$this->uploaderUrl">zum Kanal</a><br>＿＿＿＿＿＿＿＿＿＿＿＿＿＿<br><br></center>$this->description]]></description>  
-    <itunes:image href="$this->thumbnail"/> 
-    <itunes:duration>$this->duration</itunes:duration>
-    <podcast:chapters url="$this->chaptersUrl" type="application/json+chapters"/>
-    <podcast:person><![CDATA[$this->uploaderName]]></podcast:person>
-    <pubDate>$this->date</pubDate>
-    <link>$this->url</link>
-    <guid>$this->videoId</guid>
-    <enclosure url="$this->videoUrl" length="$this->size" type="$this->mimeType" />   
-</item>
-XML;
-    }
-}
+spl_autoload_register('classes');
 
 if (($_GET['clearcache'] ?? '') === '1' || ($_SERVER['HTTP_CACHE_CONTROL'] ?? '') === 'no-cache') {
     opcache_reset();
     ini_set('display_errors', '1');
 }
 
-$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+date_default_timezone_set('UTC');
 
-if (strpos($path, '/thumb') === 0) {
-    $videoId = $_GET['video'] ?? basename($path, '.jpg');
-    $proxy = $_GET['proxy'] ?? 'pipedproxy.kavin.rocks';
-    output_thumbnail($proxy, $videoId);
-    exit;
-}
-
-$api = 'https://' . ($_GET['api'] ?? "pipedapi.kavin.rocks");
-
-if (strpos($path, '/chapters') === 0) {
-    $videoId = $_GET['video'] ?? basename($path, '.json');
-    output_chapters($api, $videoId);
-    exit;
-}
-
-$authToken = $_GET['authToken'] ?? basename($path) ?: '';
-$channels = $_GET['channels'] ?? '';
-$mode = $_GET['mode'] ?? 'all';
-$frontend = 'https://' . ($_GET['frontend'] ?? "piped.kavin.rocks");
-$format = $_GET['format'] ?? 'MPEG_4';
-$quality = $_GET['quality'] ?? '720p';
-$limit = (int)($_GET['limit'] ?? 300);
-
-$feedUrl = "/feed?authToken=$authToken";
-if (!$authToken) {
-    $feedUrl = "/feed/unauthenticated?channels=$channels";
-}
-
-const TITLES = [
-    'all' => 'YouTube',
-    'shorts' => 'YouTube Shorts',
-    'subscriptions' => 'YouTube Abos',
-];
-
-$channel = new Channel();
-$channel->setLanguage($_GET['language'] ?? 'en');
-$channel->setTitle($_GET['title'] ?? TITLES[$mode] ?? 'YouTube');
-$channel->setDescription($_GET['description'] ?? 'YouTube RSS-Podcast from ' . $frontend);
-$channel->setCopyright($_GET['copyright'] ?? '&copy; YouTube');
-$channel->setCover($_GET['cover'] ?? url('/logo.jpg'));
-$channel->setFrontend($frontend);
-$channel->setFeedUrl($api . $feedUrl);
-$channel->setItems(fetch_items(fetch($api . $feedUrl), $limit, $api, $format, $quality, $frontend, $mode));
-
-output_feed($channel);
+main($_SERVER, $_GET);
 exit;
+function main(array $server, array $get): void
+{
+    $path = parse_url($server['REQUEST_URI'], PHP_URL_PATH);
+
+    if (strpos($path, '/thumb') === 0) {
+        $videoId = $get['video'] ?? basename($path, '.jpg');
+        $proxy = $get['proxy'] ?? 'pipedproxy.kavin.rocks';
+        output_thumbnail($proxy, $videoId);
+        return;
+    }
+
+    $api = 'https://' . ($get['api'] ?? "pipedapi.kavin.rocks");
+
+    if (strpos($path, '/chapters') === 0) {
+        $videoId = $get['video'] ?? basename($path, '.json');
+        output_chapters($api, $videoId);
+        return;
+    }
+
+    output_feed($path, $api, $get);
+}
 
 function fetch_items(
     array $videos,
@@ -451,7 +123,6 @@ function fetch_items(
     }
     return $items;
 }
-
 
 function find_video_file(array $streamData, string $format, string $quality): array
 {
@@ -568,8 +239,39 @@ function output_thumbnail(string $proxy, string $videoId)
     imagejpeg($dest_image);
 }
 
-function output_feed(Channel $channel)
-{
+function output_feed(
+    string $path,
+    string $api,
+    array $get,
+    array $modeTitles = [
+        'all' => 'YouTube',
+        'shorts' => 'YouTube Shorts',
+        'subscriptions' => 'YouTube Abos',
+    ]
+) {
+    $authToken = $get['authToken'] ?? basename($path) ?: '';
+    $channels = $get['channels'] ?? '';
+    $mode = $get['mode'] ?? 'all';
+    $frontend = 'https://' . ($get['frontend'] ?? "piped.kavin.rocks");
+    $format = $get['format'] ?? 'MPEG_4';
+    $quality = $get['quality'] ?? '720p';
+    $limit = (int)($get['limit'] ?? 300);
+
+    $feedUrl = "/feed?authToken=$authToken";
+    if (!$authToken) {
+        $feedUrl = "/feed/unauthenticated?channels=$channels";
+    }
+
+    $channel = new Channel();
+    $channel->setLanguage($get['language'] ?? 'en');
+    $channel->setTitle($get['title'] ?? $modeTitles[$mode] ?? 'YouTube');
+    $channel->setDescription($get['description'] ?? 'YouTube RSS-Podcast from ' . $frontend);
+    $channel->setCopyright($get['copyright'] ?? '&copy; YouTube');
+    $channel->setCover($get['cover'] ?? url('/logo.jpg'));
+    $channel->setFrontend($frontend);
+    $channel->setFeedUrl($api . $feedUrl);
+    $channel->setItems(fetch_items(fetch($api . $feedUrl), $limit, $api, $format, $quality, $frontend, $mode));
+
     header('content-type: application/xml');
     echo <<<XML
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -593,3 +295,319 @@ function resource_exists(string $url): bool
     return curl_exec($ch) && 200 == curl_getinfo($ch, CURLINFO_HTTP_CODE);
 }
 
+
+function classes(string $class): bool
+{
+    if ($class == Item::class) {
+        class Item
+        {
+            private string $title = '';
+            private string $episodeType = '';
+            private string $summary = '';
+            private string $uploaderUrl = '';
+            private string $description = '';
+            private string $thumbnail = '';
+            private string $duration = '';
+            private string $chaptersUrl = '';
+            private string $uploaderName = '';
+            private string $date;
+            private string $videoId;
+            private string $videoUrl;
+            private string $size;
+            private string $mimeType;
+            private string $url = '';
+
+            /**
+             * @param string $title
+             * @return Item
+             */
+            public function setTitle(string $title): Item
+            {
+                $this->title = $title;
+                return $this;
+            }
+
+            /**
+             * @param string $episodeType
+             * @return Item
+             */
+            public function setEpisodeType(string $episodeType): Item
+            {
+                $this->episodeType = $episodeType;
+                return $this;
+            }
+
+            /**
+             * @param string $summary
+             * @return Item
+             */
+            public function setSummary(string $summary): Item
+            {
+                $this->summary = $summary;
+                return $this;
+            }
+
+            /**
+             * @param string $uploaderUrl
+             * @return Item
+             */
+            public function setUploaderUrl(string $uploaderUrl): Item
+            {
+                $this->uploaderUrl = htmlentities($uploaderUrl);
+                return $this;
+            }
+
+            /**
+             * @param string $description
+             * @return Item
+             */
+            public function setDescription(string $description): Item
+            {
+                $this->description = $description;
+                return $this;
+            }
+
+            /**
+             * @param string $thumbnail
+             * @return Item
+             */
+            public function setThumbnail(string $thumbnail): Item
+            {
+                $this->thumbnail = htmlentities($thumbnail);
+                return $this;
+            }
+
+            /**
+             * @param string $duration
+             * @return Item
+             */
+            public function setDuration(string $duration): Item
+            {
+                $this->duration = $duration;
+                return $this;
+            }
+
+            /**
+             * @param string $chaptersUrl
+             * @return Item
+             */
+            public function setChaptersUrl(string $chaptersUrl): Item
+            {
+                $this->chaptersUrl = htmlentities($chaptersUrl);
+                return $this;
+            }
+
+            /**
+             * @param string $uploaderName
+             * @return Item
+             */
+            public function setUploaderName(string $uploaderName): Item
+            {
+                $this->uploaderName = htmlentities($uploaderName);
+                return $this;
+            }
+
+            /**
+             * @param string $date
+             * @return Item
+             */
+            public function setDate(string $date): Item
+            {
+                $this->date = $date;
+                return $this;
+            }
+
+            /**
+             * @param string $url
+             * @return Item
+             */
+            public function setUrl(string $url): Item
+            {
+                $this->url = htmlentities($url);
+                return $this;
+            }
+
+
+            /**
+             * @param string $videoId
+             * @return Item
+             */
+            public function setVideoId(string $videoId): Item
+            {
+                $this->videoId = $videoId;
+                return $this;
+            }
+
+            /**
+             * @param string $videoUrl
+             * @return Item
+             */
+            public function setVideoUrl(string $videoUrl): Item
+            {
+                $this->videoUrl = htmlentities($videoUrl);
+                return $this;
+            }
+
+            /**
+             * @param string $size
+             * @return Item
+             */
+            public function setSize(string $size): Item
+            {
+                $this->size = $size;
+                return $this;
+            }
+
+            /**
+             * @param string $mimeType
+             * @return Item
+             */
+            public function setMimeType(string $mimeType): Item
+            {
+                $this->mimeType = $mimeType;
+                return $this;
+            }
+
+            public function __toString()
+            {
+                return <<<XML
+<item>
+    <title><![CDATA[$this->title]]></title>   
+    <itunes:episodeType>$this->episodeType</itunes:episodeType>
+    <itunes:summary><![CDATA[$this->summary]]></itunes:summary>  
+    <description><![CDATA[<center>$this->summary
+    <br><a href="$this->uploaderUrl">zum Kanal</a><br>＿＿＿＿＿＿＿＿＿＿＿＿＿＿<br><br></center>$this->description]]></description>  
+    <itunes:image href="$this->thumbnail"/> 
+    <itunes:duration>$this->duration</itunes:duration>
+    <podcast:chapters url="$this->chaptersUrl" type="application/json+chapters"/>
+    <podcast:person><![CDATA[$this->uploaderName]]></podcast:person>
+    <pubDate>$this->date</pubDate>
+    <link>$this->url</link>
+    <guid>$this->videoId</guid>
+    <enclosure url="$this->videoUrl" length="$this->size" type="$this->mimeType" />   
+</item>
+XML;
+            }
+        }
+
+        return true;
+    }
+    if ($class == Channel::class) {
+        class Channel
+        {
+            private string $title = '';
+            private string $frontend = '';
+            private string $language = '';
+            private string $description = '';
+            private string $feedUrl = '';
+            private string $copyright = '';
+            private string $cover = '';
+            private string $items = '';
+
+            /**
+             * @param string $title
+             * @return Channel
+             */
+            public function setTitle(string $title): Channel
+            {
+                $this->title = $title;
+                return $this;
+            }
+
+            /**
+             * @param string $frontend
+             * @return Channel
+             */
+            public function setFrontend(string $frontend): Channel
+            {
+                $this->frontend = htmlentities($frontend);
+                return $this;
+            }
+
+            /**
+             * @param string $language
+             * @return Channel
+             */
+            public function setLanguage(string $language): Channel
+            {
+                $this->language = $language;
+                return $this;
+            }
+
+            /**
+             * @param string $description
+             * @return Channel
+             */
+            public function setDescription(string $description): Channel
+            {
+                $this->description = $description;
+                return $this;
+            }
+
+            /**
+             * @param string $feedUrl
+             * @return Channel
+             */
+            public function setFeedUrl(string $feedUrl): Channel
+            {
+                $this->feedUrl = $feedUrl;
+                return $this;
+            }
+
+            /**
+             * @param string $copyright
+             * @return Channel
+             */
+            public function setCopyright(string $copyright): Channel
+            {
+                $this->copyright = $copyright;
+                return $this;
+            }
+
+            /**
+             * @param string $cover
+             * @return Channel
+             */
+            public function setCover(string $cover): Channel
+            {
+                $this->cover = htmlentities($cover);
+                return $this;
+            }
+
+            /**
+             * @param string $items
+             * @return Channel
+             */
+            public function setItems(string $items): Channel
+            {
+                $this->items = $items;
+                return $this;
+            }
+
+
+            public function __toString()
+            {
+                return <<<XML
+  <channel>
+   <title><![CDATA[$this->title]]></title>   
+   <link>$this->frontend</link>   
+   <language>$this->language</language>   
+   <description><![CDATA[$this->description<br>Feed: $this->feedUrl]]></description>   
+   <copyright><![CDATA[$this->copyright]]></copyright>   
+   <image>
+    <title><![CDATA[$this->title]]></title>
+    <url>$this->title</url>
+    <link>$this->frontend</link>
+   </image>
+   <itunes:image href="$this->cover"/>
+   <podcast:medium>video</podcast:medium>
+   $this->items
+  </channel>  
+XML;
+            }
+        }
+
+        return true;
+    }
+    return false;
+}
