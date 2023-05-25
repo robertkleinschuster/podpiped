@@ -5,6 +5,7 @@ declare(strict_types=1);
 const DEFAULT_LIMIT = 300;
 const DEFAULT_QUALITY = '720p';
 const DEFAULT_MODE = 'all';
+const SUGGESTIONS = 2;
 
 spl_autoload_register('classes');
 
@@ -53,7 +54,7 @@ function fetch_items(
 
     $items = '';
     foreach ($videos as $i => $video) {
-        if (count($videoIds) + 1 > $limit || $related && $i > 4) {
+        if (count($videoIds) + 1 > $limit || $related && $i >= SUGGESTIONS) {
             break;
         }
         if (isset($video['url'])) {
