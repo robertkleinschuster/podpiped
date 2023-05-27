@@ -306,7 +306,7 @@ function fetch_items(
                 $uploaderFeed = url(PATH_CHANNEL . "/$id");
 
                 $uploaderName = $video['uploaderName'] ?? '';
-                $views = format_count($video['views'] ?? 0);
+                $views = format_count($streamData['views'] ?? 0);
                 $likes = format_count($streamData['likes'] ?? 0);
                 $subscribers = format_count($streamData['uploaderSubscriberCount'] ?? 0);
 
