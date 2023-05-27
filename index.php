@@ -98,7 +98,6 @@ XML;
     </body>
 </opml>
 EOL;
-
 }
 
 function output_playlist(string $playlistId, int $limit, string $api, string $format, string $quality, string $frontend, string $mode): void
@@ -110,7 +109,7 @@ function output_playlist(string $playlistId, int $limit, string $api, string $fo
     if (isset($data['uploaderAvatar'])) {
         $data['uploaderAvatar'] = str_replace('s48-c-k-c0x00ffffff-no-rw', 's1000-c-k-c0x00ffffff-no-rw', $data['uploaderAvatar']);
     }
-    $channel->setCover($data['uploaderAvatar'] ?? url('/logo.jpg'));
+    $channel->setCover($data['uploaderAvatar'] ?? url('/playlist.jpg'));
     $channel->setDescription($data['description'] ?? '');
     $channel->setLanguage('en');
     $channel->setAuthor($data['uploader'] ?? '');
@@ -381,7 +380,7 @@ function output_feed(
     $channel->setTitle($get['title'] ?? $modeTitles[$mode] ?? 'YouTube');
     $channel->setDescription($get['description'] ?? 'YouTube RSS-Podcast von ' . $frontend);
     $channel->setCopyright($get['copyright'] ?? '&copy; YouTube');
-    $channel->setCover($get['cover'] ?? url('/logo.jpg'));
+    $channel->setCover($get['cover'] ?? url('/feed.jpg'));
     $channel->setFrontend($frontend);
     $channel->setFeedUrl($api . $feedUrl);
     $videos = fetch($api . $feedUrl);
@@ -416,6 +415,12 @@ function output_help()
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="robots" content="noindex,follow" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
     <title>PodPiped - YouTube als Podcasts</title>
     <style>
         *, *:before, *:after {
