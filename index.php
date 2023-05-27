@@ -452,6 +452,9 @@ function output_help()
             color: white;
             text-decoration: underline;
         }
+        button[type=reset] {
+            background: red;
+        }
     </style>
     <script>
         function fallbackCopyTextToClipboard(text) {
@@ -477,6 +480,11 @@ function output_help()
             } else {
                 fallbackCopyTextToClipboard(elem.innerText);
             }
+        }
+        function reset(id) {
+            const elem = document.getElementById(id);
+            elem.value = '';
+            elem.dispatchEvent(new Event('change'));
         }
         function handle(input, output, callback) {
             
@@ -516,7 +524,7 @@ function output_help()
         <input type="url" id="feed_url" placeholder="hier einfügen...">   
     </label>
     <pre id="feed_podcast"></pre>
-    <p>Podcast-URL <button onclick="clipboard('feed_podcast')">📋 kopieren</button></p>
+    <p>Podcast-URL <button onclick="clipboard('feed_podcast')">📋 kopieren</button> <button type="reset" onclick="reset('feed_url')">löschen</button></p>
     <script>
             handle('feed_url', 'feed_podcast', function(input) {
                   const url = new URL(input);
@@ -547,7 +555,7 @@ function output_help()
         <input type="url" id="playlist_url" placeholder="hier einfügen...">   
     </label>
     <pre id="playlist_podcast"></pre>
-    <p>Podcast-URL <button onclick="clipboard('playlist_podcast')">📋 kopieren</button></p>
+    <p>Podcast-URL <button onclick="clipboard('playlist_podcast')">📋 kopieren</button> <button type="reset" onclick="reset('playlist_url')">löschen</button></p>
     <script>
             handle('playlist_url', 'playlist_podcast', function(input) {
                   const url = new URL(input);
@@ -571,7 +579,7 @@ function output_help()
         <input type="url" id="channel_url" placeholder="hier einfügen...">   
     </label>
     <pre id="channel_podcast"></pre>
-    <p>Podcast-URL <button onclick="clipboard('channel_podcast')">📋 kopieren</button></p>
+    <p>Podcast-URL <button onclick="clipboard('channel_podcast')">📋 kopieren</button> <button type="reset" onclick="reset('channel_url')">löschen</button></p>
     <script>
             handle('channel_url', 'channel_podcast', function(input) {
                   const url = new URL(input);
