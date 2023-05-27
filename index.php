@@ -136,7 +136,6 @@ function output_channel(string $channelId, int $limit, string $api, string $form
     $channel->setLanguage('en');
     $channel->setFrontend(url("/channel/$channelId", $frontend));
     $channel->setItems(fetch_items($data['relatedStreams'], $limit, $api, $format, $quality, $frontend, $mode));
-    $channel->setFrontend($frontend);
 
     header('content-type: application/xml');
     echo new Rss($channel);
@@ -381,7 +380,7 @@ function output_feed(
     $channel->setDescription($get['description'] ?? 'YouTube RSS-Podcast von ' . $frontend);
     $channel->setCopyright($get['copyright'] ?? '&copy; YouTube');
     $channel->setCover($get['cover'] ?? url('/feed.jpg'));
-    $channel->setFrontend($frontend);
+    $channel->setFrontend(url('/feed', $frontend));
     $channel->setFeedUrl($api . $feedUrl);
     $videos = fetch($api . $feedUrl);
     if (empty($videos)) {
