@@ -259,7 +259,7 @@ function fetch_items(
 
     $items = '';
     $count = 1;
-    foreach ($videos as $i => $video) {
+    foreach ($videos as $video) {
         if (count($videoIds) + 1 > $limit || $mode === 'suggestions' && $count >= SUGGESTIONS) {
             break;
         }
