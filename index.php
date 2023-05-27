@@ -62,10 +62,10 @@ function output_playlist(string $playlistId, int $limit, string $api, string $fo
     $playlist = fetch("$api/playlists/$playlistId");
     $channel = new Channel();
     $channel->setTitle($playlist['name']);
-    $channel->setCover(url('/logo.jpg'));
+    $channel->setCover($playlist['uploaderAvatar'] ?? url('/logo.jpg'));
     $channel->setDescription($playlist['description'] ?? '');
     $channel->setLanguage('en');
-    $channel->setCopyright($playlist['uploader'] ?? '');
+    $channel->setAuthor($playlist['uploader'] ?? '');
     $channel->setFeedUrl(url("/playlist?list=$playlistId", $frontend));
     $channel->setItems(fetch_items($playlist['relatedStreams'], $limit, $api, $format, $quality, $frontend, $mode));
     $channel->setFrontend($frontend);
@@ -722,6 +722,7 @@ XML;
             private string $copyright = '';
             private string $cover = '';
             private string $items = '';
+            private string $author = '';
 
             /**
              * @param string $title
@@ -732,6 +733,18 @@ XML;
                 $this->title = $title;
                 return $this;
             }
+
+            /**
+             * @param string $author
+             * @return Channel
+             */
+            public function setAuthor(string $author): Channel
+            {
+                $this->author = $author;
+                return $this;
+            }
+
+
 
             /**
              * @param string $frontend
@@ -812,7 +825,8 @@ XML;
    <link>$this->frontend</link>   
    <language>$this->language</language>   
    <description><![CDATA[$this->description<br>Feed: $this->feedUrl]]></description>   
-   <copyright><![CDATA[$this->copyright]]></copyright>   
+   <copyright><![CDATA[$this->copyright]]></copyright>
+   <itunes:author>$this->author</itunes:author>
    <image>
     <title><![CDATA[$this->title]]></title>
     <url>$this->title</url>
