@@ -48,6 +48,12 @@ function main(array $server, array $get): void
         return;
     }
 
+    if (strpos($path, '/channel') === 0) {
+        $channelId = $get['id'] ?? basename($path);
+        output_channel($channelId, $limit, $api, $format, $quality, $frontend, 'subscriptions');
+        return;
+    }
+
     if (!trim($path, '/')) {
         output_help();
         return;
@@ -66,8 +72,24 @@ function output_playlist(string $playlistId, int $limit, string $api, string $fo
     $channel->setDescription($playlist['description'] ?? '');
     $channel->setLanguage('en');
     $channel->setAuthor($playlist['uploader'] ?? '');
-    $channel->setFeedUrl(url("/playlist?list=$playlistId", $frontend));
+    $channel->setFrontend(url("/playlist?list=$playlistId", $frontend));
     $channel->setItems(fetch_items($playlist['relatedStreams'], $limit, $api, $format, $quality, $frontend, $mode));
+
+    header('content-type: application/xml');
+    echo new Rss($channel);
+}
+
+function output_channel(string $channelId, int $limit, string $api, string $format, string $quality, string $frontend, string $mode): void
+{
+
+    $data = fetch("$api/channel/$channelId");
+    $channel = new Channel();
+    $channel->setTitle($data['name']);
+    $channel->setCover($data['avatarUrl'] ?? url('/logo.jpg'));
+    $channel->setDescription($data['description'] ?? '');
+    $channel->setLanguage('en');
+    $channel->setFrontend(url("/channel/$channelId", $frontend));
+    $channel->setItems(fetch_items($data['relatedStreams'], $limit, $api, $format, $quality, $frontend, $mode));
     $channel->setFrontend($frontend);
 
     header('content-type: application/xml');
@@ -414,6 +436,14 @@ function output_help()
             }
         }
         function handle(input, output, callback) {
+            
+            if (typeof input === 'string') {
+                input = document.getElementById(input)
+            }
+             if (typeof output === 'string') {
+                output = document.getElementById(output)
+            }
+            
             input.addEventListener('change', function() {
                 if (input.value === '') {
                     output.innerText = '';
@@ -445,9 +475,7 @@ function output_help()
     <pre id="feed_podcast"></pre>
     <p>Podcast-URL <button onclick="clipboard('feed_podcast')">📋 kopieren</button></p>
     <script>
-            const feed_url = document.getElementById('feed_url');
-            const feed_podcast = document.getElementById('feed_podcast');
-            handle(feed_url, feed_podcast, function(input) {
+            handle('feed_url', 'feed_podcast', function(input) {
                   const url = new URL(input);
                   const authToken = url.searchParams.get('authToken');
                   if (!authToken) {
@@ -466,20 +494,37 @@ function output_help()
     <pre id="playlist_podcast"></pre>
     <p>Podcast-URL <button onclick="clipboard('playlist_podcast')">📋 kopieren</button></p>
     <script>
-            const playlist_url = document.getElementById('playlist_url');
-            const playlist_podcast = document.getElementById('playlist_podcast');
-            handle(playlist_url, playlist_podcast, function(input) {
+            handle('playlist_url', 'playlist_podcast', function(input) {
                   const url = new URL(input);
-                  let list = '';
+                  let id = '';
                   if (url.searchParams.has('list')) {
-                      list = url.searchParams.get('list');
+                      id = url.searchParams.get('list');
                   } else {
-                      list = url.pathname.split('/').pop();
+                      id = url.pathname.split('/').pop();
                   }
-                  if (!list) {
+                  if (!id) {
                       return '';
                   }
-                  return `http://$host/playlist/\${list}`;
+                  return `http://$host/playlist/\${id}`;
+            })
+    </script>
+  </section>
+   <section>
+    <h3>Kanal</h3>
+    <label>
+        Piped Kanal URL
+        <input type="url" id="channel_url" placeholder="hier einfügen...">   
+    </label>
+    <pre id="channel_podcast"></pre>
+    <p>Podcast-URL <button onclick="clipboard('channel_podcast')">📋 kopieren</button></p>
+    <script>
+            handle('channel_url', 'channel_podcast', function(input) {
+                  const url = new URL(input);
+                  const id = url.pathname.split('/').pop();
+                  if (!id) {
+                      return '';
+                  }
+                  return `http://$host/channel/\${id}`;
             })
     </script>
   </section>
