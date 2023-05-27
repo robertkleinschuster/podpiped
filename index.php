@@ -185,6 +185,9 @@ function fetch_items(
                     $episodeType = 'full';
                 }
 
+                $id = basename($video['uploaderUrl'] ?? '');
+                $uploaderFeed = url("/channel/$id");
+
                 $uploaderName = $video['uploaderName'];
                 $views = format_count($streamData['views']);
                 $likes = format_count($streamData['likes']);
@@ -197,6 +200,7 @@ function fetch_items(
                     "👤$uploaderName<br>$subscribers&nbsp;Abos | $views&nbsp;Aufr.&nbsp; | $likes&nbsp;Likes"
                 );
                 $item->setUploaderUrl(url($video['uploaderUrl'], $frontend));
+                $item->setUploaderFeedUrl($uploaderFeed);
                 $item->setDescription($streamData['description']);
                 $item->setThumbnail(url("/thumb/$videoId.jpg"));
                 $item->setDuration((string)(int)$video['duration']);
@@ -646,6 +650,7 @@ XML;
             private string $duration = '';
             private string $chaptersUrl = '';
             private string $uploaderName = '';
+            private string $uploaderFeedUrl = '';
             private string $date;
             private string $videoId;
             private string $videoUrl;
@@ -672,6 +677,18 @@ XML;
                 $this->episodeType = $episodeType;
                 return $this;
             }
+
+            /**
+             * @param string $uploaderFeedUrl
+             * @return Item
+             */
+            public function setUploaderFeedUrl(string $uploaderFeedUrl): Item
+            {
+                $this->uploaderFeedUrl = htmlentities($uploaderFeedUrl);
+                return $this;
+            }
+
+
 
             /**
              * @param string $summary
@@ -812,7 +829,12 @@ XML;
     <itunes:episodeType>$this->episodeType</itunes:episodeType>
     <itunes:summary><![CDATA[$this->summary]]></itunes:summary>  
     <description><![CDATA[<center>$this->summary
-    <br><a href="$this->uploaderUrl">zum Kanal</a><br>＿＿＿＿＿＿＿＿＿＿＿＿＿＿<br><br></center>$this->description]]></description>  
+    <br><a href="$this->uploaderUrl">zum Kanal</a><br>
+    <a href="$this->uploaderFeedUrl">Kanal Podcast-URL</a>
+    <br>
+    $this->uploaderFeedUrl
+    <br>
+    ＿＿＿＿＿＿＿＿＿＿＿＿＿＿<br><br></center>$this->description]]></description>  
     <itunes:image href="$this->thumbnail"/> 
     <itunes:duration>$this->duration</itunes:duration>
     <podcast:chapters url="$this->chaptersUrl" type="application/json+chapters"/>
