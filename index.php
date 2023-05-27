@@ -37,19 +37,54 @@ function main(array $server, array $get): void
         return;
     }
 
+    $frontend = 'https://' . ($get['frontend'] ?? "piped.kavin.rocks");
+    $format = $get['format'] ?? 'MPEG_4';
+    $quality = $get['quality'] ?? DEFAULT_QUALITY;
+    $limit = (int)($get['limit'] ?? DEFAULT_LIMIT);
+
+    if (strpos($path, '/playlist') === 0) {
+        $playlistId = $get['id'] ?? basename($path);
+        output_playlist($playlistId, $limit, $api, $format, $quality, $frontend, 'subscriptions');
+        return;
+    }
+
+    if (!trim($path, '/')) {
+        output_help();
+        return;
+    }
+    
     output_feed($path, $api, $get);
 }
 
+function output_playlist(string $playlistId, int $limit, string $api, string $format, string $quality, string $frontend, string $mode): void
+{
+
+    $playlist = fetch("$api/playlists/$playlistId");
+    $channel = new Channel();
+    $channel->setTitle($playlist['name']);
+    $channel->setCover(url('/logo.jpg'));
+    $channel->setDescription($playlist['description'] ?? '');
+    $channel->setLanguage('en');
+    $channel->setCopyright($playlist['uploader'] ?? '');
+    $channel->setFeedUrl(url("/playlist?list=$playlistId", $frontend));
+    $channel->setItems(fetch_items($playlist['relatedStreams'], $limit, $api, $format, $quality, $frontend, $mode));
+    $channel->setFrontend($frontend);
+
+    header('content-type: application/xml');
+    echo new Rss($channel);
+}
+
 function fetch_items(
-    array $videos,
-    int $limit,
+    array  $videos,
+    int    $limit,
     string $api,
     string $format,
     string $quality,
     string $frontend,
     string $mode,
-    bool $related = false
-): string {
+    bool   $related = false
+): string
+{
     static $videoIds = [];
 
     $items = '';
@@ -247,13 +282,14 @@ function output_thumbnail(string $proxy, string $videoId)
 function output_feed(
     string $path,
     string $api,
-    array $get,
-    array $modeTitles = [
+    array  $get,
+    array  $modeTitles = [
         'all' => 'YouTube',
         'shorts' => 'YouTube Shorts',
         'subscriptions' => 'YouTube Abos',
     ]
-) {
+)
+{
     $authToken = $get['authToken'] ?? basename($path) ?: '';
     $channels = $get['channels'] ?? '';
     $mode = $get['mode'] ?? DEFAULT_MODE;
@@ -305,9 +341,182 @@ function resource_exists(string $url): bool
     return curl_exec($ch) && 200 == curl_getinfo($ch, CURLINFO_HTTP_CODE);
 }
 
+function output_help()
+{
+    $host = $_SERVER['HTTP_HOST'];
+    echo <<<HTML
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="robots" content="noindex,follow" />
+    <title>PodPiped - YouTube als Podcasts</title>
+    <style>
+        *, *:before, *:after {
+            box-sizing: border-box;
+        }
+        html, body {
+           font-family: sans-serif;
+        }  
+        input {
+            width: 100%;
+            padding: .25rem;
+            margin-top: .25rem;
+            border-radius: .25rem;
+            border: 1px solid grey;
+        }
+        pre {
+            padding: .25rem;
+            width: 100%;
+            border: 1px solid black;
+            overflow: scroll;
+        }
+        pre:empty {
+            display: none;
+        }
+        pre:empty ~ p {
+            display: none;
+        }
+        button {
+            padding: .5rem;
+            cursor: pointer;
+            border-radius: .25rem;
+            border: none;
+            background: #0f5590;
+            color: white;
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+  
+            // Avoid scrolling to bottom
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy')
+
+            document.body.removeChild(textArea);
+        }
+        function clipboard(id) {
+            const elem = document.getElementById(id);
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(elem.innerText);
+            } else {
+                fallbackCopyTextToClipboard(elem.innerText);
+            }
+        }
+        function handle(input, output, callback) {
+            input.addEventListener('change', function() {
+                if (input.value === '') {
+                    output.innerText = '';
+                    return;
+                }
+                if (!input.checkValidity()) {
+                    input.reportValidity();
+                    return;
+                }
+                try {
+                    output.innerText = callback(input.value);
+                } catch(e) {
+                    alert(e);
+                }
+            })
+        }
+    </script>
+</head>
+<body>
+  <h1>PodPiped</h1>
+  <h2>YouTube als Podcasts</h2>
+  <p>Umwandeln von Piped-URLs in Podcast-URLs.</p>
+  <section>
+    <h3>Abos</h3>
+    <label>
+        Piped Feed URL
+        <input type="url" id="feed_url" placeholder="hier einfügen...">   
+    </label>
+    <pre id="feed_podcast"></pre>
+    <p>Podcast-URL <button onclick="clipboard('feed_podcast')">📋 kopieren</button></p>
+    <script>
+            const feed_url = document.getElementById('feed_url');
+            const feed_podcast = document.getElementById('feed_podcast');
+            handle(feed_url, feed_podcast, function(input) {
+                  const url = new URL(input);
+                  const authToken = url.searchParams.get('authToken');
+                  if (!authToken) {
+                      return '';
+                  }
+                  return `http://$host/\${authToken}`;
+            })
+    </script>
+  </section>
+  <section>
+    <h3>Playlist</h3>
+    <label>
+        Piped Playlist URL
+        <input type="url" id="playlist_url" placeholder="hier einfügen...">   
+    </label>
+    <pre id="playlist_podcast"></pre>
+    <p>Podcast-URL <button onclick="clipboard('playlist_podcast')">📋 kopieren</button></p>
+    <script>
+            const playlist_url = document.getElementById('playlist_url');
+            const playlist_podcast = document.getElementById('playlist_podcast');
+            handle(playlist_url, playlist_podcast, function(input) {
+                  const url = new URL(input);
+                  let list = '';
+                  if (url.searchParams.has('list')) {
+                      list = url.searchParams.get('list');
+                  } else {
+                      list = url.pathname.split('/').pop();
+                  }
+                  if (!list) {
+                      return '';
+                  }
+                  return `http://$host/playlist/\${list}`;
+            })
+    </script>
+  </section>
+</body>
+</html>
+HTML;
+}
 
 function classes(string $class): bool
 {
+    if ($class === Rss::class) {
+        class Rss
+        {
+            private Channel $channel;
+
+            /**
+             * @param Channel $channel
+             */
+            public function __construct(Channel $channel)
+            {
+                $this->channel = $channel;
+            }
+
+            public function __toString(): string
+            {
+                return <<<XML
+<?xml version="1.0" encoding="UTF-8" ?>
+ <rss version="2.0" 
+ xmlns:podcast="https://podcastindex.org/namespace/1.0" 
+ xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" 
+ xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  $this->channel   
+ </rss>
+XML;
+            }
+        }
+    }
     if ($class == Item::class) {
         class Item
         {
