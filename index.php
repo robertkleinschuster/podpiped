@@ -520,7 +520,12 @@ function output_help()
     <script>
             handle('channel_url', 'channel_podcast', function(input) {
                   const url = new URL(input);
-                  const id = url.pathname.split('/').pop();
+                  let id = '';
+                  if (url.searchParams.has('channels')) {
+                      id = url.searchParams.get('channels');
+                  } else {
+                      id = url.pathname.split('/').pop();
+                  }
                   if (!id) {
                       return '';
                   }
