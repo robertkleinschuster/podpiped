@@ -258,8 +258,9 @@ function fetch_items(
     static $videoIds = [];
 
     $items = '';
+    $count = 1;
     foreach ($videos as $i => $video) {
-        if (count($videoIds) + 1 > $limit || $mode === 'suggestions' && $i >= SUGGESTIONS) {
+        if (count($videoIds) + 1 > $limit || $mode === 'suggestions' && $count >= SUGGESTIONS) {
             break;
         }
         $isShort = (bool)($video['isShort'] ?? false);
@@ -326,11 +327,12 @@ function fetch_items(
                 $item->setUrl($frontend . $video['url']);
                 $item->setVideoUrl($fileInfo['url']);
                 $item->setVideoId($videoId);
-               # $item->setSize((string)intval((int)$video['duration'] * (int)$fileInfo['bitrate'] / 8));
+                $item->setSize((string)intval((int)$video['duration'] * (int)$fileInfo['bitrate'] / 8));
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
 
                 $items .= $item;
                 $videoIds[$videoId] = true;
+                $count++;
 
                 if ($mode === 'feed' && isset($streamData['relatedStreams'])) {
                     $items .= fetch_items(
