@@ -4,8 +4,16 @@ declare(strict_types=1);
 
 const DEFAULT_LIMIT = 300;
 const DEFAULT_QUALITY = '720p';
-const DEFAULT_MODE = 'all';
+const DEFAULT_MODE = 'feed';
 const SUGGESTIONS = 2;
+const SUGGESTION_MIN_VIEWS = 10000;
+
+const PATH_CHANNEL = '/channel';
+const PATH_PLAYLIST = '/playlist';
+const PATH_OPML = '/opml';
+const PATH_SHORTCUT = '/shortcut';
+const PATH_THUMB = '/thumb';
+const PATH_CHAPTERS = '/chapters';
 
 spl_autoload_register('classes');
 
@@ -22,7 +30,7 @@ function main(array $server, array $get): void
 {
     $path = parse_url($server['REQUEST_URI'], PHP_URL_PATH);
 
-    if (strpos($path, '/thumb') === 0) {
+    if (strpos($path, PATH_THUMB) === 0) {
         $videoId = $get['video'] ?? basename($path, '.jpg');
         $proxy = $get['proxy'] ?? 'pipedproxy.kavin.rocks';
         output_thumbnail($proxy, $videoId);
@@ -31,7 +39,7 @@ function main(array $server, array $get): void
 
     $api = 'https://' . ($get['api'] ?? "pipedapi.kavin.rocks");
 
-    if (strpos($path, '/chapters') === 0) {
+    if (strpos($path, PATH_CHAPTERS) === 0) {
         $videoId = $get['video'] ?? basename($path, '.json');
         output_chapters($api, $videoId);
         return;
@@ -42,21 +50,26 @@ function main(array $server, array $get): void
     $quality = $get['quality'] ?? DEFAULT_QUALITY;
     $limit = (int)($get['limit'] ?? DEFAULT_LIMIT);
 
-    if (strpos($path, '/playlist') === 0) {
+    if (strpos($path, PATH_PLAYLIST) === 0) {
         $playlistId = $get['id'] ?? basename($path);
         output_playlist($playlistId, $limit, $api, $format, $quality, $frontend, 'subscriptions');
         return;
     }
 
-    if (strpos($path, '/channel') === 0) {
+    if (strpos($path, PATH_CHANNEL) === 0) {
         $channelId = $get['id'] ?? basename($path);
         output_channel($channelId, $limit, $api, $format, $quality, $frontend, 'subscriptions');
         return;
     }
 
-    if (strpos($path, '/opml') === 0) {
+    if (strpos($path, PATH_OPML) === 0) {
         $authToken = $get['authToken'] ?? basename($path);
         output_opml($authToken, $api, $frontend);
+        return;
+    }
+
+    if (strpos($path, PATH_SHORTCUT) === 0) {
+        handle_shortcut($api, $path, $_GET['payload'] ?? null);
         return;
     }
 
@@ -66,6 +79,68 @@ function main(array $server, array $get): void
     }
 
     output_feed($path, $api, $get);
+}
+
+function handle_shortcut(string $api, string $path, string $payload = null)
+{
+    header('Content-Type: application/json');
+
+    if (!$payload) {
+        echo json_encode([]);
+        return;
+    }
+
+    if (strpos($payload, ':') !== false) {
+        [$mode, $id] = explode(':', $payload);
+        if ($mode === 'channel_by_video') {
+            $data = fetch(url("/streams/$id", $api));
+            $channelId = basename($data['uploaderUrl']);
+            echo json_encode(['podcast' => url(PATH_CHANNEL . "/$channelId")]);
+            return;
+        }
+        if ($mode === 'channel') {
+            echo json_encode(['podcast' => url(PATH_CHANNEL . "/$id")]);
+            return;
+        }
+        if ($mode === 'playlist') {
+            echo json_encode(['podcast' => url(PATH_PLAYLIST . "/$id")]);
+            return;
+        }
+
+        if ($mode === 'piped_feed') {
+            echo json_encode(['podcast' => url("/$id")]);
+            return;
+        }
+    }
+
+
+    $urlQuery = parse_url($payload, PHP_URL_QUERY);
+    $urlParams = [];
+    if ($urlQuery) {
+        parse_str($urlQuery, $urlParams);
+    }
+
+    $urlPath = parse_url($payload, PHP_URL_PATH);
+
+    $menu = [];
+
+    if ($urlPath === '/watch' && isset($urlParams['v'])) {
+        $menu['Kanal als Podcast hinzufügen'] = 'channel_by_video:' . $urlParams['v'];
+    }
+
+    if ($urlPath === '/feed/unauthenticated/rss' && isset($urlParams['channels'])) {
+        $menu['Kanal als Podcast hinzufügen'] = 'channel:' . $urlParams['channels'];
+    }
+
+    if ($urlPath === '/feed/rss' && isset($urlParams['authToken'])) {
+        $menu['Feed als Podcast hinzufügen'] = 'piped_feed:' . $urlParams['authToken'];
+    }
+
+    if (in_array($urlPath, ['/playlist', '/watch']) && isset($urlParams['list'])) {
+        $menu['Playlist als Podcast hinzufügen '] = 'playlist:' . $urlParams['list'];
+    }
+
+    echo json_encode(['menu' => $menu]);
 }
 
 function output_opml(string $authToken, string $api, string $frontend): void
@@ -86,7 +161,7 @@ EOL;
     foreach ($data as $datum) {
         $title = $datum['name'];
         $id = basename($datum['url']);
-        $xmlUrl = url("/channel/$id");
+        $xmlUrl = url(PATH_CHANNEL . "/$id");
         $htmlUrl = url("/channel/$id", $frontend);
 
         echo <<<XML
@@ -100,14 +175,24 @@ XML;
 EOL;
 }
 
-function output_playlist(string $playlistId, int $limit, string $api, string $format, string $quality, string $frontend, string $mode): void
-{
-
+function output_playlist(
+    string $playlistId,
+    int $limit,
+    string $api,
+    string $format,
+    string $quality,
+    string $frontend,
+    string $mode
+): void {
     $data = fetch("$api/playlists/$playlistId");
     $channel = new Channel();
     $channel->setTitle($data['uploader'] . ': ' . $data['name']);
     if (isset($data['uploaderAvatar'])) {
-        $data['uploaderAvatar'] = str_replace('s48-c-k-c0x00ffffff-no-rw', 's1000-c-k-c0x00ffffff-no-rw', $data['uploaderAvatar']);
+        $data['uploaderAvatar'] = str_replace(
+            's48-c-k-c0x00ffffff-no-rw',
+            's1000-c-k-c0x00ffffff-no-rw',
+            $data['uploaderAvatar']
+        );
     }
     $channel->setCover($data['uploaderAvatar'] ?? url('/playlist.jpg'));
     $channel->setDescription($data['description'] ?? '');
@@ -120,15 +205,25 @@ function output_playlist(string $playlistId, int $limit, string $api, string $fo
     echo new Rss($channel);
 }
 
-function output_channel(string $channelId, int $limit, string $api, string $format, string $quality, string $frontend, string $mode): void
-{
-
+function output_channel(
+    string $channelId,
+    int $limit,
+    string $api,
+    string $format,
+    string $quality,
+    string $frontend,
+    string $mode
+): void {
     $data = fetch("$api/channel/$channelId");
     $channel = new Channel();
     $channel->setTitle($data['name']);
 
     if (isset($data['avatarUrl'])) {
-        $data['avatarUrl'] = str_replace('s48-c-k-c0x00ffffff-no-rw', 's1000-c-k-c0x00ffffff-no-rw', $data['avatarUrl']);
+        $data['avatarUrl'] = str_replace(
+            's48-c-k-c0x00ffffff-no-rw',
+            's1000-c-k-c0x00ffffff-no-rw',
+            $data['avatarUrl']
+        );
     }
 
     $channel->setCover($data['avatarUrl'] ?? url('/logo.jpg'));
@@ -142,21 +237,19 @@ function output_channel(string $channelId, int $limit, string $api, string $form
 }
 
 function fetch_items(
-    array  $videos,
-    int    $limit,
+    array $videos,
+    int $limit,
     string $api,
     string $format,
     string $quality,
     string $frontend,
-    string $mode,
-    bool   $related = false
-): string
-{
+    string $mode
+): string {
     static $videoIds = [];
 
     $items = '';
     foreach ($videos as $i => $video) {
-        if (count($videoIds) + 1 > $limit || $related && $i >= SUGGESTIONS) {
+        if (count($videoIds) + 1 > $limit || $mode === 'suggestions' && $i >= SUGGESTIONS) {
             break;
         }
         if (isset($video['url'])) {
@@ -171,7 +264,16 @@ function fetch_items(
                 if ($isShort && $mode !== 'shorts' || $mode === 'shorts' && !$isShort) {
                     continue;
                 }
-                $streamData = fetch($api . $streamUrl);
+                if ($mode === 'suggestions' && ((int)$video['views'] < SUGGESTION_MIN_VIEWS)) {
+                    continue;
+                }
+
+                if (function_exists('apcu_entry')) {
+                    $streamData = apcu_entry($api . $streamUrl, fn() => fetch($api . $streamUrl), 3600);
+                } else {
+                    $streamData = fetch($api . $streamUrl);
+                }
+
                 $fileInfo = find_video_file($streamData, $format, $quality);
                 if (empty($fileInfo)) {
                     continue;
@@ -179,14 +281,14 @@ function fetch_items(
                 $videoIds[$videoId] = true;
                 if ($isShort) {
                     $episodeType = 'trailer';
-                } elseif ($related) {
+                } elseif ($mode === 'suggestions') {
                     $episodeType = 'bonus';
                 } else {
                     $episodeType = 'full';
                 }
 
                 $id = basename($video['uploaderUrl'] ?? '');
-                $uploaderFeed = url("/channel/$id");
+                $uploaderFeed = url(PATH_CHANNEL . "/$id");
 
                 $uploaderName = $video['uploaderName'];
                 $views = format_count($streamData['views']);
@@ -202,9 +304,9 @@ function fetch_items(
                 $item->setUploaderUrl(url($video['uploaderUrl'], $frontend));
                 $item->setUploaderFeedUrl($uploaderFeed);
                 $item->setDescription($streamData['description']);
-                $item->setThumbnail(url("/thumb/$videoId.jpg"));
+                $item->setThumbnail(url(PATH_THUMB . "/$videoId.jpg"));
                 $item->setDuration((string)(int)$video['duration']);
-                $item->setChaptersUrl(url("/chapters/$videoId.json"));
+                $item->setChaptersUrl(url(PATH_CHAPTERS . "/$videoId.json"));
                 $item->setUploaderName($uploaderName);
                 $item->setDate(date(DATE_RFC2822, intval($video['uploaded'] / 1000)));
                 $item->setUrl($frontend . $video['url']);
@@ -215,9 +317,9 @@ function fetch_items(
 
                 $items .= $item;
 
-                if (!$related && $mode !== 'subscriptions' && isset($streamData['relatedStreams']) && is_array(
-                        $streamData['relatedStreams']
-                    )) {
+                if ($mode === 'feed'
+                    && isset($streamData['relatedStreams'])
+                    && is_array($streamData['relatedStreams'])) {
                     $items .= fetch_items(
                         $streamData['relatedStreams'],
                         $limit,
@@ -225,8 +327,7 @@ function fetch_items(
                         $format,
                         $quality,
                         $frontend,
-                        $mode,
-                        true
+                        'suggestions',
                     );
                 }
             }
@@ -357,14 +458,14 @@ function output_thumbnail(string $proxy, string $videoId)
 function output_feed(
     string $path,
     string $api,
-    array  $get,
-    array  $modeTitles = [
-        'all' => 'YouTube',
+    array $get,
+    array $modeTitles = [
+        'feed' => 'YouTube Feed',
+        'suggestions' => 'YouTube Empfehlungen',
         'shorts' => 'YouTube Shorts',
         'subscriptions' => 'YouTube Abos',
     ]
-)
-{
+) {
     $authToken = $get['authToken'] ?? basename($path) ?: '';
     $channels = $get['channels'] ?? '';
     $mode = $get['mode'] ?? DEFAULT_MODE;
@@ -411,6 +512,9 @@ function resource_exists(string $url): bool
 function output_help()
 {
     $host = $_SERVER['HTTP_HOST'];
+    $pathOpml = PATH_OPML;
+    $pathPlaylist = PATH_PLAYLIST;
+    $pathChannel = PATH_CHANNEL;
     echo <<<HTML
 <html lang="de">
 <head>
@@ -552,7 +656,7 @@ function output_help()
                   if (!authToken) {
                       return '';
                   }
-                  return `http://$host/opml/\${authToken}`;
+                  return `http://$host$pathOpml/\${authToken}`;
             })
     </script>
   </section>
@@ -576,7 +680,7 @@ function output_help()
                   if (!id) {
                       return '';
                   }
-                  return `http://$host/playlist/\${id}`;
+                  return `http://$host$pathPlaylist/\${id}`;
             })
     </script>
   </section>
@@ -600,9 +704,13 @@ function output_help()
                   if (!id) {
                       return '';
                   }
-                  return `http://$host/channel/\${id}`;
+                  return `http://$host$pathChannel/\${id}`;
             })
     </script>
+  </section>
+  <section>
+    <h3>Apple Kurzbefehl</h3>
+    <a href="https://www.icloud.com/shortcuts/6145d22a61724a538005f02a5b32b04f">Von iCloud hinzufügen</a>
   </section>
 </body>
 </html>
@@ -687,7 +795,6 @@ XML;
                 $this->uploaderFeedUrl = htmlentities($uploaderFeedUrl);
                 return $this;
             }
-
 
 
             /**
@@ -882,7 +989,6 @@ XML;
                 $this->author = htmlentities($author);
                 return $this;
             }
-
 
 
             /**
