@@ -341,15 +341,7 @@ function output_feed(
     $channel->setItems(fetch_items($videos, $limit, $api, $format, $quality, $frontend, $mode));
 
     header('content-type: application/xml');
-    echo <<<XML
-<?xml version="1.0" encoding="UTF-8" ?>
- <rss version="2.0" 
- xmlns:podcast="https://podcastindex.org/namespace/1.0" 
- xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" 
- xmlns:content="http://purl.org/rss/1.0/modules/content/">
-  $channel   
- </rss>
-XML;
+    echo new Rss($channel);
 }
 
 function resource_exists(string $url): bool
