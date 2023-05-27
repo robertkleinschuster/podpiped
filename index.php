@@ -15,6 +15,12 @@ const PATH_SHORTCUT = '/shortcut';
 const PATH_THUMB = '/thumb';
 const PATH_CHAPTERS = '/chapters';
 
+ini_set('output_buffering', 'Off');
+ini_set('zlib.output_compression', 'Off');
+header('X-Accel-Buffering: no');
+header("Cache-Control: no-cache, must-revalidate");
+header('Surrogate-Control: BigPipe/1.0');
+
 spl_autoload_register('classes');
 
 if (($_GET['clearcache'] ?? '') === '1' || ($_SERVER['HTTP_CACHE_CONTROL'] ?? '') === 'no-cache') {
@@ -184,6 +190,9 @@ function output_playlist(
     string $frontend,
     string $mode
 ): void {
+    header('content-type: application/xml');
+    flush();
+
     $data = fetch("$api/playlists/$playlistId");
     $channel = new Channel();
     $channel->setTitle($data['uploader'] . ': ' . $data['name']);
@@ -201,7 +210,6 @@ function output_playlist(
     $channel->setFrontend(url("/playlist?list=$playlistId", $frontend));
     $channel->setItems(fetch_items($data['relatedStreams'], $limit, $api, $format, $quality, $frontend, $mode));
 
-    header('content-type: application/xml');
     echo new Rss($channel);
 }
 
@@ -214,6 +222,9 @@ function output_channel(
     string $frontend,
     string $mode
 ): void {
+    header('content-type: application/xml');
+    flush();
+
     $data = fetch("$api/channel/$channelId");
     $channel = new Channel();
     $channel->setTitle($data['name']);
@@ -232,7 +243,6 @@ function output_channel(
     $channel->setFrontend(url("/channel/$channelId", $frontend));
     $channel->setItems(fetch_items($data['relatedStreams'], $limit, $api, $format, $quality, $frontend, $mode));
 
-    header('content-type: application/xml');
     echo new Rss($channel);
 }
 
@@ -252,6 +262,13 @@ function fetch_items(
         if (count($videoIds) + 1 > $limit || $mode === 'suggestions' && $i >= SUGGESTIONS) {
             break;
         }
+        $isShort = (bool)($video['isShort'] ?? false);
+        if ($isShort && $mode !== 'shorts' || $mode === 'shorts' && !$isShort) {
+            continue;
+        }
+        if ($mode === 'suggestions' && ((int)($video['views'] ?? 0) < SUGGESTION_MIN_VIEWS)) {
+            continue;
+        }
         if (isset($video['url'])) {
             parse_str(parse_url($video['url'], PHP_URL_QUERY), $params);
             if (isset($params['v'])) {
@@ -260,25 +277,22 @@ function fetch_items(
                     continue;
                 }
                 $streamUrl = "/streams/$videoId";
-                $isShort = (bool)$video['isShort'];
-                if ($isShort && $mode !== 'shorts' || $mode === 'shorts' && !$isShort) {
-                    continue;
-                }
-                if ($mode === 'suggestions' && ((int)$video['views'] < SUGGESTION_MIN_VIEWS)) {
-                    continue;
-                }
-
                 if (function_exists('apcu_entry')) {
-                    $streamData = apcu_entry($api . $streamUrl, fn() => fetch($api . $streamUrl), 3600);
+                    $streamData = apcu_entry($api . $streamUrl, fn() => fetch($api . $streamUrl));
+                    $fileInfo = apcu_entry(
+                        $videoId . $format . $quality,
+                        fn() => find_video_file($streamData, $format, $quality),
+                        60
+                    );
                 } else {
                     $streamData = fetch($api . $streamUrl);
+                    $fileInfo = find_video_file($streamData, $format, $quality);
                 }
 
-                $fileInfo = find_video_file($streamData, $format, $quality);
                 if (empty($fileInfo)) {
                     continue;
                 }
-                $videoIds[$videoId] = true;
+
                 if ($isShort) {
                     $episodeType = 'trailer';
                 } elseif ($mode === 'suggestions') {
@@ -290,10 +304,10 @@ function fetch_items(
                 $id = basename($video['uploaderUrl'] ?? '');
                 $uploaderFeed = url(PATH_CHANNEL . "/$id");
 
-                $uploaderName = $video['uploaderName'];
-                $views = format_count($streamData['views']);
-                $likes = format_count($streamData['likes']);
-                $subscribers = format_count($streamData['uploaderSubscriberCount']);
+                $uploaderName = $video['uploaderName'] ?? '';
+                $views = format_count($video['views'] ?? 0);
+                $likes = format_count($streamData['likes'] ?? 0);
+                $subscribers = format_count($streamData['uploaderSubscriberCount'] ?? 0);
 
                 $item = new Item();
                 $item->setTitle($video['title']);
@@ -312,14 +326,13 @@ function fetch_items(
                 $item->setUrl($frontend . $video['url']);
                 $item->setVideoUrl($fileInfo['url']);
                 $item->setVideoId($videoId);
-                $item->setSize((string)intval((int)$video['duration'] * (int)$fileInfo['bitrate'] / 8));
+               # $item->setSize((string)intval((int)$video['duration'] * (int)$fileInfo['bitrate'] / 8));
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
 
                 $items .= $item;
+                $videoIds[$videoId] = true;
 
-                if ($mode === 'feed'
-                    && isset($streamData['relatedStreams'])
-                    && is_array($streamData['relatedStreams'])) {
+                if ($mode === 'feed' && isset($streamData['relatedStreams'])) {
                     $items .= fetch_items(
                         $streamData['relatedStreams'],
                         $limit,
@@ -392,7 +405,7 @@ function url(string $path, string $host = null): string
 
 function format_count($value): string
 {
-    $value = intval($value);
+    $value = (int)$value;
     if ($value > 1000000) {
         return number_format(round($value / 1000000, 1), 1, ',', '.') . ' Mio.';
     } else {
@@ -487,14 +500,20 @@ function output_feed(
     $channel->setCover($get['cover'] ?? url('/feed.jpg'));
     $channel->setFrontend(url('/feed', $frontend));
     $channel->setFeedUrl($api . $feedUrl);
-    $videos = fetch($api . $feedUrl);
+    if (function_exists('apcu_entry')) {
+        $videos = apcu_entry($api . $feedUrl, fn() => fetch($api . $feedUrl), 3600);
+    } else {
+        $videos = fetch($api . $feedUrl);
+    }
     if (empty($videos)) {
         http_response_code(404);
         return;
     }
+    header('content-type: application/xml');
+    flush();
+
     $channel->setItems(fetch_items($videos, $limit, $api, $format, $quality, $frontend, $mode));
 
-    header('content-type: application/xml');
     echo new Rss($channel);
 }
 
@@ -759,10 +778,10 @@ XML;
             private string $chaptersUrl = '';
             private string $uploaderName = '';
             private string $uploaderFeedUrl = '';
-            private string $date;
-            private string $videoId;
-            private string $videoUrl;
-            private string $size;
+            private string $date = '';
+            private string $videoId = '';
+            private string $videoUrl = '';
+            private string $size = '';
             private string $mimeType;
             private string $url = '';
 
