@@ -740,7 +740,7 @@ XML;
              */
             public function setAuthor(string $author): Channel
             {
-                $this->author = $author;
+                $this->author = htmlentities($author);
                 return $this;
             }
 
