@@ -65,15 +65,18 @@ function main(array $server, array $get): void
 function output_playlist(string $playlistId, int $limit, string $api, string $format, string $quality, string $frontend, string $mode): void
 {
 
-    $playlist = fetch("$api/playlists/$playlistId");
+    $data = fetch("$api/playlists/$playlistId");
     $channel = new Channel();
-    $channel->setTitle($playlist['name']);
-    $channel->setCover($playlist['uploaderAvatar'] ?? url('/logo.jpg'));
-    $channel->setDescription($playlist['description'] ?? '');
+    $channel->setTitle($data['uploader'] . ': ' . $data['name']);
+    if (isset($data['uploaderAvatar'])) {
+        $data['uploaderAvatar'] = str_replace('s48-c-k-c0x00ffffff-no-rw', 's1000-c-k-c0x00ffffff-no-rw', $data['uploaderAvatar']);
+    }
+    $channel->setCover($data['uploaderAvatar'] ?? url('/logo.jpg'));
+    $channel->setDescription($data['description'] ?? '');
     $channel->setLanguage('en');
-    $channel->setAuthor($playlist['uploader'] ?? '');
+    $channel->setAuthor($data['uploader'] ?? '');
     $channel->setFrontend(url("/playlist?list=$playlistId", $frontend));
-    $channel->setItems(fetch_items($playlist['relatedStreams'], $limit, $api, $format, $quality, $frontend, $mode));
+    $channel->setItems(fetch_items($data['relatedStreams'], $limit, $api, $format, $quality, $frontend, $mode));
 
     header('content-type: application/xml');
     echo new Rss($channel);
@@ -85,6 +88,11 @@ function output_channel(string $channelId, int $limit, string $api, string $form
     $data = fetch("$api/channel/$channelId");
     $channel = new Channel();
     $channel->setTitle($data['name']);
+
+    if (isset($data['avatarUrl'])) {
+        $data['avatarUrl'] = str_replace('s48-c-k-c0x00ffffff-no-rw', 's1000-c-k-c0x00ffffff-no-rw', $data['avatarUrl']);
+    }
+
     $channel->setCover($data['avatarUrl'] ?? url('/logo.jpg'));
     $channel->setDescription($data['description'] ?? '');
     $channel->setLanguage('en');
