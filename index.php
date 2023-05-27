@@ -54,12 +54,51 @@ function main(array $server, array $get): void
         return;
     }
 
+    if (strpos($path, '/opml') === 0) {
+        $authToken = $get['authToken'] ?? basename($path);
+        output_opml($authToken, $api, $frontend);
+        return;
+    }
+
     if (!trim($path, '/')) {
         output_help();
         return;
     }
-    
+
     output_feed($path, $api, $get);
+}
+
+function output_opml(string $authToken, string $api, string $frontend): void
+{
+    $data = fetch("$api/subscriptions", ["Authorization: $authToken"]);
+
+    header('content-type: application/xml');
+
+    echo <<<EOL
+<?xml version="1.0"?>
+<opml version="1.0">
+    <head>
+        <title>YouTube Subscriptions</title>
+    </head>
+    <body>
+EOL;
+
+    foreach ($data as $datum) {
+        $title = $datum['name'];
+        $id = basename($datum['url']);
+        $xmlUrl = url("/channel/$id");
+        $htmlUrl = url("/channel/$id", $frontend);
+
+        echo <<<XML
+        <outline type="rss" title="$title" xmlUrl="$xmlUrl" htmlUrl="$htmlUrl"/>
+XML;
+    }
+
+    echo <<<EOL
+    </body>
+</opml>
+EOL;
+
 }
 
 function output_playlist(string $playlistId, int $limit, string $api, string $format, string $quality, string $frontend, string $mode): void
@@ -214,7 +253,7 @@ function find_video_file(array $streamData, string $format, string $quality): ar
     return [];
 }
 
-function fetch(string $url): array
+function fetch(string $url, array $header = null): array
 {
     $ch = curl_init();
 
@@ -224,6 +263,10 @@ function fetch(string $url): array
         CURLOPT_SSH_COMPRESSION => true,
         CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'],
     ]);
+
+    if ($header) {
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+    }
 
     $response = curl_exec($ch);
     curl_close($ch);
@@ -482,6 +525,18 @@ function output_help()
                       return '';
                   }
                   return `http://$host/\${authToken}`;
+            })
+    </script>
+    <pre id="opml"></pre>
+    <p>OPML-URL <button onclick="clipboard('opml')">📋 kopieren</button></p>
+    <script>
+            handle('feed_url', 'opml', function(input) {
+                  const url = new URL(input);
+                  const authToken = url.searchParams.get('authToken');
+                  if (!authToken) {
+                      return '';
+                  }
+                  return `http://$host/opml/\${authToken}`;
             })
     </script>
   </section>
