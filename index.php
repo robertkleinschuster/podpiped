@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 const DEFAULT_LIMIT = 300;
 const DEFAULT_QUALITY = '720p';
-const DEFAULT_MODE = 'feed';
+const DEFAULT_MODE = 'subscriptions';
 const SUGGESTIONS = 2;
 const SUGGESTION_MIN_VIEWS = 10000;
+
+const SHORTCUT_LINK = 'https://www.icloud.com/shortcuts/092ac2d1f1b54b45b7ba86feab3c3667';
+const SHORTCUT_FILE = '/Podcast aus YoutTube-Link V2.shortcut';
 
 const PATH_CHANNEL = '/channel';
 const PATH_PLAYLIST = '/playlist';
 const PATH_OPML = '/opml';
+const PATH_SUGGESTIONS = '/suggestions';
 const PATH_SHORTCUT = '/shortcut';
 const PATH_THUMB = '/thumb';
 const PATH_CHAPTERS = '/chapters';
@@ -75,7 +79,7 @@ function main(array $server, array $get): void
     }
 
     if (strpos($path, PATH_SHORTCUT) === 0) {
-        handle_shortcut($api, $path, $_GET['payload'] ?? null);
+        handle_shortcut($api, $path, $_GET['version'] ?? '1', $_GET['payload'] ?? null);
         return;
     }
 
@@ -84,10 +88,17 @@ function main(array $server, array $get): void
         return;
     }
 
+    if (strpos($path, PATH_SUGGESTIONS) === 0) {
+        $authToken = $get['authToken'] ?? basename($path);
+        $get['mode'] = 'suggestions';
+        output_feed($authToken, $api, $get);
+        return;
+    }
+
     output_feed($path, $api, $get);
 }
 
-function handle_shortcut(string $api, string $path, string $payload = null)
+function handle_shortcut(string $api, string $path, string $version, string $payload = null)
 {
     header('Content-Type: application/json');
 
@@ -112,9 +123,22 @@ function handle_shortcut(string $api, string $path, string $payload = null)
             echo json_encode(['podcast' => url(PATH_PLAYLIST . "/$id")]);
             return;
         }
-
+        if ($mode === 'piped_feed_suggestions') {
+            echo json_encode(['podcast' => url(PATH_SUGGESTIONS . "/$id")]);
+            return;
+        }
         if ($mode === 'piped_feed') {
             echo json_encode(['podcast' => url("/$id")]);
+            return;
+        }
+        if ($mode === 'subscriptions') {
+            $data = fetch("$api/subscriptions", ["Authorization: $id"]);
+            $podcasts = [];
+            foreach ($data as $datum) {
+                $id = basename($datum['url']);
+                $podcasts[] = url(PATH_CHANNEL . "/$id");
+            }
+            echo json_encode(['podcast_list' => $podcasts]);
             return;
         }
     }
@@ -131,19 +155,23 @@ function handle_shortcut(string $api, string $path, string $payload = null)
     $menu = [];
 
     if ($urlPath === '/watch' && isset($urlParams['v'])) {
-        $menu['Kanal als Podcast hinzufügen'] = 'channel_by_video:' . $urlParams['v'];
+        $menu['Kanal hinzufügen'] = 'channel_by_video:' . $urlParams['v'];
     }
 
     if ($urlPath === '/feed/unauthenticated/rss' && isset($urlParams['channels'])) {
-        $menu['Kanal als Podcast hinzufügen'] = 'channel:' . $urlParams['channels'];
+        $menu['Kanal hinzufügen'] = 'channel:' . $urlParams['channels'];
     }
 
     if ($urlPath === '/feed/rss' && isset($urlParams['authToken'])) {
-        $menu['Feed als Podcast hinzufügen'] = 'piped_feed:' . $urlParams['authToken'];
+        $menu['Aggregierten Abo-Feed hinzufügen'] = 'piped_feed:' . $urlParams['authToken'];
+        $menu['Empfehlungen hinzufügen'] = 'piped_feed_suggestions:' . $urlParams['authToken'];
+        if ($version == '2') {
+            $menu['Alle abbonierten Kanäle hinzufügen'] = 'subscriptions:' . $urlParams['authToken'];
+        }
     }
 
     if (in_array($urlPath, ['/playlist', '/watch']) && isset($urlParams['list'])) {
-        $menu['Playlist als Podcast hinzufügen '] = 'playlist:' . $urlParams['list'];
+        $menu['Playlist hinzufügen '] = 'playlist:' . $urlParams['list'];
     }
 
     echo json_encode(['menu' => $menu]);
@@ -260,14 +288,17 @@ function fetch_items(
     $items = '';
     $count = 1;
     foreach ($videos as $video) {
-        if (count($videoIds) + 1 > $limit || $mode === 'suggestions' && $count >= SUGGESTIONS) {
+        if (count($videoIds) + 1 > $limit || $mode === 'suggestion_items' && $count >= SUGGESTIONS) {
             break;
+        }
+        if ($video['type'] !== 'stream') {
+            continue;
         }
         $isShort = (bool)($video['isShort'] ?? false);
         if ($isShort && $mode !== 'shorts' || $mode === 'shorts' && !$isShort) {
             continue;
         }
-        if ($mode === 'suggestions' && ((int)($video['views'] ?? 0) < SUGGESTION_MIN_VIEWS)) {
+        if ($mode === 'feed' && ((int)($video['views'] ?? 0) < SUGGESTION_MIN_VIEWS)) {
             continue;
         }
         if (isset($video['url'])) {
@@ -293,48 +324,49 @@ function fetch_items(
                 if (empty($fileInfo)) {
                     continue;
                 }
+                if ($mode !== 'suggestions') {
+                    if ($isShort) {
+                        $episodeType = 'trailer';
+                    } elseif ($mode === 'suggestion_items') {
+                        $episodeType = 'bonus';
+                    } else {
+                        $episodeType = 'full';
+                    }
 
-                if ($isShort) {
-                    $episodeType = 'trailer';
-                } elseif ($mode === 'suggestions') {
-                    $episodeType = 'bonus';
-                } else {
-                    $episodeType = 'full';
+                    $id = basename($video['uploaderUrl'] ?? '');
+                    $uploaderFeed = url(PATH_CHANNEL . "/$id");
+
+                    $uploaderName = $video['uploaderName'] ?? '';
+                    $views = format_count($streamData['views'] ?? 0);
+                    $likes = format_count($streamData['likes'] ?? 0);
+                    $subscribers = format_count($streamData['uploaderSubscriberCount'] ?? 0);
+
+                    $item = new Item();
+                    $item->setTitle($video['title']);
+                    $item->setEpisodeType($episodeType);
+                    $item->setSummary(
+                        "👤$uploaderName<br>$subscribers&nbsp;Abos | $views&nbsp;Aufr.&nbsp; | $likes&nbsp;Likes"
+                    );
+                    $item->setUploaderUrl(url($video['uploaderUrl'], $frontend));
+                    $item->setUploaderFeedUrl($uploaderFeed);
+                    $item->setDescription($streamData['description']);
+                    $item->setThumbnail(url(PATH_THUMB . "/$videoId.jpg"));
+                    $item->setDuration((string)(int)$video['duration']);
+                    $item->setChaptersUrl(url(PATH_CHAPTERS . "/$videoId.json"));
+                    $item->setUploaderName($uploaderName);
+                    $item->setDate(date(DATE_RFC2822, intval($video['uploaded'] / 1000)));
+                    $item->setUrl($frontend . $video['url']);
+                    $item->setVideoUrl($fileInfo['url']);
+                    $item->setVideoId($videoId);
+                    $item->setSize((string)intval((int)$video['duration'] * (int)$fileInfo['bitrate'] / 8));
+                    $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
+
+                    $videoIds[$videoId] = true;
+                    $count++;
+                    $items .= $item;
                 }
 
-                $id = basename($video['uploaderUrl'] ?? '');
-                $uploaderFeed = url(PATH_CHANNEL . "/$id");
-
-                $uploaderName = $video['uploaderName'] ?? '';
-                $views = format_count($streamData['views'] ?? 0);
-                $likes = format_count($streamData['likes'] ?? 0);
-                $subscribers = format_count($streamData['uploaderSubscriberCount'] ?? 0);
-
-                $item = new Item();
-                $item->setTitle($video['title']);
-                $item->setEpisodeType($episodeType);
-                $item->setSummary(
-                    "👤$uploaderName<br>$subscribers&nbsp;Abos | $views&nbsp;Aufr.&nbsp; | $likes&nbsp;Likes"
-                );
-                $item->setUploaderUrl(url($video['uploaderUrl'], $frontend));
-                $item->setUploaderFeedUrl($uploaderFeed);
-                $item->setDescription($streamData['description']);
-                $item->setThumbnail(url(PATH_THUMB . "/$videoId.jpg"));
-                $item->setDuration((string)(int)$video['duration']);
-                $item->setChaptersUrl(url(PATH_CHAPTERS . "/$videoId.json"));
-                $item->setUploaderName($uploaderName);
-                $item->setDate(date(DATE_RFC2822, intval($video['uploaded'] / 1000)));
-                $item->setUrl($frontend . $video['url']);
-                $item->setVideoUrl($fileInfo['url']);
-                $item->setVideoId($videoId);
-                $item->setSize((string)intval((int)$video['duration'] * (int)$fileInfo['bitrate'] / 8));
-                $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
-
-                $items .= $item;
-                $videoIds[$videoId] = true;
-                $count++;
-
-                if ($mode === 'feed' && isset($streamData['relatedStreams'])) {
+                if (in_array($mode, ['suggestions', 'feed']) && isset($streamData['relatedStreams'])) {
                     $items .= fetch_items(
                         $streamData['relatedStreams'],
                         $limit,
@@ -342,7 +374,7 @@ function fetch_items(
                         $format,
                         $quality,
                         $frontend,
-                        'suggestions',
+                        'suggestion_items',
                     );
                 }
             }
@@ -536,6 +568,9 @@ function output_help()
     $pathOpml = PATH_OPML;
     $pathPlaylist = PATH_PLAYLIST;
     $pathChannel = PATH_CHANNEL;
+    $pathSuggestions = PATH_SUGGESTIONS;
+    $shortcutIcloud = SHORTCUT_LINK;
+    $shortcutFile = SHORTCUT_FILE;
     echo <<<HTML
 <html lang="de">
 <head>
@@ -556,13 +591,40 @@ function output_help()
         }
         html, body {
            font-family: sans-serif;
+           background: #f5f5f5;
+           margin: 0;
+           padding: 0;
         }  
+        header {
+            margin: 1rem;
+        }
+        section {
+            padding: 1rem;
+            margin: 1rem;
+            background: white;
+            border-radius: .25rem;
+            box-shadow: 0 0 15px rgba(117,117,117,0.5);
+        }
+        h3 {
+            margin-top: 0;
+        }
+        label {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .25rem;
+            align-items: center;
+        }
+        label span {
+            flex: 1 0 100%
+        }
+        label input {
+            flex-grow: 1;
+        }
         input {
-            width: 100%;
             padding: .25rem;
-            margin-top: .25rem;
             border-radius: .25rem;
             border: 1px solid grey;
+            font-size: 14px;
         }
         pre {
             padding: .25rem;
@@ -573,7 +635,7 @@ function output_help()
         pre:empty {
             display: none;
         }
-        pre:empty ~ p {
+        pre:empty ~ * {
             display: none;
         }
         button {
@@ -586,7 +648,11 @@ function output_help()
             text-decoration: underline;
         }
         button[type=reset] {
-            background: red;
+            background: none;
+            border: 1px solid red;
+            color: black;
+            padding: .25rem;
+            font-size: 12px;
         }
     </style>
     <script>
@@ -647,17 +713,27 @@ function output_help()
     </script>
 </head>
 <body>
-  <h1>PodPiped</h1>
-  <h2>YouTube als Podcasts</h2>
-  <p>Umwandeln von Piped-URLs in Podcast-URLs.</p>
+  <header>
+    <h1>PodPiped</h1>
+    <h2>YouTube als Podcasts</h2>
+    <p>Umwandeln von Piped-URLs in Podcast-URLs.</p>
+  </header>
+  <section>
+    <h3>Apple Kurzbefehl</h3>
+    <a href="$shortcutIcloud">Von iCloud hinzufügen</a>
+    <br>
+    <br>
+    <a href="$shortcutFile">Von Datei hinzufügen</a>
+  </section>
   <section>
     <h3>Abos</h3>
     <label>
-        Piped Feed URL
+        <span>Piped Feed URL</span>
         <input type="url" id="feed_url" placeholder="hier einfügen...">   
+        <button type="reset" onclick="reset('feed_url')">❌ löschen</button>
     </label>
     <pre id="feed_podcast"></pre>
-    <p>Podcast-URL <button onclick="clipboard('feed_podcast')">📋 kopieren</button> <button type="reset" onclick="reset('feed_url')">löschen</button></p>
+    <p>Abos Podcast-URL <button onclick="clipboard('feed_podcast')">📋 kopieren</button></p>
     <script>
             handle('feed_url', 'feed_podcast', function(input) {
                   const url = new URL(input);
@@ -668,6 +744,9 @@ function output_help()
                   return `http://$host/\${authToken}`;
             })
     </script>
+    <hr>
+    <h4>OPML</h4>
+    <p>Mithilfe des OPML-Feed können alle deine abbonierten Kanäle als dedizierte Podcasts in Apps wie "Pocket Casts" importiert werden.</p>
     <pre id="opml"></pre>
     <p>OPML-URL <button onclick="clipboard('opml')">📋 kopieren</button></p>
     <script>
@@ -680,15 +759,31 @@ function output_help()
                   return `http://$host$pathOpml/\${authToken}`;
             })
     </script>
+    <hr>
+    <h4>Empfehlungen</h4>
+    <p>Podcast mit Empfehlungen zu den von dir abbonierten Kanälen.</p>
+    <pre id="feed_podcast_suggestions"></pre>
+    <p>Empfehlungen Podcast-URL <button onclick="clipboard('feed_podcast_suggestions')">📋 kopieren</button></p>
+    <script>
+            handle('feed_url', 'feed_podcast_suggestions', function(input) {
+                  const url = new URL(input);
+                  const authToken = url.searchParams.get('authToken');
+                  if (!authToken) {
+                      return '';
+                  }
+                  return `http://$host$pathSuggestions/\${authToken}`;
+            })
+    </script>
   </section>
   <section>
     <h3>Playlist</h3>
     <label>
-        Piped Playlist URL
+        <span>Piped Playlist URL</span>
         <input type="url" id="playlist_url" placeholder="hier einfügen...">   
+        <button type="reset" onclick="reset('playlist_url')">❌ löschen</button>
     </label>
     <pre id="playlist_podcast"></pre>
-    <p>Podcast-URL <button onclick="clipboard('playlist_podcast')">📋 kopieren</button> <button type="reset" onclick="reset('playlist_url')">löschen</button></p>
+    <p>Podcast-URL <button onclick="clipboard('playlist_podcast')">📋 kopieren</button></p>
     <script>
             handle('playlist_url', 'playlist_podcast', function(input) {
                   const url = new URL(input);
@@ -708,11 +803,12 @@ function output_help()
    <section>
     <h3>Kanal</h3>
     <label>
-        Piped Kanal URL
-        <input type="url" id="channel_url" placeholder="hier einfügen...">   
+        <span>Piped Kanal URL</span>
+        <input type="url" id="channel_url" placeholder="hier einfügen...">
+        <button type="reset" onclick="reset('channel_url')">❌ löschen</button>
     </label>
     <pre id="channel_podcast"></pre>
-    <p>Podcast-URL <button onclick="clipboard('channel_podcast')">📋 kopieren</button> <button type="reset" onclick="reset('channel_url')">löschen</button></p>
+    <p>Podcast-URL <button onclick="clipboard('channel_podcast')">📋 kopieren</button></p>
     <script>
             handle('channel_url', 'channel_podcast', function(input) {
                   const url = new URL(input);
@@ -728,10 +824,6 @@ function output_help()
                   return `http://$host$pathChannel/\${id}`;
             })
     </script>
-  </section>
-  <section>
-    <h3>Apple Kurzbefehl</h3>
-    <a href="https://www.icloud.com/shortcuts/6145d22a61724a538005f02a5b32b04f">Von iCloud hinzufügen</a>
   </section>
 </body>
 </html>
