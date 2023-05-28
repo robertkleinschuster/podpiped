@@ -586,6 +586,8 @@ function output_help()
     <meta name="theme-color" content="#ffffff">
     <title>PodPiped - YouTube als Podcasts</title>
     <meta name="desciption" content="Tool zur umwandlung der Feeds von piped.video zu Podcast RSS-Feeds.">
+    <meta name="og:title" content="PodPiped - YouTube als Podcasts">
+    <meta name="og:desciption" content="Tool zur umwandlung der Feeds von piped.video zu Podcast RSS-Feeds.">
     <style>
         *, *:before, *:after {
             box-sizing: border-box;
