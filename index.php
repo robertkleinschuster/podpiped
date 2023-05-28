@@ -135,8 +135,10 @@ function handle_shortcut(string $api, string $path, string $version, string $pay
             $data = fetch("$api/subscriptions", ["Authorization: $id"]);
             $podcasts = [];
             foreach ($data as $datum) {
-                $id = basename($datum['url']);
-                $podcasts[] = url(PATH_CHANNEL . "/$id");
+                if (is_array($datum)) {
+                    $id = basename($datum['url']);
+                    $podcasts[] = url(PATH_CHANNEL . "/$id");
+                }
             }
             echo json_encode(['podcast_list' => $podcasts]);
             return;
