@@ -585,6 +585,7 @@ function output_help()
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
     <title>PodPiped - YouTube als Podcasts</title>
+    <meta name="desciption" content="Tool zur umwandlung der Feeds von piped.video zu Podcast RSS-Feeds.">
     <style>
         *, *:before, *:after {
             box-sizing: border-box;
