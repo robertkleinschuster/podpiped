@@ -345,6 +345,7 @@ function fetch_items(
 
                     $item = new Item();
                     $item->setTitle($video['title']);
+                    $item->setHls($streamData['hls'] ?? '');
                     $item->setEpisodeType($episodeType);
                     $item->setSummary(
                         "👤$uploaderName<br>$subscribers&nbsp;Abos | $views&nbsp;Aufr.&nbsp; | $likes&nbsp;Likes"
@@ -885,16 +886,28 @@ XML;
             private string $size = '';
             private string $mimeType;
             private string $url = '';
-
+            private string $hls = '';
             /**
              * @param string $title
              * @return Item
              */
             public function setTitle(string $title): Item
             {
-                $this->title = $title;
+                $this->title = htmlentities($title);
                 return $this;
             }
+
+            /**
+             * @param string $hls
+             * @return Item
+             */
+            public function setHls(string $hls): Item
+            {
+                $this->hls = $hls;
+                return $this;
+            }
+
+
 
             /**
              * @param string $episodeType
@@ -1070,6 +1083,9 @@ XML;
     <link>$this->url</link>
     <guid>$this->videoId</guid>
     <enclosure url="$this->videoUrl" length="$this->size" type="$this->mimeType" />   
+    <podcast:alternateEnclosure type="application/x-mpegURL" length="19237" title="$this->title">
+        <podcast:source uri="$this->hls" />
+    </podcast:alternateEnclosure>
 </item>
 XML;
             }
