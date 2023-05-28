@@ -8,8 +8,8 @@ const DEFAULT_MODE = 'subscriptions';
 const SUGGESTIONS = 2;
 const SUGGESTION_MIN_VIEWS = 10000;
 
-const SHORTCUT_LINK = 'https://www.icloud.com/shortcuts/092ac2d1f1b54b45b7ba86feab3c3667';
-const SHORTCUT_FILE = '/Podcast aus YoutTube-Link V2.shortcut';
+const SHORTCUT_LINK = 'https://www.icloud.com/shortcuts/4d649e5897a743b9b221dcd5c0e28903';
+const SHORTCUT_FILE = '/Podcast aus YoutTube-Link V2.1.shortcut';
 
 const PATH_CHANNEL = '/channel';
 const PATH_PLAYLIST = '/playlist';
