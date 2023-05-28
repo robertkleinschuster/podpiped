@@ -1094,7 +1094,7 @@ XML;
     <link>$this->url</link>
     <guid>$this->videoId</guid>
     <enclosure url="$this->videoUrl" length="$this->size" type="$this->mimeType" />   
-    <podcast:alternateEnclosure type="application/x-mpegURL" length="19237" title="$this->title">
+    <podcast:alternateEnclosure type="application/x-mpegURL" length="19237" title="HLS">
         <podcast:source uri="$this->hls" />
     </podcast:alternateEnclosure>
 </item>
