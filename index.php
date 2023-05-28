@@ -41,9 +41,19 @@ function main(array $server, array $get): void
     $path = parse_url($server['REQUEST_URI'], PHP_URL_PATH);
 
     if (strpos($path, PATH_THUMB) === 0) {
-        $videoId = $get['video'] ?? basename($path, '.jpg');
         $proxy = $get['proxy'] ?? 'pipedproxy.kavin.rocks';
-        output_thumbnail($proxy, $videoId);
+
+        if (isset($get['file'])) {
+            $url = $get['file'];
+        } else {
+            $videoId = $get['video'] ?? basename($path, '.jpg');
+            $url = "https://$proxy/vi/$videoId/maxresdefault.jpg?host=i.ytimg.com";
+            if (!resource_exists($url)) {
+                $url = "https://$proxy/vi/$videoId/hqdefault.jpg?host=i.ytimg.com";
+            }
+        }
+
+        output_thumbnail($proxy, $url);
         return;
     }
 
@@ -155,6 +165,7 @@ function handle_shortcut(string $api, string $path, string $version, string $pay
     $urlPath = parse_url($payload, PHP_URL_PATH);
 
     $menu = [];
+    $menu['Abbrechen'] = '';
 
     if ($urlPath === '/watch' && isset($urlParams['v'])) {
         $menu['Kanal hinzufügen'] = 'channel_by_video:' . $urlParams['v'];
@@ -162,6 +173,10 @@ function handle_shortcut(string $api, string $path, string $version, string $pay
 
     if ($urlPath === '/feed/unauthenticated/rss' && isset($urlParams['channels'])) {
         $menu['Kanal hinzufügen'] = 'channel:' . $urlParams['channels'];
+    }
+
+    if (strpos($urlPath,'/channel') === 0 && basename($urlPath) !== 'channel') {
+        $menu['Kanal hinzufügen'] = 'channel:' . basename($urlPath);
     }
 
     if ($urlPath === '/feed/rss' && isset($urlParams['authToken'])) {
@@ -265,6 +280,7 @@ function output_channel(
             's1000-c-k-c0x00ffffff-no-rw',
             $data['avatarUrl']
         );
+        $data['avatarUrl'] = url(PATH_THUMB . '?file=' . urlencode($data['avatarUrl']));
     }
 
     $channel->setCover($data['avatarUrl'] ?? url('/logo.jpg'));
@@ -471,13 +487,8 @@ function output_chapters(string $api, string $videoId)
     echo json_encode($chapters);
 }
 
-function output_thumbnail(string $proxy, string $videoId)
+function output_thumbnail(string $proxy, string $url)
 {
-    $url = "https://$proxy/vi/$videoId/maxresdefault.jpg?host=i.ytimg.com";
-    if (!resource_exists($url)) {
-        $url = "https://$proxy/vi/$videoId/hqdefault.jpg?host=i.ytimg.com";
-    }
-
     $source_image = imagecreatefromwebp($url);
 
     $source_imagex = imagesx($source_image);
