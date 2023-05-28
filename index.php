@@ -717,6 +717,7 @@ function output_help()
     <h1>PodPiped</h1>
     <h2>YouTube als Podcasts</h2>
     <p>Umwandeln von Piped-URLs in Podcast-URLs.</p>
+    <p>Feeds von <a href="https://piped.video/">piped.video</a> werden unterstützt.</p>
   </header>
   <section>
     <h3>Apple Kurzbefehl</h3>
