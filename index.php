@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-const DEFAULT_LIMIT = 300;
+const DEFAULT_LIMIT = 50;
 const DEFAULT_QUALITY = '720p';
 const DEFAULT_MODE = 'subscriptions';
 const SUGGESTIONS = 2;
