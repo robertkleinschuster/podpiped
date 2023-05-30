@@ -386,6 +386,7 @@ function fetch_items(
                 }
 
                 if (in_array($mode, ['suggestions', 'feed']) && isset($streamData['relatedStreams'])) {
+                    $videoIds[$videoId] = true;
                     $items .= fetch_items(
                         $streamData['relatedStreams'],
                         $limit,
