@@ -101,12 +101,67 @@ function main(array $server, array $get): void
 
     if (strpos($path, PATH_SUGGESTIONS) === 0) {
         $authToken = $get['authToken'] ?? basename($path);
-        $get['mode'] = 'suggestions';
-        output_feed($authToken, $api, $get);
+        output_suggestions($authToken, $api, $limit, $format, $quality, $frontend);
         return;
     }
 
     output_feed($path, $api, $get);
+}
+
+function output_suggestions(
+    string $authToken,
+    string $api,
+    int $limit,
+    string $format,
+    string $quality,
+    string $frontend
+) {
+    $subscriptions = array_column(fetch("$api/subscriptions", ["Authorization: $authToken"]), 'url');
+    $feed = fetch("$api/feed?authToken=$authToken");
+    $items = [];
+    foreach ($feed as $video) {
+        parse_str(parse_url($video['url'], PHP_URL_QUERY), $params);
+        if (isset($params['v'])) {
+            $videoId = $params['v'];
+            $streams = fetch("$api/streams/$videoId");
+            $related = $streams['relatedStreams'];
+            $count = 0;
+            foreach ($related as $item) {
+                if (
+                    !in_array($item['uploaderUrl'], $subscriptions)
+                    && ((int)($video['views'] ?? 0) >= SUGGESTION_MIN_VIEWS)
+                ) {
+                    $items[] = $item;
+                    $count++;
+                }
+                if ($count > SUGGESTIONS) {
+                    break;
+                }
+            }
+        }
+        if (count($items) >= $limit) {
+            break;
+        }
+    }
+    if (empty($items)) {
+        http_response_code(404);
+        return;
+    }
+
+    header('content-type: application/xml');
+    flush();
+
+    $channel = new Channel();
+    $channel->setLanguage('en');
+    $channel->setTitle('YouTube Empfehlungen');
+    $channel->setDescription('YouTube RSS-Podcast von ' . $frontend);
+    $channel->setCopyright($get['copyright'] ?? '&copy; YouTube');
+    $channel->setCover(url('/feed.jpg'));
+    $channel->setFrontend(url('/', $frontend));
+    $channel->setFeedUrl($api);
+    $channel->setItems(fetch_items($items, $limit, $api, $format, $quality, $frontend, 'subscriptions'));
+
+    echo new Rss($channel);
 }
 
 function handle_shortcut(string $api, string $path, string $version, string $payload = null)
@@ -176,7 +231,7 @@ function handle_shortcut(string $api, string $path, string $version, string $pay
         $menu['Kanal hinzufügen'] = 'channel:' . $urlParams['channels'];
     }
 
-    if (strpos($urlPath,'/channel') === 0 && basename($urlPath) !== 'channel') {
+    if (strpos($urlPath, '/channel') === 0 && basename($urlPath) !== 'channel') {
         $menu['Kanal hinzufügen'] = 'channel:' . basename($urlPath);
     }
 
@@ -305,9 +360,8 @@ function fetch_items(
     static $videoIds = [];
 
     $items = '';
-    $count = 1;
     foreach ($videos as $video) {
-        if (count($videoIds) + 1 > $limit || $mode === 'suggestion_items' && $count >= SUGGESTIONS) {
+        if (count($videoIds) + 1 > $limit) {
             break;
         }
         if ($video['type'] !== 'stream') {
@@ -315,9 +369,6 @@ function fetch_items(
         }
         $isShort = (bool)($video['isShort'] ?? false);
         if ($isShort && $mode !== 'shorts' || $mode === 'shorts' && !$isShort) {
-            continue;
-        }
-        if ($mode === 'feed' && ((int)($video['views'] ?? 0) < SUGGESTION_MIN_VIEWS)) {
             continue;
         }
         if (isset($video['url'])) {
@@ -343,67 +394,51 @@ function fetch_items(
                 if (empty($fileInfo)) {
                     continue;
                 }
-                if ($mode !== 'suggestions') {
-                    if ($isShort) {
-                        $episodeType = 'trailer';
-                    } elseif ($mode === 'suggestion_items') {
-                        $episodeType = 'bonus';
-                    } else {
-                        $episodeType = 'full';
-                    }
-
-                    $id = basename($video['uploaderUrl'] ?? '');
-                    $uploaderFeed = url(PATH_CHANNEL . "/$id");
-
-                    $uploaderName = $video['uploaderName'] ?? '';
-                    $views = format_count($streamData['views'] ?? 0);
-                    $likes = format_count($streamData['likes'] ?? 0);
-                    $subscribers = format_count($streamData['uploaderSubscriberCount'] ?? 0);
-
-                    $item = new Item();
-                    $item->setTitle($video['title']);
-                    $item->setHls($streamData['hls'] ?? '');
-                    $item->setEpisodeType($episodeType);
-                    $item->setSummary(
-                        "👤$uploaderName<br>$subscribers&nbsp;Abos | $views&nbsp;Aufr.&nbsp; | $likes&nbsp;Likes"
-                    );
-                    $item->setUploaderUrl(url($video['uploaderUrl'], $frontend));
-                    $item->setUploaderFeedUrl($uploaderFeed);
-                    $item->setDescription($streamData['description']);
-                    $item->setThumbnail(url(PATH_THUMB . "/$videoId.jpg"));
-                    $item->setDuration((string)(int)$video['duration']);
-                    $item->setChaptersUrl(url(PATH_CHAPTERS . "/$videoId.json"));
-                    $item->setUploaderName($uploaderName);
-                    if ($video['uploaded'] > 0) {
-                        $item->setDate(date(DATE_RFC2822, intval($video['uploaded'] / 1000)));
-                    } else {
-                        $date = new DateTime($streamData['uploadDate']);
-                        $item->setDate($date->format(DATE_RFC2822));
-                    }
-
-                    $item->setUrl($frontend . $video['url']);
-                    $item->setVideoUrl($fileInfo['url']);
-                    $item->setVideoId($videoId);
-                    $item->setSize((string)intval((int)$video['duration'] * (int)$fileInfo['bitrate'] / 8));
-                    $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
-
-                    $videoIds[$videoId] = true;
-                    $count++;
-                    $items .= $item;
+                if ($isShort) {
+                    $episodeType = 'trailer';
+                } elseif ($mode === 'suggestion_items') {
+                    $episodeType = 'bonus';
+                } else {
+                    $episodeType = 'full';
                 }
 
-                if (in_array($mode, ['suggestions', 'feed']) && isset($streamData['relatedStreams'])) {
-                    $videoIds[$videoId] = true;
-                    $items .= fetch_items(
-                        $streamData['relatedStreams'],
-                        $limit,
-                        $api,
-                        $format,
-                        $quality,
-                        $frontend,
-                        'suggestion_items',
-                    );
+                $id = basename($video['uploaderUrl'] ?? '');
+                $uploaderFeed = url(PATH_CHANNEL . "/$id");
+
+                $uploaderName = $video['uploaderName'] ?? '';
+                $views = format_count($streamData['views'] ?? 0);
+                $likes = format_count($streamData['likes'] ?? 0);
+                $subscribers = format_count($streamData['uploaderSubscriberCount'] ?? 0);
+
+                $item = new Item();
+                $item->setTitle($video['title']);
+                $item->setHls($streamData['hls'] ?? '');
+                $item->setEpisodeType($episodeType);
+                $item->setSummary(
+                    "👤$uploaderName<br>$subscribers&nbsp;Abos | $views&nbsp;Aufr.&nbsp; | $likes&nbsp;Likes"
+                );
+                $item->setUploaderUrl(url($video['uploaderUrl'], $frontend));
+                $item->setUploaderFeedUrl($uploaderFeed);
+                $item->setDescription($streamData['description']);
+                $item->setThumbnail(url(PATH_THUMB . "/$videoId.jpg"));
+                $item->setDuration((string)(int)$video['duration']);
+                $item->setChaptersUrl(url(PATH_CHAPTERS . "/$videoId.json"));
+                $item->setUploaderName($uploaderName);
+                if ($video['uploaded'] > 0) {
+                    $item->setDate(date(DATE_RFC2822, intval($video['uploaded'] / 1000)));
+                } else {
+                    $date = new DateTime($streamData['uploadDate']);
+                    $item->setDate($date->format(DATE_RFC2822));
                 }
+
+                $item->setUrl($frontend . $video['url']);
+                $item->setVideoUrl($fileInfo['url']);
+                $item->setVideoId($videoId);
+                $item->setSize((string)intval((int)$video['duration'] * (int)$fileInfo['bitrate'] / 8));
+                $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
+
+                $videoIds[$videoId] = true;
+                $items .= $item;
             }
         }
     }
@@ -530,7 +565,6 @@ function output_feed(
     array $get,
     array $modeTitles = [
         'feed' => 'YouTube Feed',
-        'suggestions' => 'YouTube Empfehlungen',
         'shorts' => 'YouTube Shorts',
         'subscriptions' => 'YouTube Abos',
     ]
@@ -906,6 +940,7 @@ XML;
             private string $mimeType;
             private string $url = '';
             private string $hls = '';
+
             /**
              * @param string $title
              * @return Item
@@ -925,7 +960,6 @@ XML;
                 $this->hls = $hls;
                 return $this;
             }
-
 
 
             /**
