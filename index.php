@@ -5,6 +5,7 @@ declare(strict_types=1);
 const DEFAULT_LIMIT = 50;
 const DEFAULT_QUALITY = '720p';
 const DEFAULT_MODE = 'subscriptions';
+const USE_APCU = false;
 const SUGGESTIONS = 2;
 const SUGGESTION_MIN_VIEWS = 10000;
 
@@ -327,7 +328,7 @@ function fetch_items(
                     continue;
                 }
                 $streamUrl = "/streams/$videoId";
-                if (function_exists('apcu_entry')) {
+                if (USE_APCU && function_exists('apcu_entry')) {
                     $streamData = apcu_entry($api . $streamUrl, fn() => fetch($api . $streamUrl));
                     $fileInfo = apcu_entry(
                         $videoId . $format . $quality,
@@ -373,7 +374,13 @@ function fetch_items(
                     $item->setDuration((string)(int)$video['duration']);
                     $item->setChaptersUrl(url(PATH_CHAPTERS . "/$videoId.json"));
                     $item->setUploaderName($uploaderName);
-                    $item->setDate(date(DATE_RFC2822, intval($video['uploaded'] / 1000)));
+                    if ($video['uploaded'] > 0) {
+                        $item->setDate(date(DATE_RFC2822, intval($video['uploaded'] / 1000)));
+                    } else {
+                        $date = new DateTime($streamData['uploadDate']);
+                        $item->setDate($date->format(DATE_RFC2822));
+                    }
+
                     $item->setUrl($frontend . $video['url']);
                     $item->setVideoUrl($fileInfo['url']);
                     $item->setVideoId($videoId);
@@ -549,7 +556,7 @@ function output_feed(
     $channel->setCover($get['cover'] ?? url('/feed.jpg'));
     $channel->setFrontend(url('/feed', $frontend));
     $channel->setFeedUrl($api . $feedUrl);
-    if (function_exists('apcu_entry')) {
+    if (USE_APCU && function_exists('apcu_entry')) {
         $videos = apcu_entry($api . $feedUrl, fn() => fetch($api . $feedUrl), 3600);
     } else {
         $videos = fetch($api . $feedUrl);
