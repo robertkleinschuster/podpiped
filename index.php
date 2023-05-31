@@ -746,6 +746,56 @@ function output_help()
     <a href="$shortcutFile">Von Datei hinzufügen</a>
   </section>
   <section>
+    <h3>Kanal</h3>
+    <label>
+        <span>Piped Kanal URL</span>
+        <input type="url" id="channel_url" placeholder="hier einfügen...">
+        <button type="reset" onclick="reset('channel_url')">❌ löschen</button>
+    </label>
+    <pre id="channel_podcast"></pre>
+    <p>Podcast-URL <button onclick="clipboard('channel_podcast')">📋 kopieren</button></p>
+    <script>
+            handle('channel_url', 'channel_podcast', function(input) {
+                  const url = new URL(input);
+                  let id = '';
+                  if (url.searchParams.has('channels')) {
+                      id = url.searchParams.get('channels');
+                  } else {
+                      id = url.pathname.split('/').pop();
+                  }
+                  if (!id) {
+                      return '';
+                  }
+                  return `http://$host$pathChannel/\${id}`;
+            })
+    </script>
+  </section>
+  <section>
+    <h3>Playlist</h3>
+    <label>
+        <span>Piped Playlist URL</span>
+        <input type="url" id="playlist_url" placeholder="hier einfügen...">   
+        <button type="reset" onclick="reset('playlist_url')">❌ löschen</button>
+    </label>
+    <pre id="playlist_podcast"></pre>
+    <p>Podcast-URL <button onclick="clipboard('playlist_podcast')">📋 kopieren</button></p>
+    <script>
+            handle('playlist_url', 'playlist_podcast', function(input) {
+                  const url = new URL(input);
+                  let id = '';
+                  if (url.searchParams.has('list')) {
+                      id = url.searchParams.get('list');
+                  } else {
+                      id = url.pathname.split('/').pop();
+                  }
+                  if (!id) {
+                      return '';
+                  }
+                  return `http://$host$pathPlaylist/\${id}`;
+            })
+    </script>
+  </section>
+  <section>
     <h3>Abos</h3>
     <label>
         <span>Piped Feed URL</span>
@@ -792,56 +842,6 @@ function output_help()
                       return '';
                   }
                   return `http://$host$pathSuggestions/\${authToken}`;
-            })
-    </script>
-  </section>
-  <section>
-    <h3>Playlist</h3>
-    <label>
-        <span>Piped Playlist URL</span>
-        <input type="url" id="playlist_url" placeholder="hier einfügen...">   
-        <button type="reset" onclick="reset('playlist_url')">❌ löschen</button>
-    </label>
-    <pre id="playlist_podcast"></pre>
-    <p>Podcast-URL <button onclick="clipboard('playlist_podcast')">📋 kopieren</button></p>
-    <script>
-            handle('playlist_url', 'playlist_podcast', function(input) {
-                  const url = new URL(input);
-                  let id = '';
-                  if (url.searchParams.has('list')) {
-                      id = url.searchParams.get('list');
-                  } else {
-                      id = url.pathname.split('/').pop();
-                  }
-                  if (!id) {
-                      return '';
-                  }
-                  return `http://$host$pathPlaylist/\${id}`;
-            })
-    </script>
-  </section>
-   <section>
-    <h3>Kanal</h3>
-    <label>
-        <span>Piped Kanal URL</span>
-        <input type="url" id="channel_url" placeholder="hier einfügen...">
-        <button type="reset" onclick="reset('channel_url')">❌ löschen</button>
-    </label>
-    <pre id="channel_podcast"></pre>
-    <p>Podcast-URL <button onclick="clipboard('channel_podcast')">📋 kopieren</button></p>
-    <script>
-            handle('channel_url', 'channel_podcast', function(input) {
-                  const url = new URL(input);
-                  let id = '';
-                  if (url.searchParams.has('channels')) {
-                      id = url.searchParams.get('channels');
-                  } else {
-                      id = url.pathname.split('/').pop();
-                  }
-                  if (!id) {
-                      return '';
-                  }
-                  return `http://$host$pathChannel/\${id}`;
             })
     </script>
   </section>
