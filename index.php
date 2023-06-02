@@ -20,6 +20,7 @@ const PATH_SHORTCUT = '/shortcut';
 const PATH_THUMB = '/thumb';
 const PATH_CHAPTERS = '/chapters';
 
+set_time_limit(60);
 spl_autoload_register('classes');
 
 if (($_GET['clearcache'] ?? '') === '1' || ($_SERVER['HTTP_CACHE_CONTROL'] ?? '') === 'no-cache') {
@@ -105,11 +106,12 @@ function main(array $server, array $get): void
 function output_suggestions(
     string $authToken,
     string $api,
-    int $limit,
+    int    $limit,
     string $format,
     string $quality,
     string $frontend
-) {
+)
+{
     $subscriptions = array_column(fetch("$api/subscriptions", ["Authorization: $authToken"]), 'url');
     $feed = fetch("$api/feed?authToken=$authToken");
     $items = [];
@@ -275,13 +277,14 @@ EOL;
 
 function output_playlist(
     string $playlistId,
-    int $limit,
+    int    $limit,
     string $api,
     string $format,
     string $quality,
     string $frontend,
     string $mode
-): void {
+): void
+{
     header('content-type: application/xml');
     flush();
 
@@ -307,13 +310,14 @@ function output_playlist(
 
 function output_channel(
     string $channelId,
-    int $limit,
+    int    $limit,
     string $api,
     string $format,
     string $quality,
     string $frontend,
     string $mode
-): void {
+): void
+{
     header('content-type: application/xml');
     flush();
 
@@ -340,14 +344,15 @@ function output_channel(
 }
 
 function fetch_items(
-    array $videos,
-    int $limit,
+    array  $videos,
+    int    $limit,
     string $api,
     string $format,
     string $quality,
     string $frontend,
     string $mode
-): string {
+): string
+{
     static $videoIds = [];
 
     $items = '';
@@ -465,6 +470,7 @@ function fetch(string $url, array $header = null): array
         CURLOPT_URL => $url,
         CURLOPT_SSH_COMPRESSION => true,
         CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'],
+        CURLOPT_CONNECTTIMEOUT => 10,
     ]);
 
     if ($header) {
@@ -553,13 +559,14 @@ function output_thumbnail(string $proxy, string $url)
 function output_feed(
     string $path,
     string $api,
-    array $get,
-    array $modeTitles = [
+    array  $get,
+    array  $modeTitles = [
         'feed' => 'YouTube Feed',
         'shorts' => 'YouTube Shorts',
         'subscriptions' => 'YouTube Abos',
     ]
-) {
+)
+{
     $authToken = $get['authToken'] ?? basename($path) ?: '';
     $channels = $get['channels'] ?? '';
     $mode = $get['mode'] ?? DEFAULT_MODE;
@@ -605,6 +612,7 @@ function resource_exists(string $url): bool
         CURLOPT_NOBODY => true,
         CURLOPT_URL => $url,
         CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'],
+        CURLOPT_CONNECTTIMEOUT => 10,
     ]);
     return curl_exec($ch) && 200 == curl_getinfo($ch, CURLINFO_HTTP_CODE);
 }
