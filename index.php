@@ -11,7 +11,7 @@ const PROXY_FALLBACK = 'proxy.piped.yt';
 const DEFAULT_LIMIT = 50;
 const DEFAULT_QUALITY = '720p';
 const DEFAULT_MODE = 'subscriptions';
-const USE_APCU = false;
+const USE_APCU = true;
 const SUGGESTIONS = 2;
 const SUGGESTIONS_SOURCE_LIMIT = 2;
 
@@ -406,9 +406,13 @@ function fetch_items(
                 }
                 $streamUrl = "/streams/$videoId";
                 if (USE_APCU && function_exists('apcu_entry')) {
-                    $streamData = apcu_entry($api . $streamUrl, fn() => fetch($api . $streamUrl));
+                    $streamData = apcu_entry($api . $streamUrl, fn() => fetch($api . $streamUrl), 3600);
                 } else {
                     $streamData = fetch($api . $streamUrl);
+                }
+
+                if (empty($streamData)) {
+                    continue;
                 }
 
                 $fileInfo = find_video_file($streamData, $format, $quality);
