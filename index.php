@@ -513,6 +513,10 @@ function fetch(string $url, array $header = null): array
     if (is_string($response)) {
         $data = @json_decode($response, true);
         if (is_array($data)) {
+            if (isset($data['error'])) {
+                http_send_status(500);
+                exit;
+            }
             return $data;
         }
     }
