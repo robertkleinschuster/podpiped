@@ -514,7 +514,7 @@ function fetch(string $url, array $header = null): array
         $data = @json_decode($response, true);
         if (is_array($data)) {
             if (isset($data['error'])) {
-                http_send_status(500);
+                http_response_code(500);
                 exit;
             }
             return $data;
