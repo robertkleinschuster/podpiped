@@ -7,7 +7,7 @@ const DEFAULT_QUALITY = '720p';
 const DEFAULT_MODE = 'subscriptions';
 const USE_APCU = false;
 const SUGGESTIONS = 2;
-const SUGGESTION_MIN_VIEWS = 10000;
+const SUGGESTIONS_SOURCE_LIMIT = 2;
 
 const SHORTCUT_LINK = 'https://www.icloud.com/shortcuts/4d649e5897a743b9b221dcd5c0e28903';
 const SHORTCUT_FILE = '/Podcast aus YoutTube-Link V2.1.shortcut';
@@ -101,7 +101,7 @@ function main(array $server, array $get): void
 
     if (strpos($path, PATH_SUGGESTIONS) === 0) {
         $authToken = $get['authToken'] ?? basename($path);
-        output_suggestions($authToken, $api, $limit, $format, $quality, $frontend);
+        output_suggestions($authToken, $api, SUGGESTIONS_SOURCE_LIMIT, $format, $quality, $frontend);
         return;
     }
 
@@ -127,10 +127,7 @@ function output_suggestions(
             $related = $streams['relatedStreams'];
             $count = 0;
             foreach ($related as $item) {
-                if (
-                    !in_array($item['uploaderUrl'], $subscriptions)
-                    && ((int)($video['views'] ?? 0) >= SUGGESTION_MIN_VIEWS)
-                ) {
+                if (!in_array($item['uploaderUrl'], $subscriptions)) {
                     $items[] = $item;
                     $count++;
                 }
