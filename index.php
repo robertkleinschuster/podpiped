@@ -260,6 +260,11 @@ function output_opml(string $authToken, string $api, string $frontend): void
 {
     $data = fetch("$api/subscriptions", ["Authorization: $authToken"]);
 
+    if (empty($data)) {
+        http_response_code(404);
+        return;
+    }
+
     header('content-type: application/xml');
 
     echo <<<EOL
@@ -298,10 +303,16 @@ function output_playlist(
     string $mode
 ): void
 {
+    $data = fetch("$api/playlists/$playlistId");
+
+    if (empty($data)) {
+        http_response_code(404);
+        return;
+    }
+
     header('content-type: application/xml');
     flush();
 
-    $data = fetch("$api/playlists/$playlistId");
     $channel = new Channel();
     $channel->setTitle($data['uploader'] . ': ' . $data['name']);
     if (isset($data['uploaderAvatar'])) {
@@ -331,10 +342,16 @@ function output_channel(
     string $mode
 ): void
 {
+    $data = fetch("$api/channel/$channelId");
+
+    if (empty($data)) {
+        http_response_code(404);
+        return;
+    }
+
     header('content-type: application/xml');
     flush();
 
-    $data = fetch("$api/channel/$channelId");
     $channel = new Channel();
     $channel->setTitle($data['name']);
 
@@ -390,15 +407,11 @@ function fetch_items(
                 $streamUrl = "/streams/$videoId";
                 if (USE_APCU && function_exists('apcu_entry')) {
                     $streamData = apcu_entry($api . $streamUrl, fn() => fetch($api . $streamUrl));
-                    $fileInfo = apcu_entry(
-                        $videoId . $format . $quality,
-                        fn() => find_video_file($streamData, $format, $quality),
-                        60
-                    );
                 } else {
                     $streamData = fetch($api . $streamUrl);
-                    $fileInfo = find_video_file($streamData, $format, $quality);
                 }
+
+                $fileInfo = find_video_file($streamData, $format, $quality);
 
                 if (empty($fileInfo)) {
                     continue;
@@ -601,15 +614,13 @@ function output_feed(
     $channel->setCover($get['cover'] ?? url('/feed.jpg'));
     $channel->setFrontend(url('/feed', $frontend));
     $channel->setFeedUrl($api . $feedUrl);
-    if (USE_APCU && function_exists('apcu_entry')) {
-        $videos = apcu_entry($api . $feedUrl, fn() => fetch($api . $feedUrl), 3600);
-    } else {
-        $videos = fetch($api . $feedUrl);
-    }
+    $videos = fetch($api . $feedUrl);
+
     if (empty($videos)) {
         http_response_code(404);
         return;
     }
+
     header('content-type: application/xml');
     flush();
 
