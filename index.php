@@ -20,12 +20,6 @@ const PATH_SHORTCUT = '/shortcut';
 const PATH_THUMB = '/thumb';
 const PATH_CHAPTERS = '/chapters';
 
-ini_set('output_buffering', 'Off');
-ini_set('zlib.output_compression', 'Off');
-header('X-Accel-Buffering: no');
-header("Cache-Control: no-cache, must-revalidate");
-header('Surrogate-Control: BigPipe/1.0');
-
 spl_autoload_register('classes');
 
 if (($_GET['clearcache'] ?? '') === '1' || ($_SERVER['HTTP_CACHE_CONTROL'] ?? '') === 'no-cache') {
