@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+const API = 'pipedapi.kavin.rocks';
+const PROXY = 'pipedproxy.kavin.rocks';
+
+const API_FALLBACK = 'api.piped.yt';
+const PROXY_FALLBACK = 'proxy.piped.yt';
+
 const DEFAULT_LIMIT = 50;
 const DEFAULT_QUALITY = '720p';
 const DEFAULT_MODE = 'subscriptions';
@@ -37,7 +43,11 @@ function main(array $server, array $get): void
     $path = parse_url($server['REQUEST_URI'], PHP_URL_PATH);
 
     if (strpos($path, PATH_THUMB) === 0) {
-        $proxy = $get['proxy'] ?? 'pipedproxy.kavin.rocks';
+        $proxy = $get['proxy'] ?? PROXY;
+
+        if (!resource_exists("https://$proxy")) {
+            $proxy = PROXY_FALLBACK;
+        }
 
         if (isset($get['file'])) {
             $url = $get['file'];
@@ -53,7 +63,10 @@ function main(array $server, array $get): void
         return;
     }
 
-    $api = 'https://' . ($get['api'] ?? "pipedapi.kavin.rocks");
+    $api = 'https://' . ($get['api'] ?? API);
+    if (!resource_exists($api)) {
+        $api = 'https://' . API_FALLBACK;
+    }
 
     if (strpos($path, PATH_CHAPTERS) === 0) {
         $videoId = $get['video'] ?? basename($path, '.json');
@@ -605,14 +618,14 @@ function output_feed(
     echo new Rss($channel);
 }
 
-function resource_exists(string $url): bool
+function resource_exists(string $url, int $timeout = 1): bool
 {
     $ch = curl_init();
     curl_setopt_array($ch, [
         CURLOPT_NOBODY => true,
         CURLOPT_URL => $url,
         CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'],
-        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_CONNECTTIMEOUT => $timeout,
     ]);
     return curl_exec($ch) && 200 == curl_getinfo($ch, CURLINFO_HTTP_CODE);
 }
