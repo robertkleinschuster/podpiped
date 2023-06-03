@@ -9,6 +9,7 @@ const API_FALLBACK = 'api.piped.yt';
 const PROXY_FALLBACK = 'proxy.piped.yt';
 
 const DEFAULT_LIMIT = 50;
+const TIMEOUT = 30;
 const DEFAULT_QUALITY = '720p';
 const DEFAULT_MODE = 'subscriptions';
 const USE_APCU = true;
@@ -26,7 +27,11 @@ const PATH_SHORTCUT = '/shortcut';
 const PATH_THUMB = '/thumb';
 const PATH_CHAPTERS = '/chapters';
 
-set_time_limit(60);
+set_time_limit(TIMEOUT);
+ini_set('max_execution_time', (string)TIMEOUT);
+ini_set('memory_limit', '8M');
+ini_set('post_max_size', '0');
+ini_set('upload_max_filesize', '0');
 spl_autoload_register('classes');
 
 if (($_GET['clearcache'] ?? '') === '1' || ($_SERVER['HTTP_CACHE_CONTROL'] ?? '') === 'no-cache') {
@@ -514,9 +519,9 @@ function fetch(string $url, array $header = null): array
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_URL => $url,
-        CURLOPT_SSH_COMPRESSION => true,
+       # CURLOPT_SSH_COMPRESSION => true,
         CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'],
-        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_CONNECTTIMEOUT => 1,
     ]);
 
     if ($header) {
