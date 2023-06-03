@@ -8,7 +8,7 @@ const PROXY = 'pipedproxy.kavin.rocks';
 const API_FALLBACK = 'api.piped.yt';
 const PROXY_FALLBACK = 'proxy.piped.yt';
 
-const DEFAULT_LIMIT = 50;
+const DEFAULT_LIMIT = 10;
 const TIMEOUT = 30;
 const DEFAULT_QUALITY = '720p';
 const DEFAULT_MODE = 'subscriptions';
@@ -86,7 +86,7 @@ function main(array $server, array $get): void
 
     if (strpos($path, PATH_PLAYLIST) === 0) {
         $playlistId = $get['id'] ?? basename($path);
-        output_playlist($playlistId, $limit, $api, $format, $quality, $frontend, 'subscriptions');
+        output_playlist($playlistId, 100, $api, $format, $quality, $frontend, 'subscriptions');
         return;
     }
 
