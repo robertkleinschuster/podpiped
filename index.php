@@ -405,17 +405,18 @@ function fetch_items(
                     continue;
                 }
                 $streamUrl = "/streams/$videoId";
-                if (USE_APCU && function_exists('apcu_entry')) {
-                    $streamData = apcu_entry($api . $streamUrl, fn() => fetch($api . $streamUrl), 3600);
+
+                if (USE_APCU) {
+                    $streamData = apcu_entry($api . $streamUrl . $format . $quality, fn() => fetch_stream($api, $streamUrl, $format, $quality), mt_rand(86400, 172800));
                 } else {
-                    $streamData = fetch($api . $streamUrl);
+                    $streamData = fetch_stream($api, $streamUrl, $format, $quality);
                 }
 
                 if (empty($streamData)) {
                     continue;
                 }
 
-                $fileInfo = find_video_file($streamData, $format, $quality);
+                $fileInfo = $streamData['fileInfo'];
 
                 if (empty($fileInfo)) {
                     continue;
@@ -489,6 +490,21 @@ function find_video_file(array $streamData, string $format, string $quality): ar
     }
 
     return [];
+}
+
+function fetch_stream(string $api, string $streamUrl, string $format, string $quality): array
+{
+    $streamData = fetch($api . $streamUrl);
+    $fileInfo = find_video_file($streamData, $format, $quality);
+
+    unset($streamData['relatedStreams']);
+    unset($streamData['videoStreams']);
+    unset($streamData['audioStreams']);
+    unset($streamData['previewFrames']);
+
+    $streamData['fileInfo'] = $fileInfo;
+
+    return $streamData;
 }
 
 function fetch(string $url, array $header = null): array
