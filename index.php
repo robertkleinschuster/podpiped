@@ -412,7 +412,7 @@ function fetch_items(
                 $streamUrl = "/streams/$videoId";
 
                 if (USE_APCU) {
-                    $streamData = apcu_entry($api . $streamUrl . $format . $quality, fn() => fetch_stream($api, $streamUrl, $format, $quality), mt_rand(86400, 172800));
+                    $streamData = apcu_entry($api . $streamUrl . $format . $quality, fn() => fetch_stream($api, $streamUrl, $format, $quality), mt_rand(3600, 7200));
                 } else {
                     $streamData = fetch_stream($api, $streamUrl, $format, $quality);
                 }
