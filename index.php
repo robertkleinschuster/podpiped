@@ -1168,7 +1168,6 @@ XML;
 
             public function __toString()
             {
-                $guid = md5($this->videoUrl . $this->videoId);
                 return <<<XML
 <item>
     <title><![CDATA[$this->title]]></title>   
@@ -1187,7 +1186,7 @@ XML;
     <podcast:person><![CDATA[$this->uploaderName]]></podcast:person>
     <pubDate>$this->date</pubDate>
     <link>$this->url</link>
-    <guid>$guid</guid>
+    <guid>$this->videoUrl</guid>
     <enclosure url="$this->videoUrl" length="$this->size" type="$this->mimeType" />   
     <podcast:alternateEnclosure type="application/x-mpegURL" length="19237" title="HLS">
         <podcast:source uri="$this->hls" />
