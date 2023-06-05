@@ -2,14 +2,18 @@
 
 declare(strict_types=1);
 
+global $time;
+$time = time();
+
 const API = 'pipedapi.kavin.rocks';
 const PROXY = 'pipedproxy.kavin.rocks';
 
 const API_FALLBACK = 'api.piped.yt';
 const PROXY_FALLBACK = 'proxy.piped.yt';
 
-const DEFAULT_LIMIT = 10;
-const TIMEOUT = 30;
+const DEFAULT_LIMIT = 30;
+const TIMEOUT = 15;
+const CACHE_TTL = 3600 * 3;
 const DEFAULT_QUALITY = '720p';
 const DEFAULT_MODE = 'subscriptions';
 const USE_APCU = true;
@@ -159,9 +163,6 @@ function output_suggestions(
         return;
     }
 
-    header('content-type: application/xml');
-    flush();
-
     $channel = new Channel();
     $channel->setLanguage('en');
     $channel->setTitle('YouTube Empfehlungen');
@@ -172,6 +173,7 @@ function output_suggestions(
     $channel->setFeedUrl($api);
     $channel->setItems(fetch_items($items, $limit, $api, $format, $quality, $frontend, 'subscriptions'));
 
+    header('content-type: application/xml');
     echo new Rss($channel);
 }
 
@@ -212,7 +214,7 @@ function handle_shortcut(string $api, string $path, string $version, string $pay
             $data = fetch("$api/subscriptions", ["Authorization: $id"]);
             $podcasts = [];
             foreach ($data as $datum) {
-                if (is_array($datum)) {
+                if (is_array($datum) && isset($datum['url'])) {
                     $id = basename($datum['url']);
                     $podcasts[] = url(PATH_CHANNEL . "/$id");
                 }
@@ -315,9 +317,6 @@ function output_playlist(
         return;
     }
 
-    header('content-type: application/xml');
-    flush();
-
     $channel = new Channel();
     $channel->setTitle($data['uploader'] . ': ' . $data['name']);
     if (isset($data['uploaderAvatar'])) {
@@ -334,6 +333,7 @@ function output_playlist(
     $channel->setFrontend(url("/playlist?list=$playlistId", $frontend));
     $channel->setItems(fetch_items($data['relatedStreams'], $limit, $api, $format, $quality, $frontend, $mode));
 
+    header('content-type: application/xml');
     echo new Rss($channel);
 }
 
@@ -354,9 +354,6 @@ function output_channel(
         return;
     }
 
-    header('content-type: application/xml');
-    flush();
-
     $channel = new Channel();
     $channel->setTitle($data['name']);
 
@@ -375,6 +372,7 @@ function output_channel(
     $channel->setFrontend(url("/channel/$channelId", $frontend));
     $channel->setItems(fetch_items($data['relatedStreams'], $limit, $api, $format, $quality, $frontend, $mode));
 
+    header('content-type: application/xml');
     echo new Rss($channel);
 }
 
@@ -389,6 +387,7 @@ function fetch_items(
 ): string
 {
     static $videoIds = [];
+    global $time;
 
     $items = '';
     foreach ($videos as $video) {
@@ -412,7 +411,7 @@ function fetch_items(
                 $streamUrl = "/streams/$videoId";
 
                 if (USE_APCU) {
-                    $streamData = apcu_entry($api . $streamUrl . $format . $quality, fn() => fetch_stream($api, $streamUrl, $format, $quality), mt_rand(3600, 7200));
+                    $streamData = apcu_entry($api . $streamUrl . $format . $quality, fn() => fetch_stream($api, $streamUrl, $format, $quality), CACHE_TTL);
                 } else {
                     $streamData = fetch_stream($api, $streamUrl, $format, $quality);
                 }
@@ -471,6 +470,9 @@ function fetch_items(
 
                 $videoIds[$videoId] = true;
                 $items .= $item;
+                if (time() - $time > TIMEOUT - 5) {
+                    break;
+                }
             }
         }
     }
@@ -650,10 +652,9 @@ function output_feed(
         return;
     }
 
-    header('content-type: application/xml');
-    flush();
-
     $channel->setItems(fetch_items($videos, $limit, $api, $format, $quality, $frontend, $mode));
+
+    header('content-type: application/xml');
 
     echo new Rss($channel);
 }
