@@ -54,12 +54,12 @@ function main(array $server, array $get): void
     if (strpos($path, PATH_THUMB) === 0) {
         $proxy = $get['proxy'] ?? PROXY;
 
-        if (!resource_exists("https://$proxy")) {
+        if (!resource_exists("https://$proxy?host=www.youtube.com")) {
             $proxy = PROXY_FALLBACK;
         }
 
         if (isset($get['file'])) {
-            $url = $get['file'];
+            $url = "https://$proxy{$get['file']}";
         } else {
             $videoId = $get['video'] ?? basename($path, '.jpg');
             $url = "https://$proxy/vi/$videoId/maxresdefault.jpg?host=i.ytimg.com";
@@ -73,7 +73,7 @@ function main(array $server, array $get): void
     }
 
     $api = 'https://' . ($get['api'] ?? API);
-    if (!resource_exists($api)) {
+    if (!resource_exists("$api/trending?region=US")) {
         $api = 'https://' . API_FALLBACK;
     }
 
@@ -320,11 +320,7 @@ function output_playlist(
     $channel = new Channel();
     $channel->setTitle($data['uploader'] . ': ' . $data['name']);
     if (isset($data['uploaderAvatar'])) {
-        $data['uploaderAvatar'] = str_replace(
-            's48-c-k-c0x00ffffff-no-rw',
-            's1000-c-k-c0x00ffffff-no-rw',
-            $data['uploaderAvatar']
-        );
+        $data['uploaderAvatar'] = url_avatar($data['uploaderAvatar']);
     }
     $channel->setCover($data['uploaderAvatar'] ?? url('/playlist.jpg'));
     $channel->setDescription($data['description'] ?? '');
@@ -358,12 +354,7 @@ function output_channel(
     $channel->setTitle($data['name']);
 
     if (isset($data['avatarUrl'])) {
-        $data['avatarUrl'] = str_replace(
-            's48-c-k-c0x00ffffff-no-rw',
-            's1000-c-k-c0x00ffffff-no-rw',
-            $data['avatarUrl']
-        );
-        $data['avatarUrl'] = url(PATH_THUMB . '?file=' . urlencode($data['avatarUrl']));
+        $data['avatarUrl'] = url_avatar($data['avatarUrl']);
     }
 
     $channel->setCover($data['avatarUrl'] ?? url('/logo.jpg'));
@@ -669,6 +660,19 @@ function resource_exists(string $url, int $timeout = 1): bool
         CURLOPT_CONNECTTIMEOUT => $timeout,
     ]);
     return curl_exec($ch) && 200 == curl_getinfo($ch, CURLINFO_HTTP_CODE);
+}
+
+function url_avatar(string $avatarUrl): string
+{
+    $url = parse_url($avatarUrl);
+
+    $path = str_replace(
+        's48-c-k-c0x00ffffff-no-rw',
+        's500-c-k-c0x00ffffff-no-rw',
+        $url['path']
+    );
+
+    return url(PATH_THUMB . '?file=' . urlencode("$path?{$url['query']}"));
 }
 
 function output_help()
@@ -1316,7 +1320,7 @@ XML;
    <itunes:author>$this->author</itunes:author>
    <image>
     <title><![CDATA[$this->title]]></title>
-    <url>$this->title</url>
+    <url>$this->cover</url>
     <link>$this->frontend</link>
    </image>
    <itunes:image href="$this->cover"/>
