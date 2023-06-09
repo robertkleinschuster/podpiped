@@ -20,7 +20,7 @@ const USE_APCU = true;
 const SUGGESTIONS = 2;
 const SUGGESTIONS_SOURCE_LIMIT = 2;
 
-const SHORTCUT_LINK = 'https://www.icloud.com/shortcuts/4d649e5897a743b9b221dcd5c0e28903';
+const SHORTCUT_LINK = 'https://www.icloud.com/shortcuts/e06ffcf132b4407da80d0b78220574f1';
 const SHORTCUT_FILE = '/Podcast aus YouTube-Link.shortcut';
 
 const PATH_CHANNEL = '/channel';
