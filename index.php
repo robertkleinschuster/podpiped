@@ -384,6 +384,7 @@ function output_channel(
     $data = fetch("$api/channel/$channelId");
 
     if (empty($data)) {
+        error_log("Empty channel response $channelId");
         http_response_code(404);
         return;
     }
@@ -527,9 +528,12 @@ function find_video_file(array $streamData, string $format, string $quality): ar
     return [];
 }
 
-function fetch_stream(string $api, string $streamUrl, string $format, string $quality): array
+function fetch_stream(string $api, string $streamUrl, string $format, string $quality): ?array
 {
     $streamData = fetch($api . $streamUrl);
+    if (!is_array($streamData)) {
+        return null;
+    }
     $fileInfo = find_video_file($streamData, $format, $quality);
 
     unset($streamData['relatedStreams']);
@@ -542,7 +546,7 @@ function fetch_stream(string $api, string $streamUrl, string $format, string $qu
     return $streamData;
 }
 
-function fetch(string $url, array $header = null): array
+function fetch(string $url, array $header = null): ?array
 {
     $ch = curl_init();
 
@@ -565,13 +569,13 @@ function fetch(string $url, array $header = null): array
         $data = @json_decode($response, true);
         if (is_array($data)) {
             if (isset($data['error'])) {
-                http_response_code(500);
-                exit;
+                error_log("Error fetching: $url Message: {$data['error']}");
+                return null;
             }
             return $data;
         }
     }
-    return [];
+    return null;
 }
 
 function url(string $path, string $host = null): string
