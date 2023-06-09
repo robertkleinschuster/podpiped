@@ -216,7 +216,12 @@ function handle_shortcut(string $api, string $path, string $version, string $pay
             foreach ($data as $datum) {
                 if (is_array($datum) && isset($datum['url'])) {
                     $id = basename($datum['url']);
-                    $podcasts[] = url(PATH_CHANNEL . "/$id");
+                    if (is_channel_valid($id, $api)) {
+                        $podcasts[] = url(PATH_CHANNEL . "/$id");
+                    }
+                }
+                if (check_timeout()) {
+                    break;
                 }
             }
             echo json_encode(['podcast_list' => $podcasts]);
@@ -263,6 +268,36 @@ function handle_shortcut(string $api, string $path, string $version, string $pay
     echo json_encode(['menu' => $menu]);
 }
 
+function is_channel_valid(string $id, string $api): bool
+{
+    if (USE_APCU) {
+        $data = apcu_entry($api . $id, fn() => fetch("$api/channel/$id"), 180000);
+    } else {
+        $data = fetch("$api/channel/$id");
+    }
+    if (empty($data['relatedStreams'])) {
+        return false;
+    }
+
+    if (count($data['relatedStreams']) === 0) {
+        return false;
+    }
+
+    $count = 0;
+
+    foreach ($data['relatedStreams'] as $stream) {
+        if ($stream['type'] === 'stream' && !$stream['isShort']) {
+            $count++;
+        }
+    }
+
+    if ($count == 0) {
+        return false;
+    }
+
+    return true;
+}
+
 function output_opml(string $authToken, string $api, string $frontend): void
 {
     $data = fetch("$api/subscriptions", ["Authorization: $authToken"]);
@@ -286,6 +321,9 @@ EOL;
     foreach ($data as $datum) {
         $title = $datum['name'];
         $id = basename($datum['url']);
+        if (!is_channel_valid($id, $api)) {
+            continue;
+        }
         $xmlUrl = url(PATH_CHANNEL . "/$id");
         $htmlUrl = url("/channel/$id", $frontend);
 
@@ -378,7 +416,6 @@ function fetch_items(
 ): string
 {
     static $videoIds = [];
-    global $time;
 
     $items = '';
     foreach ($videos as $video) {
@@ -461,7 +498,7 @@ function fetch_items(
 
                 $videoIds[$videoId] = true;
                 $items .= $item;
-                if (time() - $time > TIMEOUT - 5) {
+                if (check_timeout()) {
                     break;
                 }
             }
@@ -512,7 +549,7 @@ function fetch(string $url, array $header = null): array
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_URL => $url,
-       # CURLOPT_SSH_COMPRESSION => true,
+        # CURLOPT_SSH_COMPRESSION => true,
         CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'],
         CURLOPT_CONNECTTIMEOUT => 1,
     ]);
@@ -673,6 +710,12 @@ function url_avatar(string $avatarUrl): string
     );
 
     return url(PATH_THUMB . '?file=' . urlencode("$path?{$url['query']}"));
+}
+
+function check_timeout(): bool
+{
+    global $time;
+    return time() - $time > TIMEOUT - 5;
 }
 
 function output_help()
