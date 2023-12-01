@@ -19,7 +19,7 @@ const PROXY_FALLBACK = 'proxy.piped.yt';
 const DEFAULT_LIMIT = 5;
 const TIMEOUT = 30;
 const CACHE_TTL = 3600;
-const DEFAULT_QUALITY = '720p';
+const DEFAULT_QUALITY = '360p';
 const DEFAULT_MODE = 'subscriptions';
 const USE_APCU = true;
 const SUGGESTIONS = 2;
@@ -505,7 +505,13 @@ function fetch_items(
                 $item->setUrl($frontend . $video['url']);
                 $item->setVideoUrl($fileInfo['url']);
                 $item->setVideoId($videoId);
-                $item->setSize((string)intval((int)$video['duration'] * (int)$fileInfo['bitrate'] / 8));
+
+                if (isset($fileInfo['contentLength']) && $fileInfo['contentLength'] > 0) {
+                    $item->setSize((string) $fileInfo['contentLength']);
+                } else {
+                    $item->setSize("0");
+                }
+
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
 
                 $videoIds[$videoId] = true;
