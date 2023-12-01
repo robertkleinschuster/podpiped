@@ -7,8 +7,9 @@ $time = time();
 
 const API = 'pipedapi.kavin.rocks';
 //const API = 'api-piped.mha.fi';
+//const API = 'pipedapi.r4fo.com';
 
-const STREAM_API = 'https://api-piped.mha.fi';
+const STREAM_API = 'https://pipedapi.r4fo.com';
 
 const PROXY = 'pipedproxy.kavin.rocks';
 
@@ -407,7 +408,7 @@ function output_channel(
     $channel->setDescription($data['description'] ?? '');
     $channel->setLanguage('en');
     $channel->setFrontend(url("/channel/$channelId", $frontend));
-    $channel->setItems(fetch_items($data['relatedStreams'], $limit, $api, $format, $quality, $frontend, $mode));
+    $channel->setItems(fetch_items($data['relatedStreams'], $limit, STREAM_API, $format, $quality, $frontend, $mode));
 
     header('content-type: application/xml');
     echo new Rss($channel);
@@ -424,8 +425,6 @@ function fetch_items(
 ): string
 {
     static $videoIds = [];
-
-    //$api = STREAM_API;
 
     $items = '';
     foreach ($videos as $video) {
