@@ -16,11 +16,11 @@ const API_FALLBACK = 'api.piped.yt';
 const PROXY_FALLBACK = 'proxy.piped.yt';
 
 const DEFAULT_LIMIT = 5;
-const TIMEOUT = 15;
-const CACHE_TTL = 3600 * 3;
+const TIMEOUT = 30;
+const CACHE_TTL = 3600;
 const DEFAULT_QUALITY = '720p';
 const DEFAULT_MODE = 'subscriptions';
-const USE_APCU = false;
+const USE_APCU = true;
 const SUGGESTIONS = 2;
 const SUGGESTIONS_SOURCE_LIMIT = 2;
 
@@ -142,6 +142,9 @@ function output_suggestions(
     $feed = fetch("$api/feed?authToken=$authToken");
     $items = [];
     foreach ($feed as $video) {
+        if (check_timeout()) {
+            break;
+        }
         parse_str(parse_url($video['url'], PHP_URL_QUERY), $params);
         if (isset($params['v'])) {
             $videoId = $params['v'];
@@ -218,14 +221,14 @@ function handle_shortcut(string $api, string $path, string $version, string $pay
             $data = fetch("$api/subscriptions", ["Authorization: $id"]);
             $podcasts = [];
             foreach ($data as $datum) {
+                if (check_timeout()) {
+                    break;
+                }
                 if (is_array($datum) && isset($datum['url'])) {
                     $id = basename($datum['url']);
                     if (is_channel_valid($id, $api)) {
                         $podcasts[] = url(PATH_CHANNEL . "/$id");
                     }
-                }
-                if (check_timeout()) {
-                    break;
                 }
             }
             echo json_encode(['podcast_list' => $podcasts]);
@@ -426,6 +429,9 @@ function fetch_items(
 
     $items = '';
     foreach ($videos as $video) {
+        if (check_timeout()) {
+            break;
+        }
         if (count($videoIds) + 1 > $limit) {
             break;
         }
@@ -505,9 +511,6 @@ function fetch_items(
 
                 $videoIds[$videoId] = true;
                 $items .= $item;
-                if (check_timeout()) {
-                    break;
-                }
             }
         }
     }
