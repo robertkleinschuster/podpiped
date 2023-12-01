@@ -6,17 +6,21 @@ global $time;
 $time = time();
 
 const API = 'pipedapi.kavin.rocks';
+//const API = 'api-piped.mha.fi';
+
+const STREAM_API = 'https://api-piped.mha.fi';
+
 const PROXY = 'pipedproxy.kavin.rocks';
 
 const API_FALLBACK = 'api.piped.yt';
 const PROXY_FALLBACK = 'proxy.piped.yt';
 
-const DEFAULT_LIMIT = 30;
+const DEFAULT_LIMIT = 5;
 const TIMEOUT = 15;
 const CACHE_TTL = 3600 * 3;
 const DEFAULT_QUALITY = '720p';
 const DEFAULT_MODE = 'subscriptions';
-const USE_APCU = true;
+const USE_APCU = false;
 const SUGGESTIONS = 2;
 const SUGGESTIONS_SOURCE_LIMIT = 2;
 
@@ -417,6 +421,8 @@ function fetch_items(
 ): string
 {
     static $videoIds = [];
+
+    //$api = STREAM_API;
 
     $items = '';
     foreach ($videos as $video) {
@@ -1061,7 +1067,7 @@ XML;
              */
             public function setHls(string $hls): Item
             {
-                $this->hls = $hls;
+                $this->hls = htmlentities($hls);
                 return $this;
             }
 
@@ -1240,9 +1246,6 @@ XML;
     <link>$this->url</link>
     <guid>$this->videoId</guid>
     <enclosure url="$this->videoUrl" length="$this->size" type="$this->mimeType" />   
-    <podcast:alternateEnclosure type="application/x-mpegURL" length="19237" title="HLS">
-        <podcast:source uri="$this->hls" />
-    </podcast:alternateEnclosure>
 </item>
 XML;
             }
