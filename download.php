@@ -37,6 +37,7 @@ foreach (glob(__DIR__ . '/videos/*.url') as $urlFile) {
             } else {
                 echo "locked ($age): $lockFile\n";
             }
+            flush();
             continue;
         }
 
@@ -46,10 +47,12 @@ foreach (glob(__DIR__ . '/videos/*.url') as $urlFile) {
 
         if (file_exists($file)) {
             echo "exists: $file\n";
+            flush();
             continue;
         }
 
         echo "download: $urlFile\n";
+        flush();
 
         $fp = fopen($file, 'w+');
 
@@ -81,6 +84,7 @@ foreach (glob(__DIR__ . '/videos/*.url') as $urlFile) {
         } else {
             unlink($file);
         }
+        flush();
     } catch (Throwable $exception) {
         error_log((string)$exception);
         unlink($urlFile);
