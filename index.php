@@ -9,7 +9,8 @@ const API = 'pipedapi.kavin.rocks';
 //const API = 'api-piped.mha.fi';
 //const API = 'pipedapi.r4fo.com';
 
-const STREAM_API = 'https://pipedapi.r4fo.com';
+#const STREAM_API = 'https://pipedapi.r4fo.com';
+const STREAM_API = 'https://pipedapi.kavin.rocks';
 
 const PROXY = 'pipedproxy.kavin.rocks';
 
@@ -21,7 +22,7 @@ const TIMEOUT = 30;
 const CACHE_TTL = 3600;
 const DEFAULT_QUALITY = '720p';
 const DEFAULT_MODE = 'subscriptions';
-const USE_APCU = true;
+const USE_APCU = false;
 const SUGGESTIONS = 2;
 const SUGGESTIONS_SOURCE_LIMIT = 2;
 
@@ -33,7 +34,6 @@ const PATH_PLAYLIST = '/playlist';
 const PATH_OPML = '/opml';
 const PATH_SUGGESTIONS = '/suggestions';
 const PATH_SHORTCUT = '/shortcut';
-const PATH_THUMB = '/thumb';
 const PATH_CHAPTERS = '/chapters';
 
 set_time_limit(TIMEOUT);
@@ -55,27 +55,6 @@ exit;
 function main(array $server, array $get): void
 {
     $path = parse_url($server['REQUEST_URI'], PHP_URL_PATH);
-
-    if (strpos($path, PATH_THUMB) === 0) {
-        $proxy = $get['proxy'] ?? PROXY;
-
-        if (!resource_exists("https://$proxy?host=www.youtube.com")) {
-            $proxy = PROXY_FALLBACK;
-        }
-
-        if (isset($get['file'])) {
-            $url = "https://$proxy{$get['file']}";
-        } else {
-            $videoId = $get['video'] ?? basename($path, '.jpg');
-            $url = "https://$proxy/vi/$videoId/maxresdefault.jpg?host=i.ytimg.com";
-            if (!resource_exists($url)) {
-                $url = "https://$proxy/vi/$videoId/hqdefault.jpg?host=i.ytimg.com";
-            }
-        }
-
-        output_thumbnail($proxy, $url);
-        return;
-    }
 
     $api = 'https://' . ($get['api'] ?? API);
     if (!resource_exists("$api/trending?region=US")) {
@@ -491,7 +470,6 @@ function fetch_items(
                 $item->setUploaderUrl(url($video['uploaderUrl'], $frontend));
                 $item->setUploaderFeedUrl($uploaderFeed);
                 $item->setDescription($streamData['description']);
-                $item->setThumbnail(url(PATH_THUMB . "/$videoId.jpg"));
                 $item->setDuration((string)(int)$video['duration']);
                 $item->setChaptersUrl(url(PATH_CHAPTERS . "/$videoId.json"));
                 $item->setUploaderName($uploaderName);
@@ -503,11 +481,11 @@ function fetch_items(
                 }
 
                 $item->setUrl($frontend . $video['url']);
-                $item->setVideoUrl($fileInfo['url']);
+                $item->setVideoUrl(save_video($fileInfo['url']));
                 $item->setVideoId($videoId);
 
                 if (isset($fileInfo['contentLength']) && $fileInfo['contentLength'] > 0) {
-                    $item->setSize((string) $fileInfo['contentLength']);
+                    $item->setSize((string)$fileInfo['contentLength']);
                 } else {
                     $item->setSize("0");
                 }
@@ -630,33 +608,89 @@ function output_chapters(string $api, string $videoId)
     echo json_encode($chapters);
 }
 
-function output_thumbnail(string $proxy, string $url)
+function thumb_path(string $url): string
 {
-    $source_image = imagecreatefromwebp($url);
+    return '/thumbs/' . md5($url) . '.png';
+}
 
-    $source_imagex = imagesx($source_image);
-    $source_imagey = imagesy($source_image);
+function save_video(string $url): string
+{
+    $path = '/videos/' . md5($url) . '.mp4';
+    $file = __DIR__ . $path;
 
-    $dest_imagex = 1400;
-    $dest_imagey = intval($dest_imagex * ($source_imagey / $source_imagex));
+    $urlFile = $file . '.url';
 
-    $dest_image = imagecreatetruecolor(1400, 1400);
-    imagecopyresampled(
-        $dest_image,
-        $source_image,
-        0,
-        intval(700 - $dest_imagey / 2),
-        0,
-        0,
-        $dest_imagex,
-        $dest_imagey,
-        $source_imagex,
-        $source_imagey
-    );
+    if (file_exists($urlFile)) {
+        return $url;
+    } elseif (file_exists($file)) {
+        return url($path);
+    } else {
+        file_put_contents($file . '.url', $url);
+        return $url;
+    }
+}
 
-    header('Content-Type: image/jpeg');
+function save_thumbnail(string $url)
+{
+    try {
+        ini_set('memory_limit', '50M');
 
-    imagejpeg($dest_image);
+        $file = __DIR__ . thumb_path($url);
+
+        if (file_exists($file)) {
+            return;
+        }
+
+        $originalFile = __DIR__ . '/thumbs/' . md5($url) . '.webp';
+        if (!file_exists($originalFile)) {
+            $originalFilePointer = fopen($originalFile, 'wb');
+
+            $ch = curl_init();
+
+            curl_setopt_array($ch, [
+                CURLOPT_URL => url($url, 'https://' . PROXY),
+                CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'],
+                CURLOPT_CONNECTTIMEOUT => 1,
+                CURLOPT_FILE => $originalFilePointer
+            ]);
+
+            curl_exec($ch);
+            curl_close($ch);
+
+            fclose($originalFilePointer);
+
+            if (200 != curl_getinfo($ch, CURLINFO_HTTP_CODE)) {
+                unlink($originalFile);
+                return;
+            }
+        }
+
+        $source_image = imagecreatefromwebp($originalFile);
+
+        $source_imagex = imagesx($source_image);
+        $source_imagey = imagesy($source_image);
+
+        $dest_imagex = 1400;
+        $dest_imagey = intval($dest_imagex * ($source_imagey / $source_imagex));
+
+        $dest_image = imagecreatetruecolor(1400, 1400);
+        imagecopyresampled(
+            $dest_image,
+            $source_image,
+            0,
+            intval(700 - $dest_imagey / 2),
+            0,
+            0,
+            $dest_imagex,
+            $dest_imagey,
+            $source_imagex,
+            $source_imagey
+        );
+
+        imagejpeg($dest_image, $file);
+    } catch (Throwable $exception) {
+        error_log((string)$exception);
+    }
 }
 
 function output_feed(
@@ -727,7 +761,10 @@ function url_avatar(string $avatarUrl): string
         $url['path']
     );
 
-    return url(PATH_THUMB . '?file=' . urlencode("$path?{$url['query']}"));
+    $url = "$path?{$url['query']}";
+
+    save_thumbnail($url);
+    return url(thumb_path($url));
 }
 
 function check_timeout(): bool
@@ -1246,7 +1283,6 @@ XML;
     $this->uploaderFeedUrl
     <br>
     ＿＿＿＿＿＿＿＿＿＿＿＿＿＿<br><br></center>$this->description]]></description>  
-    <itunes:image href="$this->thumbnail"/> 
     <itunes:duration>$this->duration</itunes:duration>
     <podcast:chapters url="$this->chaptersUrl" type="application/json+chapters"/>
     <podcast:person><![CDATA[$this->uploaderName]]></podcast:person>
