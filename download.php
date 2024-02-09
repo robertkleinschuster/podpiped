@@ -34,6 +34,7 @@ foreach (glob(__DIR__ . '/videos/*.url') as $videoFile) {
 echo '<pre>';
 
 foreach (glob(__DIR__ . '/videos/*.url') as $urlFile) {
+    ob_flush();
     $lockFile = $urlFile . '.lock';
     $file = dirname($urlFile) . DIRECTORY_SEPARATOR . basename($urlFile, '.url');
     try {
@@ -105,5 +106,4 @@ foreach (glob(__DIR__ . '/videos/*.url') as $urlFile) {
     }
 }
 echo '</pre>';
-
-
+exit;
