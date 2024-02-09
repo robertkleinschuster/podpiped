@@ -19,6 +19,18 @@ foreach (glob(__DIR__ . '/videos/*.mp4') as $videoFile) {
         error_log((string)$exception);
     }
 }
+
+foreach (glob(__DIR__ . '/videos/*.url') as $videoFile) {
+    try {
+        $fileTime = filemtime($videoFile);
+        $age = time() - $fileTime;
+        if ($age > (172800 * 3)) {
+            unlink($videoFile);
+        }
+    } catch (Throwable $exception) {
+        error_log((string)$exception);
+    }
+}
 echo '<pre>';
 
 foreach (glob(__DIR__ . '/videos/*.url') as $urlFile) {
