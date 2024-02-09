@@ -69,6 +69,7 @@ foreach (glob(__DIR__ . '/videos/*.url') as $urlFile) {
         echo curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
         echo "\ndownloaded size: ";
         echo curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
+        echo "\n";
         if (
             200 == curl_getinfo($ch, CURLINFO_HTTP_CODE)
             && curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD) === curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD)
