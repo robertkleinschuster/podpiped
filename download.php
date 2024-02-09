@@ -30,7 +30,9 @@ foreach (glob(__DIR__ . '/videos/*.url') as $urlFile) {
             $age = time() - $fileTime;
             if ($age > 3600) {
                 unlink($lockFile);
-                unlink($file);
+                if (file_exists($file)) {
+                    unlink($file);
+                }
                 echo "unlocked ($age): $lockFile\n";
             } else {
                 echo "locked ($age): $lockFile\n";
