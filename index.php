@@ -80,6 +80,12 @@ function main(array $server, array $get): void
 
     if (strpos($path, PATH_CHANNEL) === 0) {
         $channelId = $get['id'] ?? basename($path);
+        save_channel($channelId);
+        if (file_exists(__DIR__ . '/channel/' . $channelId )) {
+            header('content-type: application/xml');
+            echo file_get_contents(__DIR__ . '/channel/' . $channelId);
+            return;
+        }
         output_channel($channelId, $limit, $api, $format, $quality, $frontend, 'subscriptions');
         return;
     }
@@ -356,6 +362,11 @@ function output_playlist(
 
     header('content-type: application/xml');
     echo new Rss($channel);
+}
+
+function save_channel(string $id)
+{
+    touch(__DIR__ . '/channel/' . $id . '.channel');
 }
 
 function output_channel(
