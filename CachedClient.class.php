@@ -19,7 +19,7 @@ class CachedClient
             return false;
         }
         $age = time() - filemtime($cacheFile);
-        return $age < 60;
+        return $age < 3600;
     }
 
     public function channel(string $channelId): ?string
