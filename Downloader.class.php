@@ -22,6 +22,12 @@ class Downloader
         return $file;
     }
 
+    public function done(string $filename): bool
+    {
+        $file = $this->base . $this->folder . DIRECTORY_SEPARATOR . $filename;
+        return file_exists($file) && !file_exists("$file.lock");
+    }
+
     public function download(): void
     {
         $downloads = glob($this->base . $this->folder . DIRECTORY_SEPARATOR . '*.download');

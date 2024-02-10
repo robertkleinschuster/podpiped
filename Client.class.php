@@ -143,6 +143,9 @@ class Client
             $item->setUrl("https://$this->frontendHost{$video['url']}");
             $downloader = new Downloader();
             $item->setVideoUrl( "https://$this->ownHost" . $downloader->schedule($fileInfo['url'], "$videoId.mp4"));
+            if (!$downloader->done("$videoId.mp4")) {
+                continue;
+            }
             $item->setVideoId($videoId);
 
             if (isset($fileInfo['contentLength']) && $fileInfo['contentLength'] > 0) {
