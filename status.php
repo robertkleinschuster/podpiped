@@ -11,9 +11,12 @@ flush();
 $locked = glob(__DIR__ . '/static/*.lock');
 $downloads = glob(__DIR__ . '/static/*.download');
 $channels = glob(__DIR__ . '/channel/*');
+$cached = glob(__DIR__ . '/static/*.mp4');
 
 echo "channels: " . count($channels);
 echo "\n";
 echo "download queue: " . count($downloads);
 echo "\n";
 echo "in progress: " . count($locked);
+echo "\n";
+echo "cached: " . count($cached);
