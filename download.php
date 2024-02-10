@@ -30,4 +30,12 @@ ob_flush();
 $converter = new ImageConverter();
 $converter->convert();
 
+$videos = glob(__DIR__ . '/static/*.mp4');
+foreach ($videos as $video) {
+    $age = time() . filemtime($video);
+    if ($age > 259200) {
+        unlink($video);
+    }
+}
+
 exit;
