@@ -81,22 +81,28 @@ class Downloader
                 curl_exec($ch);
 
                 curl_close($ch);
+                $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
                 $contentLength = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
                 $size = curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
                 echo "\nexpected size: " . $contentLength;
                 echo "\ndownloaded size: " . $size;
+                echo "\nstatus: " . $status;
                 echo "\n";
                 if (
-                    200 == curl_getinfo($ch, CURLINFO_HTTP_CODE)
-                    && ($contentLength === curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD) || intval($contentLength) === -1 && $size > 0)
+                    200 == $status
+                    && ($contentLength === $size || intval($contentLength) === -1 && $size > 0)
                 ) {
                     fclose($fp);
                     unlink($downloadFile);
                     echo "success\n";
                 } else {
                     echo "error\n";
+                    fclose($fp);
                     unlink($file);
+                    if ($status === 403) {
+                        unlink($downloadFile);
+                    }
                 }
                 ob_flush();
             } catch (Throwable $exception) {
