@@ -11,11 +11,10 @@ class Downloader
         }
     }
 
-    public function schedule(string $url, string $ext): string
+    public function schedule(string $url, string $filename): string
     {
-        $name = $this->folder . DIRECTORY_SEPARATOR . md5($url);
-        $file = "$name.$ext";
-        file_put_contents($this->base . DIRECTORY_SEPARATOR . $name . '.download', json_encode([
+        $file = $this->folder . DIRECTORY_SEPARATOR . $filename;
+        file_put_contents($this->base . $file . '.download', json_encode([
             'url' => $url,
             'file' => $file
         ]));
@@ -58,6 +57,8 @@ class Downloader
 
                 if (file_exists($file)) {
                     echo "exists: $file\n";
+                    unlink($downloadFile);
+                    unlink($lockFile);
                     ob_flush();
                     continue;
                 }

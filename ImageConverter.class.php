@@ -45,6 +45,7 @@ class ImageConverter
             }
 
             if (file_exists($outfile)) {
+                unlink($imageFile);
                 continue;
             }
 
@@ -91,9 +92,10 @@ class ImageConverter
                 );
 
                 imagejpeg($destImage, $outfile);
-                unlink($file);
+                unlink($imageFile);
             } catch (Throwable $exception) {
                 error_log((string)$exception);
+                unlink($imageFile);
             }
 
         }

@@ -12,6 +12,7 @@ require_once "CachedClient.class.php";
 
 header('content-type: text/plan');
 http_response_code(200);
+flush();
 
 echo "\nrefreshing cached channels\n";
 ob_flush();

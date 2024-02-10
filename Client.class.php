@@ -68,7 +68,7 @@ class Client
                 $downloader = new Downloader();
                 $imageConvert = new ImageConverter();
                 $data['avatarUrl'] = "https://$this->ownHost" . $imageConvert->schedule(
-                        $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", 'img')
+                        $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", "$channelId.img")
                     );
             }
 
@@ -142,7 +142,7 @@ class Client
 
             $item->setUrl("https://$this->frontendHost{$video['url']}");
             $downloader = new Downloader();
-            $item->setVideoUrl( "https://$this->ownHost" . $downloader->schedule($fileInfo['url'], 'mp4'));
+            $item->setVideoUrl( "https://$this->ownHost" . $downloader->schedule($fileInfo['url'], "$videoId.mp4"));
             $item->setVideoId($videoId);
 
             if (isset($fileInfo['contentLength']) && $fileInfo['contentLength'] > 0) {
