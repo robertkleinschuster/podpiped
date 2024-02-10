@@ -14,6 +14,6 @@ $channels = glob(__DIR__ . '/channel/*');
 
 echo "channels: " . count($channels);
 echo "\n";
-echo "downloads: " . count($downloads);
+echo "download queue: " . count($downloads);
 echo "\n";
-echo "locked: " . count($locked);
+echo "in progress: " . count($locked);
