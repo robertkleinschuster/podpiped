@@ -35,7 +35,7 @@ $converter->convert();
 $videos = glob(__DIR__ . '/static/*.mp4');
 foreach ($videos as $video) {
     if (file_exists($video)) {
-        $age = time() . filemtime($video);
+        $age = time() - filemtime($video);
         if ($age > 259200 && file_exists($video)) {
             unlink($video);
         }
