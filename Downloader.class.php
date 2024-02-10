@@ -40,6 +40,10 @@ class Downloader
                 if (file_exists($lockFile)) {
                     $fileTime = filemtime($lockFile);
                     $age = time() - $fileTime;
+                    if (!file_exists($file)) {
+                        unlink($lockFile);
+                        echo "unlocked ($age): $lockFile\n";
+                    }
                     if ($age > 3600) {
                         unlink($lockFile);
                         if (file_exists($file)) {
