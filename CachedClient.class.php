@@ -42,10 +42,9 @@ class CachedClient
 
     public function refresh(): void
     {
-        $channels = glob($this->folder . '*.cache');
+        $channels = glob($this->folder . '*');
         foreach ($channels as $channel) {
-            $channelId = basename($channel, '.cache');
-            $this->channel($channelId);
+            $this->channel($channel);
         }
     }
 }
