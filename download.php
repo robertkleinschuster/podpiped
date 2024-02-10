@@ -12,6 +12,7 @@ require_once "CachedClient.class.php";
 
 header('content-type: text/plan');
 header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
 http_response_code(200);
 flush();
 
