@@ -2,6 +2,12 @@
 
 declare(strict_types=1);
 
+require_once 'Channel.class.php';
+require_once 'Item.class.php';
+require_once 'Rss.class.php';
+require_once 'Client.class.php';
+require_once 'CachedClient.class.php';
+
 global $time;
 $time = time();
 
@@ -41,7 +47,6 @@ ini_set('max_execution_time', (string)TIMEOUT);
 ini_set('memory_limit', '8M');
 ini_set('post_max_size', '0');
 ini_set('upload_max_filesize', '0');
-spl_autoload_register('classes');
 
 if (($_GET['clearcache'] ?? '') === '1' || ($_SERVER['HTTP_CACHE_CONTROL'] ?? '') === 'no-cache') {
     opcache_reset();
@@ -70,7 +75,6 @@ function main(array $server, array $get): void
     $frontend = 'https://' . ($get['frontend'] ?? "piped.kavin.rocks");
     $format = $get['format'] ?? 'MPEG_4';
     $quality = $get['quality'] ?? DEFAULT_QUALITY;
-    $limit = (int)($get['limit'] ?? DEFAULT_LIMIT);
 
     if (strpos($path, PATH_PLAYLIST) === 0) {
         $playlistId = $get['id'] ?? basename($path);
@@ -80,13 +84,15 @@ function main(array $server, array $get): void
 
     if (strpos($path, PATH_CHANNEL) === 0) {
         $channelId = $get['id'] ?? basename($path);
-        save_channel($channelId);
-        if (file_exists(__DIR__ . '/channel/' . $channelId )) {
+        $client = new Client($_SERVER['HTTP_HOST']);
+        $cachedClient = new CachedClient($client);
+        $channel = $cachedClient->channel($channelId);
+        if ($channel) {
             header('content-type: application/xml');
-            echo file_get_contents(__DIR__ . '/channel/' . $channelId);
-            return;
+            echo $channel;
+        } else {
+            http_response_code(404);
         }
-        output_channel($channelId, $limit, $api, $format, $quality, $frontend, 'subscriptions');
         return;
     }
 
@@ -1055,388 +1061,4 @@ function output_help()
 </body>
 </html>
 HTML;
-}
-
-function classes(string $class): bool
-{
-    if ($class === Rss::class) {
-        class Rss
-        {
-            private Channel $channel;
-
-            /**
-             * @param Channel $channel
-             */
-            public function __construct(Channel $channel)
-            {
-                $this->channel = $channel;
-            }
-
-            public function __toString(): string
-            {
-                return <<<XML
-<?xml version="1.0" encoding="UTF-8" ?>
- <rss version="2.0" 
- xmlns:podcast="https://podcastindex.org/namespace/1.0" 
- xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" 
- xmlns:content="http://purl.org/rss/1.0/modules/content/">
-  $this->channel   
- </rss>
-XML;
-            }
-        }
-    }
-    if ($class == Item::class) {
-        class Item
-        {
-            private string $title = '';
-            private string $episodeType = '';
-            private string $summary = '';
-            private string $uploaderUrl = '';
-            private string $description = '';
-            private string $thumbnail = '';
-            private string $duration = '';
-            private string $chaptersUrl = '';
-            private string $uploaderName = '';
-            private string $uploaderFeedUrl = '';
-            private string $date = '';
-            private string $videoId = '';
-            private string $videoUrl = '';
-            private string $size = '';
-            private string $mimeType;
-            private string $url = '';
-            private string $hls = '';
-
-            /**
-             * @param string $title
-             * @return Item
-             */
-            public function setTitle(string $title): Item
-            {
-                $this->title = htmlentities($title);
-                return $this;
-            }
-
-            /**
-             * @param string $hls
-             * @return Item
-             */
-            public function setHls(string $hls): Item
-            {
-                $this->hls = htmlentities($hls);
-                return $this;
-            }
-
-
-            /**
-             * @param string $episodeType
-             * @return Item
-             */
-            public function setEpisodeType(string $episodeType): Item
-            {
-                $this->episodeType = $episodeType;
-                return $this;
-            }
-
-            /**
-             * @param string $uploaderFeedUrl
-             * @return Item
-             */
-            public function setUploaderFeedUrl(string $uploaderFeedUrl): Item
-            {
-                $this->uploaderFeedUrl = htmlentities($uploaderFeedUrl);
-                return $this;
-            }
-
-
-            /**
-             * @param string $summary
-             * @return Item
-             */
-            public function setSummary(string $summary): Item
-            {
-                $this->summary = $summary;
-                return $this;
-            }
-
-            /**
-             * @param string $uploaderUrl
-             * @return Item
-             */
-            public function setUploaderUrl(string $uploaderUrl): Item
-            {
-                $this->uploaderUrl = htmlentities($uploaderUrl);
-                return $this;
-            }
-
-            /**
-             * @param string $description
-             * @return Item
-             */
-            public function setDescription(string $description): Item
-            {
-                $this->description = $description;
-                return $this;
-            }
-
-            /**
-             * @param string $thumbnail
-             * @return Item
-             */
-            public function setThumbnail(string $thumbnail): Item
-            {
-                $this->thumbnail = htmlentities($thumbnail);
-                return $this;
-            }
-
-            /**
-             * @param string $duration
-             * @return Item
-             */
-            public function setDuration(string $duration): Item
-            {
-                $this->duration = $duration;
-                return $this;
-            }
-
-            /**
-             * @param string $chaptersUrl
-             * @return Item
-             */
-            public function setChaptersUrl(string $chaptersUrl): Item
-            {
-                $this->chaptersUrl = htmlentities($chaptersUrl);
-                return $this;
-            }
-
-            /**
-             * @param string $uploaderName
-             * @return Item
-             */
-            public function setUploaderName(string $uploaderName): Item
-            {
-                $this->uploaderName = htmlentities($uploaderName);
-                return $this;
-            }
-
-            /**
-             * @param string $date
-             * @return Item
-             */
-            public function setDate(string $date): Item
-            {
-                $this->date = $date;
-                return $this;
-            }
-
-            /**
-             * @param string $url
-             * @return Item
-             */
-            public function setUrl(string $url): Item
-            {
-                $this->url = htmlentities($url);
-                return $this;
-            }
-
-
-            /**
-             * @param string $videoId
-             * @return Item
-             */
-            public function setVideoId(string $videoId): Item
-            {
-                $this->videoId = $videoId;
-                return $this;
-            }
-
-            /**
-             * @param string $videoUrl
-             * @return Item
-             */
-            public function setVideoUrl(string $videoUrl): Item
-            {
-                $this->videoUrl = htmlentities($videoUrl);
-                return $this;
-            }
-
-            /**
-             * @param string $size
-             * @return Item
-             */
-            public function setSize(string $size): Item
-            {
-                $this->size = $size;
-                return $this;
-            }
-
-            /**
-             * @param string $mimeType
-             * @return Item
-             */
-            public function setMimeType(string $mimeType): Item
-            {
-                $this->mimeType = $mimeType;
-                return $this;
-            }
-
-            public function __toString()
-            {
-                return <<<XML
-<item>
-    <title><![CDATA[$this->title]]></title>   
-    <itunes:episodeType>$this->episodeType</itunes:episodeType>
-    <itunes:summary><![CDATA[$this->summary]]></itunes:summary>  
-    <description><![CDATA[<center>$this->summary
-    <br><a href="$this->uploaderUrl">zum Kanal</a><br>
-    <a href="$this->uploaderFeedUrl">Kanal Podcast-URL</a>
-    <br>
-    $this->uploaderFeedUrl
-    <br>
-    ＿＿＿＿＿＿＿＿＿＿＿＿＿＿<br><br></center>$this->description]]></description>  
-    <itunes:duration>$this->duration</itunes:duration>
-    <podcast:chapters url="$this->chaptersUrl" type="application/json+chapters"/>
-    <podcast:person><![CDATA[$this->uploaderName]]></podcast:person>
-    <pubDate>$this->date</pubDate>
-    <link>$this->url</link>
-    <guid>$this->videoId</guid>
-    <enclosure url="$this->videoUrl" length="$this->size" type="$this->mimeType" />   
-</item>
-XML;
-            }
-        }
-
-        return true;
-    }
-    if ($class == Channel::class) {
-        class Channel
-        {
-            private string $title = '';
-            private string $frontend = '';
-            private string $language = '';
-            private string $description = '';
-            private string $feedUrl = '';
-            private string $copyright = '';
-            private string $cover = '';
-            private string $items = '';
-            private string $author = '';
-
-            /**
-             * @param string $title
-             * @return Channel
-             */
-            public function setTitle(string $title): Channel
-            {
-                $this->title = $title;
-                return $this;
-            }
-
-            /**
-             * @param string $author
-             * @return Channel
-             */
-            public function setAuthor(string $author): Channel
-            {
-                $this->author = htmlentities($author);
-                return $this;
-            }
-
-
-            /**
-             * @param string $frontend
-             * @return Channel
-             */
-            public function setFrontend(string $frontend): Channel
-            {
-                $this->frontend = htmlentities($frontend);
-                return $this;
-            }
-
-            /**
-             * @param string $language
-             * @return Channel
-             */
-            public function setLanguage(string $language): Channel
-            {
-                $this->language = $language;
-                return $this;
-            }
-
-            /**
-             * @param string $description
-             * @return Channel
-             */
-            public function setDescription(string $description): Channel
-            {
-                $this->description = $description;
-                return $this;
-            }
-
-            /**
-             * @param string $feedUrl
-             * @return Channel
-             */
-            public function setFeedUrl(string $feedUrl): Channel
-            {
-                $this->feedUrl = $feedUrl;
-                return $this;
-            }
-
-            /**
-             * @param string $copyright
-             * @return Channel
-             */
-            public function setCopyright(string $copyright): Channel
-            {
-                $this->copyright = $copyright;
-                return $this;
-            }
-
-            /**
-             * @param string $cover
-             * @return Channel
-             */
-            public function setCover(string $cover): Channel
-            {
-                $this->cover = htmlentities($cover);
-                return $this;
-            }
-
-            /**
-             * @param string $items
-             * @return Channel
-             */
-            public function setItems(string $items): Channel
-            {
-                $this->items = $items;
-                return $this;
-            }
-
-
-            public function __toString()
-            {
-                return <<<XML
-  <channel>
-   <title><![CDATA[$this->title]]></title>   
-   <link>$this->frontend</link>   
-   <language>$this->language</language>   
-   <description><![CDATA[$this->description<br>Feed: $this->feedUrl]]></description>   
-   <copyright><![CDATA[$this->copyright]]></copyright>
-   <itunes:author>$this->author</itunes:author>
-   <image>
-    <title><![CDATA[$this->title]]></title>
-    <url>$this->cover</url>
-    <link>$this->frontend</link>
-   </image>
-   <itunes:image href="$this->cover"/>
-   <podcast:medium>video</podcast:medium>
-   $this->items
-  </channel>  
-XML;
-            }
-        }
-
-        return true;
-    }
-    return false;
 }
