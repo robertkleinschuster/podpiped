@@ -17,7 +17,7 @@ http_response_code(200);
 flush();
 
 echo "\nconverting images\n";
-ob_flush();
+
 $converter = new ImageConverter();
 $converter->convert();
 

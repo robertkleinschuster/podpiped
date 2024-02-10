@@ -17,7 +17,7 @@ http_response_code(200);
 flush();
 
 echo "\ndownloading files\n";
-ob_flush();
+
 $downloader = new Downloader();
 $downloader->download();
 

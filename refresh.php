@@ -17,7 +17,7 @@ http_response_code(200);
 flush();
 
 echo "\nrefreshing cached channels\n";
-ob_flush();
+
 $client = new Client($_SERVER['HTTP_HOST']);
 $cachedClient = new CachedClient($client);
 $cachedClient->refresh();
