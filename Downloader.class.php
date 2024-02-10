@@ -65,7 +65,6 @@ class Downloader
                     } else {
                         echo "locked ($age): $lockFile\n";
                     }
-                    ob_flush();
                     continue;
                 }
 
@@ -73,14 +72,12 @@ class Downloader
 
                 if (file_exists($file)) {
                     echo "exists: $file\n";
-                    unlink($downloadFile);
+                    unlink($file);
                     unlink($lockFile);
-                    ob_flush();
                     continue;
                 }
 
                 echo "downloading: $url\n";
-                ob_flush();
 
                 $fp = fopen($file, 'w+');
 
@@ -120,7 +117,6 @@ class Downloader
                         unlink($downloadFile);
                     }
                 }
-                ob_flush();
             } catch (Throwable $exception) {
                 error_log((string)$exception);
                 unlink($file);
