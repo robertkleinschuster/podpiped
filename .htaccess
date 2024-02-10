@@ -6,6 +6,4 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule . /index.php [L]
-    RewriteRule .* - [E=noabort:1]
-    RewriteRule .* - [E=noconntimeout:1]
 </IfModule>
