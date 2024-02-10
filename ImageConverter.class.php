@@ -31,6 +31,9 @@ class ImageConverter
 
         $images = glob($this->base . $this->folder . DIRECTORY_SEPARATOR . '*.convert');
         foreach ($images as $imageFile) {
+            if (!file_exists($imageFile)) {
+                continue;
+            }
             $image = json_decode(file_get_contents($imageFile), true);
             $file = __DIR__ . $image['file'];
             $outfile = __DIR__ . $image['outfile'];
