@@ -24,7 +24,7 @@ class CachedClient
 
     public function channel(string $channelId): ?string
     {
-        $cacheFile = $this->folder . $channelId . '.cache';
+        $cacheFile = $this->folder . $channelId;
 
         if (!$this->isValid($cacheFile)) {
             $channel = $this->client->channel($channelId);
