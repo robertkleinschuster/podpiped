@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 require_once "Downloader.class.php";
 require_once "ImageConverter.class.php";
+require_once "Channel.class.php";
+require_once "Item.class.php";
+require_once "Rss.class.php";
 
 class Client
 {
@@ -72,7 +75,7 @@ class Client
                     );
             }
 
-            $channel->setCover($data['avatarUrl'] ?? url('/logo.jpg'));
+            $channel->setCover($data['avatarUrl'] ?? "https://$this->ownHost/logo.jpg");
             $channel->setDescription($data['description'] ?? '');
             $channel->setLanguage('en');
             $channel->setFrontend("https://$this->frontendHost/channel/$channelId");
@@ -81,6 +84,16 @@ class Client
         }
 
         return null;
+    }
+
+    private function format_count($value): string
+    {
+        $value = (int)$value;
+        if ($value > 1000000) {
+            return number_format(round($value / 1000000, 1), 1, ',', '.') . ' Mio.';
+        } else {
+            return number_format(round($value, 1), 0, ',', '.');
+        }
     }
 
     private function items(array $videos): array
@@ -114,12 +127,12 @@ class Client
             $fileInfo = $streamData['fileInfo'];
 
             $id = basename($video['uploaderUrl'] ?? '');
-            $uploaderFeed = url(PATH_CHANNEL . "/$id");
+            $uploaderFeed = 'https://' . $this->ownHost . "/channel/$id";
 
             $uploaderName = $video['uploaderName'] ?? '';
-            $views = format_count($streamData['views'] ?? 0);
-            $likes = format_count($streamData['likes'] ?? 0);
-            $subscribers = format_count($streamData['uploaderSubscriberCount'] ?? 0);
+            $views = $this->format_count($streamData['views'] ?? 0);
+            $likes = $this->format_count($streamData['likes'] ?? 0);
+            $subscribers = $this->format_count($streamData['uploaderSubscriberCount'] ?? 0);
 
             $item = new Item();
             $item->setTitle($video['title']);
@@ -132,7 +145,7 @@ class Client
             $item->setUploaderFeedUrl($uploaderFeed);
             $item->setDescription($streamData['description']);
             $item->setDuration((string)(int)$video['duration']);
-            $item->setChaptersUrl(url(PATH_CHAPTERS . "/$videoId.json"));
+            $item->setChaptersUrl("https://$this->ownHost/chapters/$videoId.json");
             $item->setUploaderName($uploaderName);
             if ($video['uploaded'] > 0) {
                 $item->setDate(date(DATE_RFC2822, intval($video['uploaded'] / 1000)));
