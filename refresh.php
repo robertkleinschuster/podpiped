@@ -16,9 +16,10 @@ header('Pragma: no-cache');
 http_response_code(200);
 flush();
 
-echo "\ndownloading files\n";
+echo "\nrefreshing cached channels\n";
 ob_flush();
-$downloader = new Downloader();
-$downloader->download();
+$client = new Client($_SERVER['HTTP_HOST']);
+$cachedClient = new CachedClient($client);
+$cachedClient->refresh();
 
 exit;

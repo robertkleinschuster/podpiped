@@ -16,9 +16,9 @@ header('Pragma: no-cache');
 http_response_code(200);
 flush();
 
-echo "\ndownloading files\n";
+echo "\nconverting images\n";
 ob_flush();
-$downloader = new Downloader();
-$downloader->download();
+$converter = new ImageConverter();
+$converter->convert();
 
 exit;
