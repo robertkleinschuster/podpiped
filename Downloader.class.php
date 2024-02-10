@@ -28,6 +28,12 @@ class Downloader
         return file_exists($file) && !file_exists("$file.lock");
     }
 
+    public function scheduled(string $filename): bool
+    {
+        $file = $this->folder . DIRECTORY_SEPARATOR . $filename;
+        return file_exists($this->base . $file . '.download');
+    }
+
     public function download(): void
     {
         $downloads = glob($this->base . $this->folder . DIRECTORY_SEPARATOR . '*.download');
