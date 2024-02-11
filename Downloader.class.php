@@ -96,7 +96,7 @@ class Downloader
                         @unlink($lockFile);
                         $this->log->append("unlocked ($age s): $info");
                     }
-                    if ($age > 3600) {
+                    if ($age > 600) {
                         @unlink($lockFile);
                         if (file_exists($file)) {
                             @unlink($file);
