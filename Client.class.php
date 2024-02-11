@@ -282,14 +282,22 @@ class Client
         unset($streamData['previewFrames']);
 
         $isValid = fn(
-            array $videoStream
+            array $videoStream,
+            string $res
         ) => isset($videoStream['videoOnly'], $videoStream['format'], $videoStream['quality'], $videoStream['url'])
             && !$videoStream['videoOnly']
             && 'MPEG_4' === $videoStream['format']
-            && '720p' === $videoStream['quality'];
+            && $res === $videoStream['quality'];
 
         foreach ($videoStreams as $videoStream) {
-            if ($isValid($videoStream)) {
+            if ($isValid($videoStream, '720p')) {
+                $streamData['fileInfo'] = $videoStream;
+                return $streamData;
+            }
+        }
+
+        foreach ($videoStreams as $videoStream) {
+            if ($isValid($videoStream, '360p')) {
                 $streamData['fileInfo'] = $videoStream;
                 return $streamData;
             }
