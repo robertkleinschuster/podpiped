@@ -92,11 +92,7 @@ class Downloader
                 if (file_exists($lockFile)) {
                     $fileTime = filemtime($lockFile);
                     $age = time() - $fileTime;
-                    if (!file_exists($file)) {
-                        @unlink($lockFile);
-                        $this->log->append("unlocked ($age s): $info");
-                    }
-                    if ($age > 600) {
+                    if ($age > 600 || !file_exists($file)) {
                         @unlink($lockFile);
                         if (file_exists($file)) {
                             @unlink($file);
@@ -104,18 +100,14 @@ class Downloader
                         $this->log->append("unlocked ($age s): $info");
                     } else {
                         $this->log->append("locked ($age s): $info");
+                        continue;
                     }
-                    continue;
                 }
 
                 touch($lockFile);
 
                 if (file_exists($file)) {
-                    $this->log->append("exists: $info");
-
                     @unlink($file);
-                    @unlink($lockFile);
-                    continue;
                 }
 
                 $this->log->append("downloading: $info");
@@ -133,10 +125,9 @@ class Downloader
                 ]);
 
                 curl_exec($ch);
-
                 curl_close($ch);
-                $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
+                $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 $contentLength = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
                 $size = curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
 
