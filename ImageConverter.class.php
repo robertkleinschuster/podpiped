@@ -14,7 +14,7 @@ class ImageConverter
     public function schedule(string $file): string
     {
         $name = $this->folder . DIRECTORY_SEPARATOR . md5($file);
-        $outfile = dirname($file) . DIRECTORY_SEPARATOR . basename($file, ".img") . '.jpg';
+        $outfile = dirname($file) . DIRECTORY_SEPARATOR . basename($file) . '.jpg';
 
         if (!file_exists($this->base . $outfile)) {
             file_put_contents($this->base . DIRECTORY_SEPARATOR . $name . '.convert', json_encode([

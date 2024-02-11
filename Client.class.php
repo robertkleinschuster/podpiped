@@ -70,13 +70,14 @@ class Client
 
                 $downloader = new Downloader();
                 $imageConvert = new ImageConverter();
-                $avatarFilename = "$channelId.img";
+                $avatarFilename = $channelId;
                 if ($downloader->done($avatarFilename)) {
                     $source = $downloader->path($avatarFilename);
                     $data['avatarUrl'] = "https://$this->ownHost" . $imageConvert->schedule($source);
                 } else {
                     $source = $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", $avatarFilename);
                     $imageConvert->schedule($source);
+                    $data['avatarUrl'] = null;
                 }
             }
 
