@@ -8,15 +8,15 @@ header('Pragma: no-cache');
 http_response_code(200);
 flush();
 
-$locked = glob(__DIR__ . '/static/*.lock');
-$downloads = glob(__DIR__ . '/static/*.download');
 $channels = glob(__DIR__ . '/channel/*');
-$cached = glob(__DIR__ . '/static/*.mp4');
+$locked = array_map(fn($name) => basename($name, '.lock'), glob(__DIR__ . '/static/*.lock'));
+$downloads = array_map(fn($name) => basename($name, '.download'), glob(__DIR__ . '/static/*.download'));
+$cached = array_map(fn($name) => basename($name, '.mp4'), glob(__DIR__ . '/static/*.mp4'));
 
 echo "channels: " . count($channels);
 echo "\n";
-echo "download queue: " . count($downloads);
+echo "download queue: " . count(array_intersect($downloads, $locked));
 echo "\n";
 echo "in progress: " . count($locked);
 echo "\n";
-echo "cached: " . count($cached);
+echo "cached: " . count(array_intersect($cached, $locked));
