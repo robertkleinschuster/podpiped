@@ -83,13 +83,13 @@ class Downloader
                     $fileTime = filemtime($lockFile);
                     $age = time() - $fileTime;
                     if (!file_exists($file)) {
-                        unlink($lockFile);
+                        @unlink($lockFile);
                         echo "unlocked ($age): $lockFile\n";
                     }
                     if ($age > 3600) {
-                        unlink($lockFile);
+                        @unlink($lockFile);
                         if (file_exists($file)) {
-                            unlink($file);
+                            @unlink($file);
                         }
                         echo "unlocked ($age): $lockFile\n";
                     } else {
@@ -103,8 +103,8 @@ class Downloader
 
                 if (file_exists($file)) {
                     echo "exists: $file\n";
-                    unlink($file);
-                    unlink($lockFile);
+                    @unlink($file);
+                    @unlink($lockFile);
                     flush();
                     continue;
                 }
@@ -141,27 +141,25 @@ class Downloader
                     && ($contentLength === $size || intval($contentLength) === -1 && $size > 0)
                 ) {
                     fclose($fp);
-                    unlink($downloadFile);
-                    unlink($lockFile);
+                    @unlink($downloadFile);
+                    @unlink($lockFile);
                     echo "success\n";
                 } else {
                     echo "error\n";
                     fclose($fp);
-                    unlink($file);
+                    @unlink($file);
                     if ($status === 403) {
-                        unlink($downloadFile);
+                        @unlink($downloadFile);
                     }
                 }
-                echo "\n------------------";
-                flush();
             } catch (Throwable $exception) {
                 error_log((string)$exception);
-                unlink($file);
-                flush();
+                @unlink($file);
             }
             if (file_exists($lockFile)) {
-                unlink($lockFile);
+                @unlink($lockFile);
             }
+            flush();
         }
     }
 }
