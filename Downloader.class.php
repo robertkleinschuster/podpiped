@@ -64,8 +64,8 @@ class Downloader
         @unlink("$file.download");
         @unlink("$file.lock");
         if (file_exists($file)) {
-            $this->log->append("delete: " . $filename);
             @unlink($file);
+            $this->log->append("delete: " . $filename);
         }
     }
 
