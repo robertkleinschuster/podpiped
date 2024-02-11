@@ -49,7 +49,9 @@ class CachedClient
     {
         $channels = glob($this->folder . '*');
         foreach ($channels as $channel) {
-            $this->channel(basename($channel, '.new'));
+            if (!str_ends_with($channel, '.new')) {
+                $this->channel(basename($channel));
+            }
         }
         $channels = glob($this->folder . '*.new');
         foreach ($channels as $newChannel) {
