@@ -148,6 +148,7 @@ class Downloader
                         unlink($downloadFile);
                     }
                 }
+                echo "\n------------------";
             } catch (Throwable $exception) {
                 error_log((string)$exception);
                 unlink($file);
