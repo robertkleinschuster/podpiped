@@ -202,13 +202,22 @@ class Item
     <title><![CDATA[$this->title]]></title>   
     <itunes:episodeType>$this->episodeType</itunes:episodeType>
     <itunes:summary><![CDATA[$this->summary]]></itunes:summary>  
-    <description><![CDATA[<center>$this->summary
-    <br><a href="$this->uploaderUrl">zum Kanal</a><br>
-    <a href="$this->uploaderFeedUrl">Kanal Podcast-URL</a>
+    <description><![CDATA[
+    <center>
+    $this->summary
     <br>
-    $this->uploaderFeedUrl
+    <a href="$this->videoUrl">Video-URL: $this->videoUrl</a>
     <br>
-    ＿＿＿＿＿＿＿＿＿＿＿＿＿＿<br><br></center>$this->description]]></description>  
+    <a href="$this->uploaderUrl">zum Kanal</a>
+    <br>
+    <a href="$this->uploaderFeedUrl">Kanal Podcast</a>
+    <br>
+    ＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+    <br>
+    <br>
+    </center>
+    $this->description
+    ]]></description>  
     <itunes:duration>$this->duration</itunes:duration>
     <podcast:chapters url="$this->chaptersUrl" type="application/json+chapters"/>
     <podcast:person><![CDATA[$this->uploaderName]]></podcast:person>
