@@ -142,6 +142,7 @@ class Downloader
                 ) {
                     fclose($fp);
                     unlink($downloadFile);
+                    unlink($lockFile);
                     echo "success\n";
                 } else {
                     echo "error\n";
