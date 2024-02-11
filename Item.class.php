@@ -22,6 +22,8 @@ class Item
     private string $url = '';
     private string $hls = '';
 
+    public bool $complete = false;
+
     /**
      * @param string $title
      * @return Item

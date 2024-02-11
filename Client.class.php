@@ -85,7 +85,19 @@ class Client
             $channel->setDescription($data['description'] ?? '');
             $channel->setLanguage('en');
             $channel->setFrontend("https://$this->frontendHost/channel/$channelId");
-            $channel->setItems(implode(array_map('strval', $this->items($data['relatedStreams']))));
+            $items = $this->items($data['relatedStreams']);
+            $channel->setItems(implode(array_map('strval', $items)));
+            $complete = null;
+            foreach ($items as $item) {
+                if ($complete === null) {
+                    $complete = $item->complete;
+                } else {
+                    $complete = $complete && $item->complete;
+                }
+            }
+            if ($complete && isset($data['avatarUrl'])) {
+                unlink(__DIR__ . '/channel/' . $channelId . '.new');
+            }
             return $channel;
         }
 
@@ -102,6 +114,11 @@ class Client
         }
     }
 
+    /**
+     * @param array $videos
+     * @return Item[]
+     * @throws Exception
+     */
     public function items(array $videos): array
     {
         $downloader = new Downloader();
@@ -169,6 +186,7 @@ class Client
             $item->setVideoId($videoId);
             if ($downloader->done($videoFilename)) {
                 $item->setVideoUrl( "https://$this->ownHost" . $downloader->path($videoFilename));
+                $item->complete = true;
             } else {
                 $item->setVideoUrl($fileInfo['url']);
                 $downloader->schedule($fileInfo['url'], $videoFilename);

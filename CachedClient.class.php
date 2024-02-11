@@ -69,13 +69,7 @@ class CachedClient
                 }
             }
         }
-        $channels = glob($this->folder . '*.new');
-        foreach ($channels as $newChannel) {
-            $age = time() - filemtime($newChannel);
-            if ($age > 3600) {
-                unlink($newChannel);
-            }
-        }
+
         return $complete;
     }
 }
