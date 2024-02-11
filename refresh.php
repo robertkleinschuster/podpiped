@@ -24,5 +24,5 @@ $cachedClient = new CachedClient($client);
 $time = time();
 do {
     $complete = $cachedClient->refresh();
-} while (!$complete && time() - $time < 60);
+} while (!$complete && time() - $time < 30);
 exit;
