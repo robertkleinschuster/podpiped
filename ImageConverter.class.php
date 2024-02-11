@@ -51,7 +51,6 @@ class ImageConverter
 
             echo "converting: " . $file;
             echo "\n";
-            ob_flush();
 
             try {
                 $sourceImage = null;
