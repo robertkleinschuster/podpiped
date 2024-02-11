@@ -28,6 +28,23 @@ class Downloader
         return file_exists($file) && !file_exists("$file.lock");
     }
 
+    public function size(string $filename): int
+    {
+        if (!$this->done($filename)) {
+            return 0;
+        }
+        $file = $this->base . $this->folder . DIRECTORY_SEPARATOR . $filename;
+        return filesize($file);
+    }
+
+    public function delete(string $filename): void
+    {
+        if ($this->done($filename)) {
+            $file = $this->base . $this->folder . DIRECTORY_SEPARATOR . $filename;
+            unlink($file);
+        }
+    }
+
     public function scheduled(string $filename): bool
     {
         $file = $this->folder . DIRECTORY_SEPARATOR . $filename;

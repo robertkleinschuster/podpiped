@@ -16,14 +16,4 @@ header('Pragma: no-cache');
 http_response_code(200);
 flush();
 
-$videos = glob(__DIR__ . '/static/*.mp4');
-foreach ($videos as $video) {
-    if (file_exists($video)) {
-        $age = time() - filemtime($video);
-        if ($age > 259200 && file_exists($video)) {
-            unlink($video);
-        }
-    }
-}
-
 exit;

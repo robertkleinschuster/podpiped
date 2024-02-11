@@ -90,7 +90,7 @@ class Client
         return null;
     }
 
-    private function format_count($value): string
+    private function formatCount($value): string
     {
         $value = (int)$value;
         if ($value > 1000000) {
@@ -100,9 +100,12 @@ class Client
         }
     }
 
-    private function items(array $videos): array
+    public function items(array $videos): array
     {
+        $downloader = new Downloader();
+
         $items = [];
+        $limit = 3;
         foreach ($videos as $video) {
             if ($video['type'] !== 'stream') {
                 continue;
@@ -119,6 +122,12 @@ class Client
                 continue;
             }
             $videoId = $params['v'];
+            $videoFilename = "$videoId.mp4";
+            if (count($items) >= $limit) {
+                $downloader->delete($videoFilename);
+                continue;
+            }
+
             $streamData = $this->stream($videoId);
 
             if (empty($streamData['fileInfo'])) {
@@ -130,9 +139,9 @@ class Client
             $uploaderFeed = 'https://' . $this->ownHost . "/channel/$id";
 
             $uploaderName = $video['uploaderName'] ?? '';
-            $views = $this->format_count($streamData['views'] ?? 0);
-            $likes = $this->format_count($streamData['likes'] ?? 0);
-            $subscribers = $this->format_count($streamData['uploaderSubscriberCount'] ?? 0);
+            $views = $this->formatCount($streamData['views'] ?? 0);
+            $likes = $this->formatCount($streamData['likes'] ?? 0);
+            $subscribers = $this->formatCount($streamData['uploaderSubscriberCount'] ?? 0);
 
             $item = new Item();
             $item->setTitle($video['title']);
@@ -155,22 +164,12 @@ class Client
             }
 
             $item->setUrl("https://$this->frontendHost{$video['url']}");
-            $downloader = new Downloader();
-            if (count($items) >= 2 && !$downloader->done("$videoId.mp4")) {
-                break;
-            }
-            $item->setVideoUrl( "https://$this->ownHost" . $downloader->schedule($fileInfo['url'], "$videoId.mp4"));
-            if (!$downloader->done("$videoId.mp4")) {
+            $item->setVideoId($videoId);
+            $item->setVideoUrl( "https://$this->ownHost" . $downloader->schedule($fileInfo['url'], $videoFilename));
+            if (!$downloader->done($videoFilename)) {
                 $item->setVideoUrl($fileInfo['url']);
             }
-            $item->setVideoId($videoId);
-
-            if (isset($fileInfo['contentLength']) && $fileInfo['contentLength'] > 0) {
-                $item->setSize((string)$fileInfo['contentLength']);
-            } else {
-                $item->setSize("0");
-            }
-
+            $item->setSize((string)$downloader->size($videoFilename));
             $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
 
             $items[] = $item;
@@ -179,7 +178,7 @@ class Client
         return $items;
     }
 
-    public function stream(string $videoId): ?array
+    private function stream(string $videoId): ?array
     {
         $streamData = $this->fetch("/streams/" . $videoId);
         if (!is_array($streamData)) {
