@@ -35,6 +35,7 @@ class CachedClient
             if ($channel) {
                 $rss = new Rss($channel);
                 file_put_contents($cacheFile, (string)$rss);
+                echo "\nrefreshed: " . $channelId;
             }
         }
         if (!file_exists($cacheFile)) {
