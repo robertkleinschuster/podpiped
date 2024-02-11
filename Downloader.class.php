@@ -11,6 +11,7 @@ class Downloader
         if (!is_dir($this->base . $this->folder)) {
             mkdir($this->base . $this->folder);
         }
+        $this->log = new Log();
     }
 
     public function schedule(string $url, string $filename): string
