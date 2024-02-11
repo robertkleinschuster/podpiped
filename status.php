@@ -2,11 +2,7 @@
 
 declare(strict_types=1);
 
-header('content-type: text/plan');
-header('Cache-Control: no-cache, no-store, must-revalidate, post-check=0, max-age=0');
-header('Pragma: no-cache');
-http_response_code(200);
-flush();
+require_once "flush_header.php";
 
 $channels =  array_map(fn($name) => basename($name, '.new'), glob(__DIR__ . '/channel/*'));
 $newChannels = array_map(fn($name) => basename($name, '.new'), glob(__DIR__ . '/channel/*.new'));

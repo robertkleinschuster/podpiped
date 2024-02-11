@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once 'Client.class.php';
+require_once 'Rss.class.php';
 
 class CachedClient
 {

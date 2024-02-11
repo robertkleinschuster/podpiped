@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once "Channel.class.php";
+
 class Rss
 {
     private Channel $channel;
