@@ -95,6 +95,7 @@ class Downloader
                     } else {
                         echo "locked ($age): $lockFile\n";
                     }
+                    flush();
                     continue;
                 }
 
@@ -104,11 +105,13 @@ class Downloader
                     echo "exists: $file\n";
                     unlink($file);
                     unlink($lockFile);
+                    flush();
                     continue;
                 }
 
                 echo "downloading: $url\n";
                 echo "to: $file\n";
+                flush();
 
                 $fp = fopen($file, 'w+');
 
