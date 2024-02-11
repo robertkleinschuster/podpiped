@@ -64,6 +64,10 @@ class Downloader
             $file = $this->pathAbsolute($filename);
             unlink($file);
             $this->log->append("deleted: " . $this->path($filename));
+        } else {
+            $file = $this->pathAbsolute($filename);
+            unlink("$file.download");
+            unlink("$file.lock");
         }
     }
 
