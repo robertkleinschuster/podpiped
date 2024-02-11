@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-set_time_limit(45);
+set_time_limit(0);
 
 header('content-type: text/plan; charset=utf-8');
 header('Cache-Control: no-cache, must-revalidate, max-age=0');
