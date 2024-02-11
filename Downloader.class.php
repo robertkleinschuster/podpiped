@@ -21,11 +21,13 @@ class Downloader
         $file = $this->path($filename);
 
         if (!$this->scheduled($filename)) {
+            $info = "$file: $info";
             file_put_contents($this->pathAbsolute($filename) . '.download', json_encode([
                 'url' => $url,
                 'file' => $file,
-                'info' => "$file: $info"
+                'info' => $info
             ]));
+            $this->log->append("scheduled: $file");
         }
 
         return $file;
@@ -61,6 +63,7 @@ class Downloader
         if ($this->done($filename)) {
             $file = $this->pathAbsolute($filename);
             unlink($file);
+            $this->log->append("deleted: $file");
         }
     }
 
