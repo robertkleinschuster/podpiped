@@ -154,7 +154,7 @@ class Downloader
                     }
                 }
             } catch (Throwable $exception) {
-                error_log((string)$exception);
+                $this->log->append((string)$exception);
                 @unlink($file);
             }
             if (file_exists($lockFile)) {
