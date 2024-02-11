@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once "Log.class.php";
+
 class ImageConverter
 {
     private Log $log;
