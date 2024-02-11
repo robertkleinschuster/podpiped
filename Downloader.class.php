@@ -108,6 +108,7 @@ class Downloader
                 }
 
                 echo "downloading: $url\n";
+                echo "to: $file\n";
 
                 $fp = fopen($file, 'w+');
 
