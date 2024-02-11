@@ -20,3 +20,6 @@ ob_start();
 echo "processing\n\n";
 ob_flush();
 flush();
+
+$status = require "status.php";
+file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'status', $status);
