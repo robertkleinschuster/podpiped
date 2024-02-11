@@ -31,12 +31,9 @@ class CachedClient
         $cacheFile = $this->folder . $channelId;
 
         if (!$this->isValid($cacheFile)) {
-            $channel = $this->client->channel($channelId);
-            if ($channel) {
-                $rss = new Rss($channel);
-                file_put_contents($cacheFile, (string)$rss);
-            }
+            $this->load($channelId);
         }
+
         if (!file_exists($cacheFile)) {
             return null;
         }
@@ -44,15 +41,31 @@ class CachedClient
         return file_get_contents($cacheFile);
     }
 
-    public function refresh(): void
+    private function load(string $channelId): bool
+    {
+        $cacheFile = $this->folder . $channelId;
+        $channel = $this->client->channel($channelId);
+        if ($channel) {
+            $rss = new Rss($channel);
+            file_put_contents($cacheFile, (string)$rss);
+            return true;
+        }
+        return false;
+    }
+
+    public function refresh(): bool
     {
         $channels = glob($this->folder . '*');
+        $complete = true;
         foreach ($channels as $channel) {
             if (!str_ends_with($channel, '.new')) {
-                $channelId = basename($channel);
-                $result = $this->channel($channelId);
-                if ($result) {
-                    echo "\nrefreshed: " . $channelId;
+                if (!$this->isValid($channel)) {
+                    $channelId = basename($channel);
+                    if ($this->load($channelId)) {
+                        echo "\nrefreshed: " . $channelId;
+                    } else {
+                        $complete = false;
+                    }
                 }
             }
         }
@@ -63,5 +76,6 @@ class CachedClient
                 unlink($newChannel);
             }
         }
+        return $complete;
     }
 }

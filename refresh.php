@@ -22,8 +22,7 @@ $client = new Client($_SERVER['HTTP_HOST']);
 $cachedClient = new CachedClient($client);
 
 $time = time();
-while (time() - $time < 45) {
-    $cachedClient->refresh();
-}
-
+do {
+    $complete = $cachedClient->refresh();
+} while (!$complete && time() - $time < 60);
 exit;
