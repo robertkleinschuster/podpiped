@@ -70,12 +70,13 @@ class Client
 
                 $downloader = new Downloader();
                 $imageConvert = new ImageConverter();
-                $data['avatarUrl'] = "https://$this->ownHost" . $imageConvert->schedule(
-                        $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", "$channelId.img")
-                    );
-
-                if (!$downloader->done("$channelId.img")) {
-                    unset($data['avatarUrl']);
+                $avatarFilename = "$channelId.img";
+                if ($downloader->done($avatarFilename)) {
+                    $source = $downloader->path($avatarFilename);
+                    $data['avatarUrl'] = "https://$this->ownHost" . $imageConvert->schedule($source);
+                } else {
+                    $source = $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", $avatarFilename);
+                    $imageConvert->schedule($source);
                 }
             }
 
@@ -165,9 +166,11 @@ class Client
 
             $item->setUrl("https://$this->frontendHost{$video['url']}");
             $item->setVideoId($videoId);
-            $item->setVideoUrl( "https://$this->ownHost" . $downloader->schedule($fileInfo['url'], $videoFilename));
-            if (!$downloader->done($videoFilename)) {
+            if ($downloader->done($videoFilename)) {
+                $item->setVideoUrl( "https://$this->ownHost" . $downloader->path($videoFilename));
+            } else {
                 $item->setVideoUrl($fileInfo['url']);
+                $downloader->schedule($fileInfo['url'], $videoFilename);
             }
             $item->setSize((string)$downloader->size($videoFilename));
             $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');

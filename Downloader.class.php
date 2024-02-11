@@ -13,18 +13,31 @@ class Downloader
 
     public function schedule(string $url, string $filename): string
     {
-        $file = $this->folder . DIRECTORY_SEPARATOR . $filename;
-        file_put_contents($this->base . $file . '.download', json_encode([
-            'url' => $url,
-            'file' => $file
-        ]));
+        $file = $this->path($filename);
+
+        if (!$this->scheduled($filename)) {
+            file_put_contents($this->pathAbsolute($filename) . '.download', json_encode([
+                'url' => $url,
+                'file' => $file
+            ]));
+        }
 
         return $file;
     }
 
+    public function path(string $filename): string
+    {
+        return $this->folder . DIRECTORY_SEPARATOR . $filename;
+    }
+
+    public function pathAbsolute(string $filename): string
+    {
+        return $this->base . $this->path($filename);
+    }
+
     public function done(string $filename): bool
     {
-        $file = $this->base . $this->folder . DIRECTORY_SEPARATOR . $filename;
+        $file = $this->pathAbsolute($filename);
         return file_exists($file) && !file_exists("$file.lock");
     }
 
@@ -33,22 +46,22 @@ class Downloader
         if (!$this->done($filename)) {
             return 0;
         }
-        $file = $this->base . $this->folder . DIRECTORY_SEPARATOR . $filename;
+        $file = $this->pathAbsolute($filename);
         return filesize($file);
     }
 
     public function delete(string $filename): void
     {
         if ($this->done($filename)) {
-            $file = $this->base . $this->folder . DIRECTORY_SEPARATOR . $filename;
+            $file = $this->pathAbsolute($filename);
             unlink($file);
         }
     }
 
     public function scheduled(string $filename): bool
     {
-        $file = $this->folder . DIRECTORY_SEPARATOR . $filename;
-        return file_exists($this->base . $file . '.download');
+        $file = $this->pathAbsolute($filename);
+        return file_exists($file . '.download');
     }
 
     public function download(): void
