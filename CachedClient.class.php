@@ -46,8 +46,8 @@ class CachedClient
         $cacheFile = $this->folder . $channelId;
         $channel = $this->client->channel($channelId);
         if ($channel) {
-            if ($channel->complete && file_exists($cacheFile . '.new')) {
-                unlink($cacheFile . '.new');
+            if ($channel->complete && file_exists("$cacheFile.new")) {
+                unlink("$cacheFile.new");
             }
 
             $rss = new Rss($channel);
