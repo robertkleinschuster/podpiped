@@ -49,9 +49,10 @@ class CachedClient
         $channels = glob($this->folder . '*');
         foreach ($channels as $channel) {
             if (!str_ends_with($channel, '.new')) {
-                $result = $this->channel(basename($channel));
+                $channelId = basename($channel);
+                $result = $this->channel($channelId);
                 if ($result) {
-                    echo "\nrefreshed: " . $channel;
+                    echo "\nrefreshed: " . $channelId;
                 }
             }
         }
