@@ -13,7 +13,7 @@ class Log
 
     public function append(string $line): void
     {
-        if (file_exists($this->file) && time() - filectime($this->file) > 600) {
+        if (file_exists($this->file) && time() - filemtime($this->file) > 600) {
             $this->clear();
         }
         file_put_contents($this->file, date('Y-m-d H:i:s') . ": $line\n", FILE_APPEND);
