@@ -20,6 +20,10 @@ echo "\nrefreshing cached channels\n";
 
 $client = new Client($_SERVER['HTTP_HOST']);
 $cachedClient = new CachedClient($client);
-$cachedClient->refresh();
+
+$time = time();
+while (time() - $time < 30) {
+    $cachedClient->refresh();
+}
 
 exit;
