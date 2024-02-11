@@ -35,7 +35,6 @@ class CachedClient
             if ($channel) {
                 $rss = new Rss($channel);
                 file_put_contents($cacheFile, (string)$rss);
-                echo "\nrefreshed: " . $channelId;
             }
         }
         if (!file_exists($cacheFile)) {
@@ -50,7 +49,10 @@ class CachedClient
         $channels = glob($this->folder . '*');
         foreach ($channels as $channel) {
             if (!str_ends_with($channel, '.new')) {
-                $this->channel(basename($channel));
+                $result = $this->channel(basename($channel));
+                if ($result) {
+                    echo "\nrefreshed: " . $channel;
+                }
             }
         }
         $channels = glob($this->folder . '*.new');
