@@ -99,11 +99,7 @@ class Client
     private function items(array $videos): array
     {
         $items = [];
-        $count = 0;
         foreach ($videos as $video) {
-            if ($count >= 2) {
-                break;
-            }
             if ($video['type'] !== 'stream') {
                 continue;
             }
@@ -156,10 +152,12 @@ class Client
 
             $item->setUrl("https://$this->frontendHost{$video['url']}");
             $downloader = new Downloader();
+            if (count($items) >= 2 && !$downloader->done("$videoId.mp4")) {
+                break;
+            }
             $item->setVideoUrl( "https://$this->ownHost" . $downloader->schedule($fileInfo['url'], "$videoId.mp4"));
             if (!$downloader->done("$videoId.mp4")) {
-                $count++;
-                continue;
+                $item->setVideoUrl($fileInfo['url']);
             }
             $item->setVideoId($videoId);
 
@@ -172,7 +170,6 @@ class Client
             $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
 
             $items[] = $item;
-            $count++;
         }
 
         return $items;
