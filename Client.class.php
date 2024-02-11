@@ -90,7 +90,7 @@ class Client
             $channel->setLanguage('en');
             $channel->setFrontend("https://$this->frontendHost/playlist?list=$playlistId");
 
-            $items = $this->items($data['relatedStreams'], 10);
+            $items = $this->items($data['relatedStreams'], 50);
 
             $channel->setItems(implode(array_map('strval', $items)));
             $complete = null;
