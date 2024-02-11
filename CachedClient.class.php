@@ -15,7 +15,11 @@ class CachedClient
 
     private function isValid(string $cacheFile): bool
     {
+        if (file_exists("$cacheFile.new")) {
+            return false;
+        }
         if (!file_exists($cacheFile)) {
+            touch("$cacheFile.new");
             return false;
         }
         $age = time() - filemtime($cacheFile);
@@ -45,6 +49,13 @@ class CachedClient
         $channels = glob($this->folder . '*');
         foreach ($channels as $channel) {
             $this->channel(basename($channel));
+        }
+        $channels = glob($this->folder . '*.new');
+        foreach ($channels as $newChannel) {
+            $age = time() - filemtime($newChannel);
+            if ($age > 3600) {
+                unlink($newChannel);
+            }
         }
     }
 }
