@@ -16,14 +16,15 @@ class Downloader
         $this->log = new Log();
     }
 
-    public function schedule(string $url, string $filename): string
+    public function schedule(string $url, string $filename, string $info = ''): string
     {
         $file = $this->path($filename);
 
         if (!$this->scheduled($filename)) {
             file_put_contents($this->pathAbsolute($filename) . '.download', json_encode([
                 'url' => $url,
-                'file' => $file
+                'file' => $file,
+                'info' => "$file: $info"
             ]));
         }
 
@@ -79,6 +80,7 @@ class Downloader
 
             $download = json_decode(file_get_contents($downloadFile), true);
             $url = $download['url'];
+            $info = $download['info'];
             $file = __DIR__ . $download['file'];
 
             $lockFile = $file . '.lock';
@@ -89,16 +91,16 @@ class Downloader
                     $age = time() - $fileTime;
                     if (!file_exists($file)) {
                         @unlink($lockFile);
-                        $this->log->append("unlocked ($age s): " . basename($lockFile));
+                        $this->log->append("unlocked ($age s): $info");
                     }
                     if ($age > 3600) {
                         @unlink($lockFile);
                         if (file_exists($file)) {
                             @unlink($file);
                         }
-                        $this->log->append("unlocked ($age s): " . basename($lockFile));
+                        $this->log->append("unlocked ($age s): $info");
                     } else {
-                        $this->log->append("locked ($age s): " . basename($lockFile));
+                        $this->log->append("locked ($age s): $info");
                     }
                     continue;
                 }
@@ -106,14 +108,14 @@ class Downloader
                 touch($lockFile);
 
                 if (file_exists($file)) {
-                    $this->log->append("exists: " . basename($file));
+                    $this->log->append("exists: $info");
 
                     @unlink($file);
                     @unlink($lockFile);
                     continue;
                 }
 
-                $this->log->append("downloading: " . basename($file));
+                $this->log->append("downloading: $info");
 
                 $fp = fopen($file, 'w+');
 
@@ -144,9 +146,9 @@ class Downloader
                     fclose($fp);
                     @unlink($downloadFile);
                     @unlink($lockFile);
-                    $this->log->append("success: " . basename($file));
+                    $this->log->append("success: $info");
                 } else {
-                    $this->log->append("error: " . basename($file));
+                    $this->log->append("error: $info");
                     fclose($fp);
                     @unlink($file);
                     if ($status === 403) {

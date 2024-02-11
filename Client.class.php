@@ -78,7 +78,7 @@ class Client
                     $source = $downloader->path($avatarFilename);
                     $data['uploaderAvatar'] = "https://$this->ownHost" . $imageConvert->schedule($source);
                 } else {
-                    $source = $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", $avatarFilename);
+                    $source = $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", $avatarFilename, $data['name'] ?? '');
                     $imageConvert->schedule($source);
                     $data['uploaderAvatar'] = null;
                 }
@@ -128,7 +128,7 @@ class Client
                     $source = $downloader->path($avatarFilename);
                     $data['avatarUrl'] = "https://$this->ownHost" . $imageConvert->schedule($source);
                 } else {
-                    $source = $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", $avatarFilename);
+                    $source = $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", $avatarFilename, $data['name'] ?? '');
                     $imageConvert->schedule($source);
                     $data['avatarUrl'] = null;
                 }
@@ -256,7 +256,7 @@ class Client
                 $item->complete = true;
             } else {
                 $item->setVideoUrl($fileInfo['url']);
-                $downloader->schedule($fileInfo['url'], $videoFilename);
+                $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '');
             }
             $item->setSize((string)$downloader->size($videoFilename));
             $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
