@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 class Downloader
 {
+    private Log $log;
+
     public function __construct(private string $base = __DIR__, private string $folder = DIRECTORY_SEPARATOR . 'static')
     {
         if (!is_dir($this->base . $this->folder)) {
@@ -84,34 +86,31 @@ class Downloader
                     $age = time() - $fileTime;
                     if (!file_exists($file)) {
                         @unlink($lockFile);
-                        echo "unlocked ($age): $lockFile\n";
+                        $this->log->append("unlocked ($age): $lockFile");
                     }
                     if ($age > 3600) {
                         @unlink($lockFile);
                         if (file_exists($file)) {
                             @unlink($file);
                         }
-                        echo "unlocked ($age): $lockFile\n";
+                        $this->log->append("unlocked ($age): $lockFile");
                     } else {
-                        echo "locked ($age): $lockFile\n";
+                        $this->log->append("locked ($age): $lockFile");
                     }
-                    flush();
                     continue;
                 }
 
                 touch($lockFile);
 
                 if (file_exists($file)) {
-                    echo "exists: $file\n";
+                    $this->log->append("exists: $file");
+
                     @unlink($file);
                     @unlink($lockFile);
-                    flush();
                     continue;
                 }
 
-                echo "downloading: $url\n";
-                echo "to: $file\n";
-                flush();
+                $this->log->append("downloading: $file");
 
                 $fp = fopen($file, 'w+');
 
@@ -132,10 +131,9 @@ class Downloader
 
                 $contentLength = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
                 $size = curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
-                echo "\nexpected size: " . $contentLength;
-                echo "\ndownloaded size: " . $size;
-                echo "\nstatus: " . $status;
-                echo "\n";
+
+                $this->log->append("expected size: $contentLength, downloaded size: $size, status: $status");
+
                 if (
                     200 == $status
                     && ($contentLength === $size || intval($contentLength) === -1 && $size > 0)
@@ -143,9 +141,9 @@ class Downloader
                     fclose($fp);
                     @unlink($downloadFile);
                     @unlink($lockFile);
-                    echo "success\n";
+                    $this->log->append("success: $file");
                 } else {
-                    echo "error\n";
+                    $this->log->append("error: $file");
                     fclose($fp);
                     @unlink($file);
                     if ($status === 403) {
@@ -159,7 +157,6 @@ class Downloader
             if (file_exists($lockFile)) {
                 @unlink($lockFile);
             }
-            flush();
         }
     }
 }

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 class ImageConverter
 {
+    private Log $log;
+
     public function __construct(private string $base = __DIR__, private string $folder = DIRECTORY_SEPARATOR . 'static')
     {
         if (!is_dir($this->base . $this->folder)) {
             mkdir($this->base . $this->folder);
         }
+        $this->log = new Log();
     }
 
     public function schedule(string $file): string
@@ -52,8 +55,7 @@ class ImageConverter
                 continue;
             }
 
-            echo "converting: " . $file;
-            echo "\n";
+            $this->log->append("converting: $file");
 
             try {
                 $sourceImage = null;

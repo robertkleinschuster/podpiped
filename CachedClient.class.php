@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 require_once 'Client.class.php';
 require_once 'Rss.class.php';
+require_once 'Log.class.php';
 
 class CachedClient
 {
+    private Log $log;
+
     public function __construct(
         private readonly Client $client,
         private readonly string $channelFolder = __DIR__ . '/channel/',
@@ -19,6 +22,8 @@ class CachedClient
         if (!is_dir($this->playlistFolder)) {
             mkdir($this->playlistFolder);
         }
+
+        $this->log = new Log();
     }
 
     private function isValid(string $cacheFile): bool
@@ -105,8 +110,7 @@ class CachedClient
                 if (!$this->isValid($cacheFile)) {
                     $channelId = basename($cacheFile);
                     if ($this->loadChannel($channelId)) {
-                        echo "\nrefreshed channel: " . $channelId;
-                        flush();
+                        $this->log->append("refreshed channel: " . $channelId);
                     } else {
                         $complete = false;
                     }
@@ -126,8 +130,7 @@ class CachedClient
                 if (!$this->isValid($cacheFile)) {
                     $playlistId = basename($cacheFile);
                     if ($this->loadPlaylist($playlistId)) {
-                        echo "\nrefreshed playlist: " . $playlistId;
-                        flush();
+                        $this->log->append("refreshed playlist: " . $playlistId);
                     } else {
                         $complete = false;
                     }
