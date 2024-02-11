@@ -13,6 +13,7 @@ class Channel
     private string $cover = '';
     private string $items = '';
     private string $author = '';
+    public bool $complete = false;
 
     /**
      * @param string $title

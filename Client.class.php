@@ -95,9 +95,7 @@ class Client
                     $complete = $complete && $item->complete;
                 }
             }
-            if ($complete && isset($data['avatarUrl'])) {
-                unlink(__DIR__ . '/channel/' . $channelId . '.new');
-            }
+            $channel->complete = $complete && isset($data['avatarUrl']);
             return $channel;
         }
 
