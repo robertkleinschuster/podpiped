@@ -10,4 +10,5 @@ echo "\ndownloading files\n";
 $downloader = new Downloader();
 $downloader->download();
 
+flush();
 exit;

@@ -149,9 +149,11 @@ class Downloader
                     }
                 }
                 echo "\n------------------";
+                flush();
             } catch (Throwable $exception) {
                 error_log((string)$exception);
                 unlink($file);
+                flush();
             }
             if (file_exists($lockFile)) {
                 unlink($lockFile);

@@ -68,6 +68,7 @@ class CachedClient
                     $channelId = basename($channel);
                     if ($this->load($channelId)) {
                         echo "\nrefreshed: " . $channelId;
+                        flush();
                     } else {
                         $complete = false;
                     }
