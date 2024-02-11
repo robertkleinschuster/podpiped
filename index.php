@@ -399,56 +399,6 @@ function output_help()
             })
     </script>
   </section>
-  <section>
-    <h3>Abos</h3>
-    <label>
-        <span>Piped Feed URL</span>
-        <input type="url" id="feed_url" placeholder="hier einfügen...">   
-        <button type="reset" onclick="reset('feed_url')">❌ löschen</button>
-    </label>
-    <pre id="feed_podcast"></pre>
-    <p>Abos Podcast-URL <button onclick="clipboard('feed_podcast')">📋 kopieren</button></p>
-    <script>
-            handle('feed_url', 'feed_podcast', function(input) {
-                  const url = new URL(input);
-                  const authToken = url.searchParams.get('authToken');
-                  if (!authToken) {
-                      return '';
-                  }
-                  return `http://$host/\${authToken}`;
-            })
-    </script>
-    <hr>
-    <h4>OPML</h4>
-    <p>Mithilfe des OPML-Feed können alle deine abbonierten Kanäle als dedizierte Podcasts in Apps wie "Pocket Casts" importiert werden.</p>
-    <pre id="opml"></pre>
-    <p>OPML-URL <button onclick="clipboard('opml')">📋 kopieren</button></p>
-    <script>
-            handle('feed_url', 'opml', function(input) {
-                  const url = new URL(input);
-                  const authToken = url.searchParams.get('authToken');
-                  if (!authToken) {
-                      return '';
-                  }
-                  return `http://$host$pathOpml/\${authToken}`;
-            })
-    </script>
-    <hr>
-    <h4>Empfehlungen</h4>
-    <p>Podcast mit Empfehlungen zu den von dir abbonierten Kanälen.</p>
-    <pre id="feed_podcast_suggestions"></pre>
-    <p>Empfehlungen Podcast-URL <button onclick="clipboard('feed_podcast_suggestions')">📋 kopieren</button></p>
-    <script>
-            handle('feed_url', 'feed_podcast_suggestions', function(input) {
-                  const url = new URL(input);
-                  const authToken = url.searchParams.get('authToken');
-                  if (!authToken) {
-                      return '';
-                  }
-                  return `http://$host$pathSuggestions/\${authToken}`;
-            })
-    </script>
-  </section>
 </body>
 </html>
 HTML;
