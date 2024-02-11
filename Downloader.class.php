@@ -60,15 +60,10 @@ class Downloader
 
     public function delete(string $filename): void
     {
-        if ($this->done($filename)) {
-            $file = $this->pathAbsolute($filename);
-            unlink($file);
-            $this->log->append("deleted: " . $this->path($filename));
-        } else {
-            $file = $this->pathAbsolute($filename);
-            unlink("$file.download");
-            unlink("$file.lock");
-        }
+        $file = $this->pathAbsolute($filename);
+        @unlink($file);
+        @unlink("$file.download");
+        @unlink("$file.lock");
     }
 
     public function scheduled(string $filename): bool
