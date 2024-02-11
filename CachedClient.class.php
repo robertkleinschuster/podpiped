@@ -103,41 +103,52 @@ class CachedClient
 
     public function refreshChannels(): bool
     {
-        $files = glob($this->channelFolder . '*');
-        $complete = true;
-        foreach ($files as $cacheFile) {
-            if (!str_ends_with($cacheFile, '.new')) {
-                if (!$this->isValid($cacheFile)) {
-                    $channelId = basename($cacheFile);
-                    if ($this->loadChannel($channelId)) {
-                        $this->log->append("refreshed channel: " . $channelId);
-                    } else {
-                        $complete = false;
+        try {
+
+            $files = glob($this->channelFolder . '*');
+            $complete = true;
+            foreach ($files as $cacheFile) {
+                if (!str_ends_with($cacheFile, '.new')) {
+                    if (!$this->isValid($cacheFile)) {
+                        $channelId = basename($cacheFile);
+                        if ($this->loadChannel($channelId)) {
+                            $this->log->append("refreshed channel: " . $channelId);
+                        } else {
+                            $complete = false;
+                        }
                     }
                 }
             }
-        }
 
-        return $complete;
+            return $complete;
+        } catch (Throwable $exception) {
+            $this->log->append((string)$exception);
+            return true;
+        }
     }
 
     public function refreshPlaylists(): bool
     {
-        $files = glob($this->playlistFolder . '*');
-        $complete = true;
-        foreach ($files as $cacheFile) {
-            if (!str_ends_with($cacheFile, '.new')) {
-                if (!$this->isValid($cacheFile)) {
-                    $playlistId = basename($cacheFile);
-                    if ($this->loadPlaylist($playlistId)) {
-                        $this->log->append("refreshed playlist: " . $playlistId);
-                    } else {
-                        $complete = false;
+        try {
+            $files = glob($this->playlistFolder . '*');
+            $complete = true;
+            foreach ($files as $cacheFile) {
+                if (!str_ends_with($cacheFile, '.new')) {
+                    if (!$this->isValid($cacheFile)) {
+                        $playlistId = basename($cacheFile);
+                        if ($this->loadPlaylist($playlistId)) {
+                            $this->log->append("refreshed playlist: " . $playlistId);
+                        } else {
+                            $complete = false;
+                        }
                     }
                 }
             }
-        }
 
-        return $complete;
+            return $complete;
+        } catch (Throwable $exception) {
+            $this->log->append((string)$exception);
+            return true;
+        }
     }
 }
