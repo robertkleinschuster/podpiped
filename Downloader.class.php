@@ -27,7 +27,7 @@ class Downloader
                 'file' => $file,
                 'info' => $info
             ]));
-            $this->log->append("scheduled: $file");
+            $this->log->append("scheduled: $info");
         }
 
         return $file;
