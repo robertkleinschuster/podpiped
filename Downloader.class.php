@@ -89,16 +89,16 @@ class Downloader
                     $age = time() - $fileTime;
                     if (!file_exists($file)) {
                         @unlink($lockFile);
-                        $this->log->append("unlocked ($age s): $lockFile");
+                        $this->log->append("unlocked ($age s): " . basename($lockFile));
                     }
                     if ($age > 3600) {
                         @unlink($lockFile);
                         if (file_exists($file)) {
                             @unlink($file);
                         }
-                        $this->log->append("unlocked ($age s): $lockFile");
+                        $this->log->append("unlocked ($age s): " . basename($lockFile));
                     } else {
-                        $this->log->append("locked ($age s): $lockFile");
+                        $this->log->append("locked ($age s): " . basename($lockFile));
                     }
                     continue;
                 }
@@ -106,14 +106,14 @@ class Downloader
                 touch($lockFile);
 
                 if (file_exists($file)) {
-                    $this->log->append("exists: $file");
+                    $this->log->append("exists: " . basename($file));
 
                     @unlink($file);
                     @unlink($lockFile);
                     continue;
                 }
 
-                $this->log->append("downloading: $file");
+                $this->log->append("downloading: " . basename($file));
 
                 $fp = fopen($file, 'w+');
 
@@ -144,9 +144,9 @@ class Downloader
                     fclose($fp);
                     @unlink($downloadFile);
                     @unlink($lockFile);
-                    $this->log->append("success: $file");
+                    $this->log->append("success: " . basename($file));
                 } else {
-                    $this->log->append("error: $file");
+                    $this->log->append("error: " . basename($file));
                     fclose($fp);
                     @unlink($file);
                     if ($status === 403) {
