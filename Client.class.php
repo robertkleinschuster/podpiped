@@ -73,6 +73,10 @@ class Client
                 $data['avatarUrl'] = "https://$this->ownHost" . $imageConvert->schedule(
                         $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", "$channelId.img")
                     );
+
+                if (!$downloader->done("$channelId.img")) {
+                    unset($data['avatarUrl']);
+                }
             }
 
             $channel->setCover($data['avatarUrl'] ?? "https://$this->ownHost/logo.jpg");
