@@ -10,5 +10,7 @@ echo "\ndownloading files\n";
 $downloader = new Downloader();
 $downloader->download();
 
+$status = require "status.php";
+file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'status', $status);
 flush();
 exit;

@@ -15,6 +15,8 @@ $time = time();
 do {
     $complete = $cachedClient->refresh();
     flush();
+    $status = require "status.php";
+    file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'status', $status);
 } while (!$complete && time() - $time < 30);
 
 exit;
