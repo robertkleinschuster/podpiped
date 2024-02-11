@@ -86,13 +86,21 @@ function main(array $server, array $get): void
         $channelId = $get['id'] ?? basename($path);
         $client = new Client($_SERVER['HTTP_HOST']);
         $cachedClient = new CachedClient($client);
-        $channel = $cachedClient->channel($channelId);
-        if ($channel) {
-            header('content-type: application/xml');
-            echo $channel;
-        } else {
+        $retry = 0;
+        while (!isset($channel) && $retry <= 5) {
+            $channel = $cachedClient->channel($channelId);
+            if ($channel) {
+                header('content-type: application/xml');
+                echo $channel;
+            } else {
+                $retry++;
+            }
+        }
+
+        if (!isset($channel)) {
             http_response_code(404);
         }
+
         return;
     }
 
