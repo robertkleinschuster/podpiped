@@ -159,7 +159,7 @@ class Downloader
                     }
                 }
             } catch (Throwable $exception) {
-                $this->log->append((string)$exception);
+                $this->log->append($exception->getMessage());
                 @unlink($file);
             }
             if (file_exists($lockFile)) {

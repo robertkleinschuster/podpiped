@@ -101,7 +101,7 @@ class Client
                     $complete = $complete && $item->complete;
                 }
             }
-            $channel->complete = $complete && isset($data['uploaderAvatar']);
+            $channel->complete = $complete;
             return $channel;
         }
 

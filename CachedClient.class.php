@@ -122,7 +122,7 @@ class CachedClient
 
             return $complete;
         } catch (Throwable $exception) {
-            $this->log->append((string)$exception);
+            $this->log->append($exception->getMessage());
             return true;
         }
     }
@@ -147,7 +147,7 @@ class CachedClient
 
             return $complete;
         } catch (Throwable $exception) {
-            $this->log->append((string)$exception);
+            $this->log->append($exception->getMessage());
             return true;
         }
     }
