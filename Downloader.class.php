@@ -60,6 +60,7 @@ class Downloader
 
     public function delete(string $filename): void
     {
+        $this->log->append("delete: " . $filename);
         $file = $this->pathAbsolute($filename);
         @unlink($file);
         @unlink("$file.download");
