@@ -60,11 +60,11 @@ class Downloader
 
     public function delete(string $filename): void
     {
-        $this->log->append("delete: " . $filename);
         $file = $this->pathAbsolute($filename);
         @unlink($file);
         @unlink("$file.download");
         @unlink("$file.lock");
+        $this->log->append("delete: " . $filename);
     }
 
     public function scheduled(string $filename): bool
