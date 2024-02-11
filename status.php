@@ -15,8 +15,8 @@ $cached = array_map(fn($name) => basename($name, '.mp4'), glob(__DIR__ . '/stati
 
 echo "channels: " . count($channels);
 echo "\n";
-echo "download queue: " . count(array_intersect($downloads, $locked));
+echo "download queue: " . count(array_diff($downloads, $locked));
 echo "\n";
 echo "in progress: " . count($locked);
 echo "\n";
-echo "cached: " . count(array_intersect($cached, $locked));
+echo "cached: " . count(array_diff($cached, $locked));
