@@ -6,7 +6,7 @@ require_once "flush_header.php";
 require_once "Client.class.php";
 require_once "CachedClient.class.php";
 
-echo "\nrefreshing cached channels\n";
+echo "\nrefreshing cached channels/playlists\n";
 
 $client = new Client($_SERVER['HTTP_HOST']);
 $cachedClient = new CachedClient($client);
