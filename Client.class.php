@@ -17,6 +17,9 @@ class Client
         private string $proxyHost = 'pipedproxy.kavin.rocks',
     )
     {
+        if (!is_dir(__DIR__ . '/chapters')) {
+            mkdir(__DIR__ . '/chapters');
+        }
     }
 
     public function fetch(string $path, array $header = null): ?array
@@ -54,6 +57,56 @@ class Client
         return null;
     }
 
+    /**
+     * @throws Exception
+     */
+    public function playlist(string $playlistId): ?Channel
+    {
+        $data = $this->fetch("/playlists/$playlistId");
+
+        if (!empty($data)) {
+            $channel = new Channel();
+            $channel->setTitle($data['name']);
+
+            if (isset($data['uploaderAvatar'])) {
+                $url = parse_url($data['uploaderAvatar']);
+                $path = $url['path'];
+                $downloader = new Downloader();
+                $imageConvert = new ImageConverter();
+                $avatarFilename = $playlistId;
+                if ($downloader->done($avatarFilename)) {
+                    $source = $downloader->path($avatarFilename);
+                    $data['uploaderAvatar'] = "https://$this->ownHost" . $imageConvert->schedule($source);
+                } else {
+                    $source = $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", $avatarFilename);
+                    $imageConvert->schedule($source);
+                    $data['uploaderAvatar'] = null;
+                }
+            }
+
+            $channel->setCover($data['uploaderAvatar'] ?? "https://$this->ownHost/playlist.jpg");
+            $channel->setAuthor($data['uploader'] ?? '');
+            $channel->setDescription($data['description'] ?? '');
+            $channel->setLanguage('en');
+            $channel->setFrontend("https://$this->frontendHost/playlist?list=$playlistId");
+
+            $items = $this->items($data['relatedStreams'], 10);
+
+            $channel->setItems(implode(array_map('strval', $items)));
+            $complete = null;
+            foreach ($items as $item) {
+                if ($complete === null) {
+                    $complete = $item->complete;
+                } else {
+                    $complete = $complete && $item->complete;
+                }
+            }
+            $channel->complete = $complete && isset($data['uploaderAvatar']);
+            return $channel;
+        }
+
+        return null;
+    }
 
     public function channel(string $channelId): ?Channel
     {
@@ -117,12 +170,11 @@ class Client
      * @return Item[]
      * @throws Exception
      */
-    public function items(array $videos): array
+    public function items(array $videos, int $limit = 2): array
     {
         $downloader = new Downloader();
 
         $items = [];
-        $limit = 3;
         foreach ($videos as $video) {
             if ($video['type'] !== 'stream') {
                 continue;
@@ -150,6 +202,23 @@ class Client
             if (empty($streamData['fileInfo'])) {
                 continue;
             }
+
+            if (is_array($streamData['chapters']) && file_exists(__DIR__ . '/chapters/' . $videoId . '.json')) {
+                $chapters = [
+                    'version' => "1.2.0",
+                    'chapters' => array_map(
+                        fn(array $chapter) => [
+                            'title' => $chapter['title'],
+                            'img' => $chapter['image'],
+                            'startTime' => $chapter['start']
+                        ],
+                        $streamData['chapters']
+                    ),
+                ];
+                $chaptersJson = json_encode($chapters);
+                file_put_contents(__DIR__ . '/chapters/' . $videoId . '.json', $chaptersJson);
+            }
+
             $fileInfo = $streamData['fileInfo'];
 
             $id = basename($video['uploaderUrl'] ?? '');
@@ -183,7 +252,7 @@ class Client
             $item->setUrl("https://$this->frontendHost{$video['url']}");
             $item->setVideoId($videoId);
             if ($downloader->done($videoFilename)) {
-                $item->setVideoUrl( "https://$this->ownHost" . $downloader->path($videoFilename));
+                $item->setVideoUrl("https://$this->ownHost" . $downloader->path($videoFilename));
                 $item->complete = true;
             } else {
                 $item->setVideoUrl($fileInfo['url']);
@@ -198,7 +267,7 @@ class Client
         return $items;
     }
 
-    private function stream(string $videoId): ?array
+    public function stream(string $videoId): ?array
     {
         $streamData = $this->fetch("/streams/" . $videoId);
         if (!is_array($streamData)) {

@@ -7,10 +7,17 @@ require_once 'Rss.class.php';
 
 class CachedClient
 {
-    public function __construct(private readonly Client $client, private readonly string $folder = __DIR__ . '/channel/')
+    public function __construct(
+        private readonly Client $client,
+        private readonly string $channelFolder = __DIR__ . '/channel/',
+        private readonly string $playlistFolder = __DIR__ . '/playlist/'
+    )
     {
-        if (!is_dir($this->folder)) {
-            mkdir($this->folder);
+        if (!is_dir($this->channelFolder)) {
+            mkdir($this->channelFolder);
+        }
+        if (!is_dir($this->playlistFolder)) {
+            mkdir($this->playlistFolder);
         }
     }
 
@@ -29,10 +36,10 @@ class CachedClient
 
     public function channel(string $channelId): ?string
     {
-        $cacheFile = $this->folder . $channelId;
+        $cacheFile = $this->channelFolder . $channelId;
 
         if (!$this->isValid($cacheFile)) {
-            $this->load($channelId);
+            $this->loadChannel($channelId);
         }
 
         if (!file_exists($cacheFile)) {
@@ -42,9 +49,9 @@ class CachedClient
         return file_get_contents($cacheFile);
     }
 
-    private function load(string $channelId): bool
+    private function loadChannel(string $channelId): bool
     {
-        $cacheFile = $this->folder . $channelId;
+        $cacheFile = $this->channelFolder . $channelId;
         $channel = $this->client->channel($channelId);
         if ($channel) {
             if ($channel->complete && file_exists("$cacheFile.new")) {
@@ -58,16 +65,68 @@ class CachedClient
         return false;
     }
 
-    public function refresh(): bool
+    public function playlist(string $playlistId): ?string
     {
-        $channels = glob($this->folder . '*');
+        $cacheFile = $this->playlistFolder . $playlistId;
+
+        if (!$this->isValid($cacheFile)) {
+            $this->loadPlaylist($playlistId);
+        }
+
+        if (!file_exists($cacheFile)) {
+            return null;
+        }
+
+        return file_get_contents($cacheFile);
+    }
+
+    private function loadPlaylist(string $playlistId): bool
+    {
+        $cacheFile = $this->playlistFolder . $playlistId;
+        $playlist = $this->client->playlist($playlistId);
+        if ($playlist) {
+            if ($playlist->complete && file_exists("$cacheFile.new")) {
+                unlink("$cacheFile.new");
+            }
+
+            $rss = new Rss($playlist);
+            file_put_contents($cacheFile, (string)$rss);
+            return true;
+        }
+        return false;
+    }
+
+    public function refreshChannels(): bool
+    {
+        $files = glob($this->channelFolder . '*');
         $complete = true;
-        foreach ($channels as $channel) {
-            if (!str_ends_with($channel, '.new')) {
-                if (!$this->isValid($channel)) {
-                    $channelId = basename($channel);
-                    if ($this->load($channelId)) {
-                        echo "\nrefreshed: " . $channelId;
+        foreach ($files as $cacheFile) {
+            if (!str_ends_with($cacheFile, '.new')) {
+                if (!$this->isValid($cacheFile)) {
+                    $channelId = basename($cacheFile);
+                    if ($this->loadChannel($channelId)) {
+                        echo "\nrefreshed channel: " . $channelId;
+                        flush();
+                    } else {
+                        $complete = false;
+                    }
+                }
+            }
+        }
+
+        return $complete;
+    }
+
+    public function refreshPlaylists(): bool
+    {
+        $files = glob($this->playlistFolder . '*');
+        $complete = true;
+        foreach ($files as $cacheFile) {
+            if (!str_ends_with($cacheFile, '.new')) {
+                if (!$this->isValid($cacheFile)) {
+                    $playlistId = basename($cacheFile);
+                    if ($this->loadPlaylist($playlistId)) {
+                        echo "\nrefreshed playlist: " . $playlistId;
                         flush();
                     } else {
                         $complete = false;
