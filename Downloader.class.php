@@ -83,7 +83,7 @@ class Downloader
 
             $download = json_decode(file_get_contents($downloadFile), true);
             $url = $download['url'];
-            $info = $download['info'];
+            $info = $download['info'] ?? $download['file'];
             $file = __DIR__ . $download['file'];
 
             $lockFile = $file . '.lock';
