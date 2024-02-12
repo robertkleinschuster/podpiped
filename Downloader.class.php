@@ -143,13 +143,14 @@ class Downloader
                     @unlink($lockFile);
                     $this->log->append("finished: $info");
                 } else {
-                    $this->log->append("ERROR $status, $size B / $contentLength B: $info");
                     fclose($fp);
                     @unlink($file);
                     @unlink($lockFile);
                     if ($errors > 10 || $status === 403 || $status === 404) {
+                        $this->log->append("ABORT ERROR $status, $size B / $contentLength B: $info");
                         @unlink($downloadFile);
                     } else {
+                        $this->log->append("RETRY ERROR $status, $size B / $contentLength B: $info");
                         $download['errors'] = $errors+1;
                         file_put_contents($downloadFile, json_encode($download));
                     }
