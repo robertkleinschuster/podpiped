@@ -122,7 +122,7 @@ class Downloader
                     CURLOPT_URL => $url,
                     CURLOPT_USERAGENT => $_SERVER['HTTP_USER_AGENT'],
                     CURLOPT_FILE => $fp,
-                    CURLOPT_TIMEOUT => 600,
+                    CURLOPT_TIMEOUT => 0,
                     CURLOPT_FOLLOWLOCATION => true,
                 ]);
 
