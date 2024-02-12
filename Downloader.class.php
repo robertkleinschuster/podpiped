@@ -85,6 +85,7 @@ class Downloader
 
             $download = json_decode(file_get_contents($downloadFile), true);
             $url = $download['url'];
+            $errors = $download['errors'] ?? 0;
             $info = $download['info'] ?? $download['file'];
             $file = __DIR__ . $download['file'];
 
@@ -146,8 +147,11 @@ class Downloader
                     fclose($fp);
                     @unlink($file);
                     @unlink($lockFile);
-                    if ($status === 403 || $status === 404) {
+                    if ($errors > 10 || $status === 403 || $status === 404) {
                         @unlink($downloadFile);
+                    } else {
+                        $download['errors'] = $errors+1;
+                        file_put_contents($downloadFile, json_encode($download));
                     }
                 }
             } catch (Throwable $exception) {
