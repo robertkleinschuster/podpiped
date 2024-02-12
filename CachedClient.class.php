@@ -31,11 +31,7 @@ class CachedClient
         if (file_exists("$cacheFile.new")) {
             return false;
         }
-        if (file_exists("$cacheFile.changed")) {
-            return false;
-        }
         if (!file_exists($cacheFile)) {
-            touch("$cacheFile.new");
             return false;
         }
         $age = time() - filemtime($cacheFile);
@@ -64,7 +60,6 @@ class CachedClient
         if ($channel) {
             if ($channel->complete) {
                 @unlink("$cacheFile.new");
-                @unlink("$cacheFile.changed");
             }
 
             $rss = new Rss($channel);
@@ -94,8 +89,8 @@ class CachedClient
         $cacheFile = $this->playlistFolder . $playlistId;
         $playlist = $this->client->playlist($playlistId);
         if ($playlist) {
-            if ($playlist->complete && file_exists("$cacheFile.new")) {
-                unlink("$cacheFile.new");
+            if ($playlist->complete) {
+                @unlink("$cacheFile.new");
             }
 
             $rss = new Rss($playlist);

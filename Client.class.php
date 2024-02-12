@@ -255,7 +255,7 @@ class Client
             } else {
                 $item->setTitle("⏳ - " . $video['title']);
                 $item->setVideoUrl($fileInfo['url']);
-                $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '', "/channel/$channelId.changed");
+                $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '', "/channel/$channelId.new");
             }
             $item->setSize((string)$downloader->size($videoFilename));
             $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');

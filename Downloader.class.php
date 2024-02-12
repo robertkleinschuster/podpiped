@@ -183,13 +183,5 @@ class Downloader
                 unlink($lockFile);
             }
         }
-
-        $lockFiles = glob($this->base . $this->folder . DIRECTORY_SEPARATOR . '*.changed');
-        foreach ($lockFiles as $lockFile) {
-            $downloadFile = dirname($lockFile) . DIRECTORY_SEPARATOR . basename($lockFile, '.changed') . '.download';
-            if (!file_exists($downloadFile)) {
-                unlink($lockFile);
-            }
-        }
     }
 }
