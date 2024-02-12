@@ -233,7 +233,8 @@ class Client
             $item->setSummary($uploaderName);
             $item->setUploaderUrl("https://$this->frontendHost{$video['uploaderUrl']}");
             $item->setUploaderFeedUrl($uploaderFeed);
-            $item->setDescription($streamData['description']);
+            $description = $streamData['description'] ?? '';
+            $item->setDescription(str_replace('www.youtube.com', 'piped.video', $description));
             $item->setDuration((string)(int)$video['duration']);
             if (isset($chaptersJson)) {
                 $item->setChaptersUrl("https://$this->ownHost$chaptersFile");
