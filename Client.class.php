@@ -204,7 +204,7 @@ class Client
                 continue;
             }
 
-            if (is_array($streamData['chapters']) && file_exists(__DIR__ . '/chapters/' . $videoId . '.json')) {
+            if (isset($streamData['chapters']) && is_array($streamData['chapters']) && !file_exists(__DIR__ . '/chapters/' . $videoId . '.json')) {
                 $chapters = [
                     'version' => "1.2.0",
                     'chapters' => array_map(
