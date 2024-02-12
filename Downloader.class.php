@@ -16,7 +16,7 @@ class Downloader
         $this->log = new Log();
     }
 
-    public function schedule(string $url, string $filename, string $info = ''): string
+    public function schedule(string $url, string $filename, string $info = '', string $touch = null): string
     {
         $file = $this->path($filename);
 
@@ -25,7 +25,8 @@ class Downloader
             file_put_contents($this->pathAbsolute($filename) . '.download', json_encode([
                 'url' => $url,
                 'file' => $file,
-                'info' => $info
+                'info' => $info,
+                'touch' => $touch,
             ]));
             $this->log->append("scheduled: $info");
         }
@@ -141,6 +142,9 @@ class Downloader
                     fclose($fp);
                     @unlink($downloadFile);
                     @unlink($lockFile);
+                    if (isset($download['touch'])) {
+                        touch(__DIR__ . $download['touch']);
+                    }
                     $this->log->append("finished: $info");
                 } else {
                     fclose($fp);

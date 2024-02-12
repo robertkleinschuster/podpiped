@@ -31,6 +31,9 @@ class CachedClient
         if (file_exists("$cacheFile.new")) {
             return false;
         }
+        if (file_exists("$cacheFile.changed")) {
+            return false;
+        }
         if (!file_exists($cacheFile)) {
             touch("$cacheFile.new");
             return false;
@@ -59,15 +62,17 @@ class CachedClient
         $cacheFile = $this->channelFolder . $channelId;
         $channel = $this->client->channel($channelId);
         if ($channel) {
-            if ($channel->complete && file_exists("$cacheFile.new")) {
-                unlink("$cacheFile.new");
+            if ($channel->complete) {
+                @unlink("$cacheFile.new");
+                @unlink("$cacheFile.changed");
             }
 
             $rss = new Rss($channel);
             file_put_contents($cacheFile, (string)$rss);
             return true;
         }
-        unlink("$cacheFile.new");
+        @unlink("$cacheFile.new");
+        @unlink("$cacheFile.changed");
         return false;
     }
 

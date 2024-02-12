@@ -155,16 +155,6 @@ class Client
         return null;
     }
 
-    private function formatCount($value): string
-    {
-        $value = (int)$value;
-        if ($value > 1000000) {
-            return number_format(round($value / 1000000, 1), 1, ',', '.') . ' Mio.';
-        } else {
-            return number_format(round($value, 1), 0, ',', '.');
-        }
-    }
-
     /**
      * @param array $videos
      * @param int $limit
@@ -222,8 +212,8 @@ class Client
 
             $fileInfo = $streamData['fileInfo'];
 
-            $id = basename($video['uploaderUrl'] ?? '');
-            $uploaderFeed = 'https://' . $this->ownHost . "/channel/$id";
+            $channelId = basename($video['uploaderUrl'] ?? '');
+            $uploaderFeed = 'https://' . $this->ownHost . "/channel/$channelId";
 
             $uploaderName = $video['uploaderName'] ?? '';
 
@@ -265,7 +255,7 @@ class Client
             } else {
                 $item->setTitle("⏳ - " . $video['title']);
                 $item->setVideoUrl($fileInfo['url']);
-                $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '');
+                $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '', "/channel/$channelId.changed");
             }
             $item->setSize((string)$downloader->size($videoFilename));
             $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
