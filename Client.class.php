@@ -203,8 +203,8 @@ class Client
             if (empty($streamData['fileInfo'])) {
                 continue;
             }
-
-            if (isset($streamData['chapters']) && is_array($streamData['chapters']) && !file_exists(__DIR__ . '/chapters/' . $videoId . '.json')) {
+            $chaptersFile = '/chapters/' . $videoId . '.json';
+            if (isset($streamData['chapters']) && is_array($streamData['chapters']) && !file_exists(__DIR__ . $chaptersFile)) {
                 $chapters = [
                     'version' => "1.2.0",
                     'chapters' => array_map(
@@ -217,7 +217,7 @@ class Client
                     ),
                 ];
                 $chaptersJson = json_encode($chapters);
-                file_put_contents(__DIR__ . '/chapters/' . $videoId . '.json', $chaptersJson);
+                file_put_contents(__DIR__ . $chaptersFile, $chaptersJson);
             }
 
             $fileInfo = $streamData['fileInfo'];
@@ -236,7 +236,7 @@ class Client
             $item->setDescription($streamData['description']);
             $item->setDuration((string)(int)$video['duration']);
             if (isset($chaptersJson)) {
-                $item->setChaptersUrl("https://$this->ownHost/chapters/$videoId.json");
+                $item->setChaptersUrl("https://$this->ownHost$chaptersFile");
             }
             $item->setUploaderName($uploaderName);
 
