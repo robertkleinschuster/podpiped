@@ -235,7 +235,9 @@ class Client
             $item->setUploaderFeedUrl($uploaderFeed);
             $item->setDescription($streamData['description']);
             $item->setDuration((string)(int)$video['duration']);
-            $item->setChaptersUrl("https://$this->ownHost/chapters/$videoId.json");
+            if (isset($chaptersJson)) {
+                $item->setChaptersUrl("https://$this->ownHost/chapters/$videoId.json");
+            }
             $item->setUploaderName($uploaderName);
 
             if ($video['uploaded'] > 0) {
