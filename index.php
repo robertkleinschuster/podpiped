@@ -184,10 +184,8 @@ function url(string $path, string $host = null): string
 function output_help()
 {
     $host = $_SERVER['HTTP_HOST'];
-    $pathOpml = PATH_OPML;
     $pathPlaylist = PATH_PLAYLIST;
     $pathChannel = PATH_CHANNEL;
-    $pathSuggestions = PATH_SUGGESTIONS;
     $shortcutIcloud = SHORTCUT_LINK;
     $shortcutFile = SHORTCUT_FILE;
     echo <<<HTML

@@ -167,6 +167,7 @@ class Client
 
     /**
      * @param array $videos
+     * @param int $limit
      * @return Item[]
      * @throws Exception
      */
@@ -242,19 +243,26 @@ class Client
             $item->setDuration((string)(int)$video['duration']);
             $item->setChaptersUrl("https://$this->ownHost/chapters/$videoId.json");
             $item->setUploaderName($uploaderName);
+
             if ($video['uploaded'] > 0) {
-                $item->setDate(date(DATE_RFC2822, intval($video['uploaded'] / 1000)));
+                $date = new DateTime();
+                $date->setTimestamp(intval($video['uploaded'] / 1000));
             } else {
                 $date = new DateTime($streamData['uploadDate']);
-                $item->setDate($date->format(DATE_RFC2822));
             }
+
+            $item->setDate($date->format(DATE_RFC2822));
 
             $item->setUrl("https://$this->frontendHost{$video['url']}");
             $item->setVideoId($videoId);
             if ($downloader->done($videoFilename)) {
                 $item->setVideoUrl("https://$this->ownHost" . $downloader->path($videoFilename));
+                if (time() - $date->getTimestamp() < 86400) {
+                    $limit++;
+                }
                 $item->complete = true;
             } else {
+                $item->setTitle("⏳ - " . $video['title']);
                 $item->setVideoUrl($fileInfo['url']);
                 $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '');
             }
@@ -282,7 +290,7 @@ class Client
         unset($streamData['previewFrames']);
 
         $isValid = fn(
-            array $videoStream,
+            array  $videoStream,
             string $res
         ) => isset($videoStream['videoOnly'], $videoStream['format'], $videoStream['quality'], $videoStream['url'])
             && !$videoStream['videoOnly']
