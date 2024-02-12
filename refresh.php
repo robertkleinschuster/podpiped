@@ -15,14 +15,12 @@ $time = time();
 
 do {
     $complete = $cachedClient->refreshPlaylists();
-    flush();
     $status = require "status.php";
     file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'status', $status);
 } while (!$complete && time() - $time < 30);
 
 do {
     $complete = $cachedClient->refreshChannels();
-    flush();
     $status = require "status.php";
     file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'status', $status);
 } while (!$complete && time() - $time < 30);
