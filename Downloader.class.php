@@ -152,10 +152,10 @@ class Downloader
                     } else {
                         $this->log->append("RETRY ERROR $status, $size B / $contentLength B: $info");
                         $download = json_decode(file_get_contents($downloadFile), true);
-                        if (!isset($download['errors'])) {
-                            $download['errors'] = 1;
-                        } else {
+                        if (isset($download['errors'])) {
                             $download['errors']++;
+                        } else {
+                            $download['errors'] = 1;
                         }
                         file_put_contents($downloadFile, json_encode($download));
                     }
