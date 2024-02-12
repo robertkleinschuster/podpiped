@@ -26,7 +26,7 @@ class CachedClient
         $this->log = new Log();
     }
 
-    private function isValid(string $cacheFile): bool
+    private function isValid(string $cacheFile, int $ttl): bool
     {
         if (file_exists("$cacheFile.new")) {
             return false;
@@ -36,14 +36,14 @@ class CachedClient
             return false;
         }
         $age = time() - filemtime($cacheFile);
-        return $age < 3600;
+        return $age < $ttl;
     }
 
     public function channel(string $channelId): ?string
     {
         $cacheFile = $this->channelFolder . $channelId;
 
-        if (!$this->isValid($cacheFile)) {
+        if (!$this->isValid($cacheFile, 3600)) {
             $this->loadChannel($channelId);
         }
 
@@ -75,7 +75,7 @@ class CachedClient
     {
         $cacheFile = $this->playlistFolder . $playlistId;
 
-        if (!$this->isValid($cacheFile)) {
+        if (!$this->isValid($cacheFile, 3600)) {
             $this->loadPlaylist($playlistId);
         }
 
@@ -111,7 +111,7 @@ class CachedClient
             $complete = true;
             foreach ($files as $cacheFile) {
                 if (!str_ends_with($cacheFile, '.new')) {
-                    if (!$this->isValid($cacheFile)) {
+                    if (!$this->isValid($cacheFile, 3600)) {
                         $channelId = basename($cacheFile);
                         if ($this->loadChannel($channelId)) {
                             $this->log->append("refreshed channel: " . $channelId);
@@ -136,7 +136,7 @@ class CachedClient
             $complete = true;
             foreach ($files as $cacheFile) {
                 if (!str_ends_with($cacheFile, '.new')) {
-                    if (!$this->isValid($cacheFile)) {
+                    if (!$this->isValid($cacheFile, 600)) {
                         $playlistId = basename($cacheFile);
                         if ($this->loadPlaylist($playlistId)) {
                             $this->log->append("refreshed playlist: " . $playlistId);
