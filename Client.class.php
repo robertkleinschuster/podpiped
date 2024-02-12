@@ -68,20 +68,18 @@ class Client
             $channel = new Channel();
             $channel->setTitle($data['name']);
 
-            if (isset($data['uploaderAvatar'])) {
-                $url = parse_url($data['uploaderAvatar']);
-                $path = $url['path'];
-                $downloader = new Downloader();
-                $imageConvert = new ImageConverter();
-                $avatarFilename = $playlistId;
-                if ($downloader->done($avatarFilename)) {
-                    $source = $downloader->path($avatarFilename);
-                    $data['uploaderAvatar'] = "https://$this->ownHost" . $imageConvert->schedule($source);
-                } else {
-                    $source = $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", $avatarFilename, $data['name'] ?? '');
-                    $imageConvert->schedule($source);
-                    $data['uploaderAvatar'] = null;
-                }
+            $url = parse_url($data['uploaderAvatar']);
+            $path = $url['path'];
+            $downloader = new Downloader();
+            $imageConvert = new ImageConverter();
+            $avatarFilename = $playlistId;
+            if ($downloader->done($avatarFilename)) {
+                $source = $downloader->path($avatarFilename);
+                $data['uploaderAvatar'] = "https://$this->ownHost" . $imageConvert->schedule($source);
+            } elseif (isset($data['uploaderAvatar'])) {
+                $source = $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", $avatarFilename, $data['name'] ?? '');
+                $imageConvert->schedule($source);
+                $data['uploaderAvatar'] = null;
             }
 
             $channel->setCover($data['uploaderAvatar'] ?? "https://$this->ownHost/playlist.jpg");
@@ -116,22 +114,18 @@ class Client
             $channel = new Channel();
             $channel->setTitle($data['name']);
 
-            if (isset($data['avatarUrl'])) {
+            $downloader = new Downloader();
+            $imageConvert = new ImageConverter();
+            $avatarFilename = $channelId;
+            if ($downloader->done($avatarFilename)) {
+                $source = $downloader->path($avatarFilename);
+                $data['avatarUrl'] = "https://$this->ownHost" . $imageConvert->schedule($source);
+            } elseif (isset($data['avatarUrl'])) {
                 $url = parse_url($data['avatarUrl']);
-
                 $path = $url['path'];
-
-                $downloader = new Downloader();
-                $imageConvert = new ImageConverter();
-                $avatarFilename = $channelId;
-                if ($downloader->done($avatarFilename)) {
-                    $source = $downloader->path($avatarFilename);
-                    $data['avatarUrl'] = "https://$this->ownHost" . $imageConvert->schedule($source);
-                } else {
-                    $source = $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", $avatarFilename, $data['name'] ?? '');
-                    $imageConvert->schedule($source);
-                    $data['avatarUrl'] = null;
-                }
+                $source = $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", $avatarFilename, $data['name'] ?? '');
+                $imageConvert->schedule($source);
+                $data['avatarUrl'] = null;
             }
 
             $channel->setCover($data['avatarUrl'] ?? "https://$this->ownHost/logo.jpg");
