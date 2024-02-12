@@ -99,7 +99,7 @@ class Client
                     $complete = $complete && $item->complete;
                 }
             }
-            $channel->complete = $complete;
+            $channel->complete = (bool)$complete;
             return $channel;
         }
 
