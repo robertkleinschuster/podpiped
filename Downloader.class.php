@@ -133,8 +133,6 @@ class Downloader
                 $contentLength = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
                 $size = curl_getinfo($ch, CURLINFO_SIZE_DOWNLOAD);
 
-                $this->log->append("expected size: $contentLength, downloaded size: $size, status: $status");
-
                 if (
                     200 == $status
                     && ($contentLength === $size || intval($contentLength) === -1 && $size > 0)
@@ -142,12 +140,13 @@ class Downloader
                     fclose($fp);
                     @unlink($downloadFile);
                     @unlink($lockFile);
-                    $this->log->append("success: $info");
+                    $this->log->append("finished: $info");
                 } else {
-                    $this->log->append("error: $info");
+                    $this->log->append("ERROR $status, $size B / $contentLength B: $info");
                     fclose($fp);
                     @unlink($file);
-                    if ($status === 403) {
+                    @unlink($lockFile);
+                    if ($status === 403 || $status === 404) {
                         @unlink($downloadFile);
                     }
                 }
