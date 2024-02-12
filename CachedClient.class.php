@@ -67,6 +67,7 @@ class CachedClient
             file_put_contents($cacheFile, (string)$rss);
             return true;
         }
+        unlink("$cacheFile.new");
         return false;
     }
 
@@ -98,6 +99,7 @@ class CachedClient
             file_put_contents($cacheFile, (string)$rss);
             return true;
         }
+        unlink("$cacheFile.new");
         return false;
     }
 
