@@ -14,8 +14,8 @@ $downloader->download();
 $status = require "status.php";
 file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'status', $status);
 
-if (time() - $start < 150) {
-    sleep(10);
+if (time() - $start < 250) {
+    sleep(30);
     try {
         $url = "https://$_SERVER[HTTP_HOST]/download.php?start=" . $start;
         $ch = curl_init();
