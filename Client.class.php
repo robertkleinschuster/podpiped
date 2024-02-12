@@ -226,17 +226,11 @@ class Client
             $uploaderFeed = 'https://' . $this->ownHost . "/channel/$id";
 
             $uploaderName = $video['uploaderName'] ?? '';
-            $views = $this->formatCount($streamData['views'] ?? 0);
-            $likes = $this->formatCount($streamData['likes'] ?? 0);
-            $subscribers = $this->formatCount($streamData['uploaderSubscriberCount'] ?? 0);
 
             $item = new Item();
             $item->setTitle($video['title']);
-            $item->setHls($streamData['hls'] ?? '');
             $item->setEpisodeType('full');
-            $item->setSummary(
-                "👤$uploaderName<br>$subscribers&nbsp;Abos | $views&nbsp;Aufr.&nbsp; | $likes&nbsp;Likes"
-            );
+            $item->setSummary($uploaderName);
             $item->setUploaderUrl("https://$this->frontendHost{$video['uploaderUrl']}");
             $item->setUploaderFeedUrl($uploaderFeed);
             $item->setDescription($streamData['description']);
