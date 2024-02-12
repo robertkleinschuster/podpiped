@@ -68,7 +68,6 @@ class Client
             $channel = new Channel();
             $channel->setTitle($data['name']);
 
-
             $downloader = new Downloader();
             $imageConvert = new ImageConverter();
             $avatarFilename = $playlistId;
