@@ -151,7 +151,8 @@ class Downloader
                         @unlink($downloadFile);
                     } else {
                         $this->log->append("RETRY ERROR $status, $size B / $contentLength B: $info");
-                        $download['errors'] = $errors+1;
+                        $download = json_decode(file_get_contents($downloadFile), true);
+                        $download['errors'] = ($download['errors'] ?? 0) + 1;
                         file_put_contents($downloadFile, json_encode($download));
                     }
                 }
