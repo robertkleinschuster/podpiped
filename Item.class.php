@@ -21,6 +21,7 @@ class Item
     private string $mimeType;
     private string $url = '';
     private string $hls = '';
+    private string $downloadFilename = '';
 
     public bool $complete = false;
 
@@ -197,8 +198,32 @@ class Item
         return $this;
     }
 
+    /**
+     * @param bool $complete
+     */
+    public function setComplete(bool $complete): void
+    {
+        $this->complete = $complete;
+    }
+
+    /**
+     * @param string $downloadFilename
+     */
+    public function setDownloadFilename(string $downloadFilename): void
+    {
+        $this->downloadFilename = $downloadFilename;
+    }
+
     public function __toString()
     {
+
+        $videoLink = '';
+        if ($this->complete && $this->downloadFilename && $this->videoUrl) {
+            $videoLink = <<<HTML
+<a href="$this->videoUrl" target="_blank" download="$this->downloadFilename">Herunterladen ⬇️</a>
+<br>
+HTML;
+        }
         return <<<XML
 <item>
     <title><![CDATA[$this->title]]></title>   
@@ -208,8 +233,7 @@ class Item
     <center>
     $this->summary
     <br>
-    <a href="$this->videoUrl">Video-URL: $this->videoUrl</a>
-    <br>
+    $videoLink
     <a href="$this->uploaderUrl">zum Kanal</a>
     <br>
     <a href="$this->uploaderFeedUrl">Kanal Podcast</a>

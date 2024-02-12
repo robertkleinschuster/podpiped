@@ -260,7 +260,11 @@ class Client
                 if (time() - $date->getTimestamp() < 86400) {
                     $limit++;
                 }
-                $item->complete = true;
+                $item->setComplete(true);
+                $filename = mb_ereg_replace("([^\w\s\d\-_~,;\[\]\(\).])", '', $video['title']);
+                $filename = mb_ereg_replace("([\.]{2,})", '', $filename);
+                $filename .= "_$videoFilename";
+                $item->setDownloadFilename($filename);
             } else {
                 $item->setTitle("⏳ - " . $video['title']);
                 $item->setVideoUrl($fileInfo['url']);
