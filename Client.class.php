@@ -253,7 +253,7 @@ class Client
             $item->setVideoId($videoId);
             if ($downloader->done($videoFilename)) {
                 $item->setVideoUrl("https://$this->ownHost" . $downloader->path($videoFilename));
-                if (time() - $date->getTimestamp() < 86400) {
+                if (new DateTime('yesterday') < $date) {
                     $limit++;
                 }
                 $item->setComplete(true);
