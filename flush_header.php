@@ -39,6 +39,8 @@ try {
 
         curl_exec($ch);
         curl_close($ch);
+        $log = new Log();
+        $log->append('rerun: ' . $run);
     }
 } catch (Throwable $exception) {
     error_log((string)$exception);
