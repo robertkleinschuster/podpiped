@@ -13,13 +13,18 @@ header('Set-Cookie: rid=' . uniqid());
 if (function_exists('apache_setenv')) {
     apache_setenv('no-gzip', '1');
 }
-
 http_response_code(200);
-flush();
 ob_start();
 echo "processing\n\n";
-ob_flush();
+header('Connection: close');
+header('Content-Length: ' . ob_get_length());
+ob_end_flush();
+@ob_flush();
 flush();
+
+if (function_exists('fastcgi_finish_request')) {
+    fastcgi_finish_request();
+}
 
 $status = require "status.php";
 file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'status', $status);
