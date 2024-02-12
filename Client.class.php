@@ -68,8 +68,7 @@ class Client
             $channel = new Channel();
             $channel->setTitle($data['name']);
 
-            $url = parse_url($data['uploaderAvatar']);
-            $path = $url['path'];
+
             $downloader = new Downloader();
             $imageConvert = new ImageConverter();
             $avatarFilename = $playlistId;
@@ -77,6 +76,8 @@ class Client
                 $source = $downloader->path($avatarFilename);
                 $data['uploaderAvatar'] = "https://$this->ownHost" . $imageConvert->schedule($source);
             } elseif (isset($data['uploaderAvatar'])) {
+                $url = parse_url($data['uploaderAvatar']);
+                $path = $url['path'];
                 $source = $downloader->schedule("https://$this->proxyHost$path?{$url['query']}", $avatarFilename, $data['name'] ?? '');
                 $imageConvert->schedule($source);
                 $data['uploaderAvatar'] = null;
