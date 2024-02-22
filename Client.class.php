@@ -225,13 +225,7 @@ class Client
             }
             $item->setUploaderName($uploaderName);
 
-            if ($video['uploaded'] > 0) {
-                $date = new DateTime();
-                $date->setTimestamp(intval($video['uploaded'] / 1000));
-            } else {
-                $date = new DateTime($streamData['uploadDate']);
-            }
-
+            $date = new DateTime($streamData['uploadDate']);
             $item->setDate($date->format(DATE_RFC2822));
 
             $item->setUrl("https://$this->frontendHost{$video['url']}");
