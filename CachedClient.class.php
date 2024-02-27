@@ -11,9 +11,9 @@ class CachedClient
     private Log $log;
 
     public function __construct(
-        private readonly Client $client,
-        private readonly string $channelFolder = __DIR__ . '/channel/',
-        private readonly string $playlistFolder = __DIR__ . '/playlist/'
+        private Client $client,
+        private string $channelFolder = __DIR__ . '/channel/',
+        private string $playlistFolder = __DIR__ . '/playlist/'
     )
     {
         if (!is_dir($this->channelFolder)) {
