@@ -7,3 +7,11 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule . /index.php [L]
 </IfModule>
+
+<Files status>
+   Header set Content-Type "text/plain"
+</Files>
+
+<Files log>
+   Header set Content-Type "text/plain"
+</Files>
