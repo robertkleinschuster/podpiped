@@ -224,7 +224,8 @@ class Client
             $item->setUploaderFeedUrl($uploaderFeed);
             $description = $streamData['description'] ?? '';
             $item->setDescription(str_replace('www.youtube.com', 'piped.video', $description));
-            $item->setDuration((string)(int)$video['duration']);
+            $duration = (int)$video['duration'];
+            $item->setDuration((string)$duration);
             if (isset($chaptersJson)) {
                 $item->setChaptersUrl("https://$this->ownHost$chaptersFile");
             }
@@ -242,7 +243,7 @@ class Client
                 $item->setVideoUrl($fileInfo['url']);
             }
 
-            if (count($items) >= $downloadLimit) {
+            if (count($items) >= $downloadLimit || $duration > 1200) {
                 $item->setTitle("❎ " . $video['title']);
                 $item->setComplete(true);
             } elseif ($downloader->done($videoFilename)) {
