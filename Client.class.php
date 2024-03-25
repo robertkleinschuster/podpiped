@@ -155,7 +155,7 @@ class Client
      * @return Item[]
      * @throws Exception
      */
-    public function items(array $videos, int $limit = 2): array
+    public function items(array $videos, int $limit = 5, int $downloadLimit = 1): array
     {
         $downloader = new Downloader();
 
@@ -177,8 +177,12 @@ class Client
             }
             $videoId = $params['v'];
             $videoFilename = "$videoId.mp4";
-            if (count($items) >= $limit) {
+
+            if (count($items) >= $downloadLimit) {
                 $downloader->delete($videoFilename);
+            }
+
+            if (count($items) >= $limit) {
                 continue;
             }
 
@@ -230,11 +234,11 @@ class Client
 
             $item->setUrl("https://$this->frontendHost{$video['url']}");
             $item->setVideoId($videoId);
-            if ($downloader->done($videoFilename)) {
+            if (count($items) >= $downloadLimit) {
+                $item->setVideoUrl($fileInfo['url']);
+                $item->setComplete(true);
+            } elseif ($downloader->done($videoFilename)) {
                 $item->setVideoUrl("https://$this->ownHost" . $downloader->path($videoFilename));
-                if (new DateTime('yesterday') < $date) {
-                    $limit++;
-                }
                 $item->setComplete(true);
                 $filename = mb_ereg_replace("([^\w\s\d\-_~,;\[\]\(\).])", '', $video['title']);
                 $filename = mb_ereg_replace("([\.]{2,})", '', $filename);
@@ -277,7 +281,7 @@ class Client
             && $res === $videoStream['quality'];
 
         foreach ($videoStreams as $videoStream) {
-            if ($isValid($videoStream, '720p')) {
+            if ($isValid($videoStream, '360p')) {
                 $streamData['fileInfo'] = $videoStream;
                 return $streamData;
             }
