@@ -178,11 +178,8 @@ class Client
             $videoId = $params['v'];
             $videoFilename = "$videoId.mp4";
 
-            if (count($items) >= $downloadLimit) {
-                $downloader->delete($videoFilename);
-            }
-
             if (count($items) >= $limit) {
+                $downloader->delete($videoFilename);
                 continue;
             }
 
@@ -246,6 +243,7 @@ class Client
             if (count($items) >= $downloadLimit || $duration > 1200) {
                 $item->setTitle("❎ " . $video['title']);
                 $item->setComplete(true);
+                $downloader->delete($videoFilename);
             } elseif ($downloader->done($videoFilename)) {
                 $item->setTitle("✅ " . $video['title']);
                 $item->setVideoUrl("https://$this->ownHost" . $downloader->path($videoFilename));
