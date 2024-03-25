@@ -209,6 +209,7 @@ class Client
             }
 
             $fileInfo = $streamData['fileInfo'];
+            $fileInfo720 = $streamData['fileInfo_720p'] ?? null;
 
             $channelId = basename($video['uploaderUrl'] ?? '');
             $uploaderFeed = 'https://' . $this->ownHost . "/channel/$channelId";
@@ -234,10 +235,18 @@ class Client
 
             $item->setUrl("https://$this->frontendHost{$video['url']}");
             $item->setVideoId($videoId);
-            if (count($items) >= $downloadLimit) {
+
+            if ($fileInfo720) {
+                $item->setVideoUrl($fileInfo720['url']);
+            } else {
                 $item->setVideoUrl($fileInfo['url']);
+            }
+
+            if (count($items) >= $downloadLimit) {
+                $item->setTitle("❎ " . $video['title']);
                 $item->setComplete(true);
             } elseif ($downloader->done($videoFilename)) {
+                $item->setTitle("✅ " . $video['title']);
                 $item->setVideoUrl("https://$this->ownHost" . $downloader->path($videoFilename));
                 $item->setComplete(true);
                 $filename = mb_ereg_replace("([^\w\s\d\-_~,;\[\]\(\).])", '', $video['title']);
@@ -245,8 +254,7 @@ class Client
                 $filename .= "_$videoFilename";
                 $item->setDownloadFilename($filename);
             } else {
-                $item->setTitle("⏳ - " . $video['title']);
-                $item->setVideoUrl($fileInfo['url']);
+                $item->setTitle("⏳ " . $video['title']);
                 $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '', "/channel/$channelId.new");
             }
             $item->setSize((string)$downloader->size($videoFilename));
@@ -283,15 +291,14 @@ class Client
         foreach ($videoStreams as $videoStream) {
             if ($isValid($videoStream, '360p')) {
                 $streamData['fileInfo'] = $videoStream;
-                return $streamData;
+            }
+            if ($isValid($videoStream, '720p')) {
+                $streamData['fileInfo_720p'] = $videoStream;
             }
         }
 
-        foreach ($videoStreams as $videoStream) {
-            if ($isValid($videoStream, '360p')) {
-                $streamData['fileInfo'] = $videoStream;
-                return $streamData;
-            }
+        if (isset($streamData['fileInfo'])) {
+            return $streamData['fileInfo'];
         }
 
         return null;
