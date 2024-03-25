@@ -13,7 +13,7 @@ $downloader->download();
 
 $status = require "status.php";
 file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'status', $status);
-
+exit;
 if (time() - $start < 250) {
     sleep(1);
     try {
