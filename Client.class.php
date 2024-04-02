@@ -12,9 +12,9 @@ class Client
 {
     public function __construct(
         private string $ownHost,
-        private string $apiHost = 'piped-api.lunar.icu', //'pipedapi.kavin.rocks',
+        private string $apiHost = 'pipedapi.kavin.rocks', //'pipedapi.kavin.rocks', 'piped-api.lunar.icu'
         private string $frontendHost = 'piped.kavin.rocks',
-        private string $proxyHost = 'piped-proxy.lunar.icu', //'pipedproxy.kavin.rocks',
+        private string $proxyHost = 'pipedproxy.kavin.rocks', //'pipedproxy.kavin.rocks', 'piped-proxy.lunar.icu'
     )
     {
         if (!is_dir(__DIR__ . '/chapters')) {
