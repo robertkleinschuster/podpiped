@@ -71,6 +71,7 @@ class CachedClient
             if (str_contains($exception->getMessage(), 'This channel does not exist.')) {
                 @unlink($cacheFile);
                 @unlink("$cacheFile.new");
+                $this->log->append('removed channel: ' . $channelId);
             } else {
                 throw $exception;
             }
@@ -112,6 +113,7 @@ class CachedClient
             if (str_contains($exception->getMessage(), 'Playlist not found')) {
                 @unlink($cacheFile);
                 @unlink("$cacheFile.new");
+                $this->log->append('removed playlist: ' . $playlistId);
             } else {
                 throw $exception;
             }
@@ -141,6 +143,7 @@ class CachedClient
 
             return $complete;
         } catch (Throwable $exception) {
+            error_log($exception->getMessage());
             $this->log->append($exception->getMessage());
             return true;
         }
@@ -166,6 +169,7 @@ class CachedClient
 
             return $complete;
         } catch (Throwable $exception) {
+            error_log($exception->getMessage());
             $this->log->append($exception->getMessage());
             return true;
         }

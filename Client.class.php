@@ -48,8 +48,7 @@ class Client
             $data = @json_decode($response, true);
             if (is_array($data)) {
                 if (isset($data['error'])) {
-                    error_log("Error fetching: $path Message: {$data['error']}");
-                    return null;
+                    throw new Exception("Error fetching: $path Message: {$data['error']}");
                 }
                 return $data;
             }
