@@ -56,16 +56,26 @@ class CachedClient
     private function loadChannel(string $channelId): bool
     {
         $cacheFile = $this->channelFolder . $channelId;
-        $channel = $this->client->channel($channelId);
-        if ($channel) {
-            if ($channel->complete) {
-                @unlink("$cacheFile.new");
-            }
+        try {
+            $channel = $this->client->channel($channelId);
+            if ($channel) {
+                if ($channel->complete) {
+                    @unlink("$cacheFile.new");
+                }
 
-            $rss = new Rss($channel);
-            file_put_contents($cacheFile, (string)$rss);
-            return true;
+                $rss = new Rss($channel);
+                file_put_contents($cacheFile, (string)$rss);
+                return true;
+            }
+        } catch (Throwable $exception) {
+            if (str_contains($exception->getMessage(), 'This channel does not exist.')) {
+                @unlink($cacheFile);
+                @unlink("$cacheFile.new");
+            } else {
+                throw $exception;
+            }
         }
+
         return false;
     }
 
@@ -87,16 +97,26 @@ class CachedClient
     private function loadPlaylist(string $playlistId): bool
     {
         $cacheFile = $this->playlistFolder . $playlistId;
-        $playlist = $this->client->playlist($playlistId);
-        if ($playlist) {
-            if ($playlist->complete) {
-                @unlink("$cacheFile.new");
-            }
+        try {
+            $playlist = $this->client->playlist($playlistId);
+            if ($playlist) {
+                if ($playlist->complete) {
+                    @unlink("$cacheFile.new");
+                }
 
-            $rss = new Rss($playlist);
-            file_put_contents($cacheFile, (string)$rss);
-            return true;
+                $rss = new Rss($playlist);
+                file_put_contents($cacheFile, (string)$rss);
+                return true;
+            }
+        } catch (Throwable $exception) {
+            if (str_contains($exception->getMessage(), 'Playlist not found')) {
+                @unlink($cacheFile);
+                @unlink("$cacheFile.new");
+            } else {
+                throw $exception;
+            }
         }
+
         return false;
     }
 
