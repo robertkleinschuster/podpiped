@@ -296,7 +296,7 @@ class Client
         }
 
         if (isset($streamData['fileInfo'])) {
-            return $streamData['fileInfo'];
+            return $streamData;
         }
 
         return null;
