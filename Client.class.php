@@ -219,7 +219,8 @@ class Client
             $item->setUploaderUrl("https://$this->frontendHost{$video['uploaderUrl']}");
             $item->setUploaderFeedUrl($uploaderFeed);
             $description = $streamData['description'] ?? '';
-            $item->setDescription(str_replace('www.youtube.com', 'piped.video', $description));
+            $description = str_replace('www.youtube.com', 'piped.video', $description);
+            $item->setDescription($description);
             $duration = (int)$video['duration'];
             $item->setDuration((string)$duration);
             if (isset($chaptersJson)) {
@@ -241,6 +242,8 @@ class Client
 
             if (count($items) >= $downloadLimit || $duration > 1200) {
                 $item->setTitle("❎ " . $video['title']);
+                $item->setDescription("❎ Nicht auf Server<br>$description");
+
                 $item->setComplete(true);
                 $downloader->delete($videoFilename);
             } elseif ($downloader->done($videoFilename)) {
