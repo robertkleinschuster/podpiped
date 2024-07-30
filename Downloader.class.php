@@ -190,6 +190,7 @@ class Downloader
                 $age = time() - $fileTime;
                 if ($age > 86400 * 7) {
                     @unlink($file);
+                    $this->log->append("deleted ($age s): $file");
                 }
             }
         }
