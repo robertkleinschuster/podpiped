@@ -180,7 +180,17 @@ class Downloader
         foreach ($lockFiles as $lockFile) {
             $downloadFile = dirname($lockFile) . DIRECTORY_SEPARATOR . basename($lockFile, '.lock') . '.download';
             if (!file_exists($downloadFile)) {
-                unlink($lockFile);
+                @unlink($lockFile);
+            }
+        }
+        $files = glob($this->base . $this->folder . DIRECTORY_SEPARATOR . '*');
+        foreach ($files as $file) {
+            if (file_exists($file)) {
+                $fileTime = @filemtime($file);
+                $age = time() - $fileTime;
+                if ($age > 86400 * 7) {
+                    @unlink($file);
+                }
             }
         }
     }
