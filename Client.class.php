@@ -154,7 +154,7 @@ class Client
      * @return Item[]
      * @throws Exception
      */
-    public function items(array $videos, int $limit = 5, int $downloadLimit = 5): array
+    public function items(array $videos, int $limit = 5, int $downloadLimit = 3): array
     {
         $downloader = new Downloader();
 
