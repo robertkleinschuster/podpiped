@@ -154,7 +154,7 @@ class Client
      * @return Item[]
      * @throws Exception
      */
-    public function items(array $videos, int $limit = 5, int $downloadLimit = 1): array
+    public function items(array $videos, int $limit = 5, int $downloadLimit = 5): array
     {
         $downloader = new Downloader();
 
@@ -242,7 +242,7 @@ class Client
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
             }
 
-            if (count($items) >= $downloadLimit || $duration > 2700) {
+            if (count($items) >= $downloadLimit || $duration > 1200 && count($items)) {
                 $item->setComplete(true);
                 $downloader->delete($videoFilename);
             } elseif ($downloader->done($videoFilename)) {
