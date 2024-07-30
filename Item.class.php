@@ -207,19 +207,15 @@ HTML;
     <itunes:episodeType>$this->episodeType</itunes:episodeType>
     <itunes:summary><![CDATA[$this->summary]]></itunes:summary>  
     <description><![CDATA[
+    $this->description
     <center>
-    $this->summary
+    <br>
     <br>
     $videoLink
-    <a href="$this->uploaderUrl">zum Kanal</a>
+    <a href="$this->uploaderUrl">$this->summary</a>
     <br>
     <a href="$this->uploaderFeedUrl">Kanal Podcast</a>
-    <br>
-    ＿＿＿＿＿＿＿＿＿＿＿＿＿＿
-    <br>
-    <br>
     </center>
-    $this->description
     ]]></description>  
     <itunes:duration>$this->duration</itunes:duration>
     <podcast:chapters url="$this->chaptersUrl" type="application/json+chapters"/>
