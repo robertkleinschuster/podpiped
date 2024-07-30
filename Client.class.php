@@ -236,30 +236,23 @@ class Client
 
             if ($fileInfo720) {
                 $item->setVideoUrl($fileInfo720['url']);
+                $item->setMimeType($fileInfo720['mimeType'] ?? 'video/mp4');
             } else {
                 $item->setVideoUrl($fileInfo['url']);
+                $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
             }
 
-            if (count($items) >= $downloadLimit || $duration > 1200) {
-                $item->setTitle("❎ " . $video['title']);
-                $item->setDescription("❎ Nicht auf Server<br>$description");
-
+            if (count($items) >= $downloadLimit || $duration > 2700) {
                 $item->setComplete(true);
                 $downloader->delete($videoFilename);
             } elseif ($downloader->done($videoFilename)) {
-                $item->setTitle("✅ " . $video['title']);
                 $item->setVideoUrl("https://$this->ownHost" . $downloader->path($videoFilename));
+                $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
                 $item->setComplete(true);
-                $filename = mb_ereg_replace("([^\w\s\d\-_~,;\[\]\(\).])", '', $video['title']);
-                $filename = mb_ereg_replace("([\.]{2,})", '', $filename);
-                $filename .= "_$videoFilename";
-                $item->setDownloadFilename($filename);
             } else {
-                $item->setTitle("⏳ " . $video['title']);
                 $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '', "/channel/$channelId.new");
             }
             $item->setSize((string)$downloader->size($videoFilename));
-            $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
 
             $items[] = $item;
         }

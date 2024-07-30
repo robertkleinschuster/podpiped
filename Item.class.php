@@ -9,7 +9,6 @@ class Item
     private string $summary = '';
     private string $uploaderUrl = '';
     private string $description = '';
-    private string $thumbnail = '';
     private string $duration = '';
     private string $chaptersUrl = '';
     private string $uploaderName = '';
@@ -20,8 +19,6 @@ class Item
     private string $size = '';
     private string $mimeType;
     private string $url = '';
-    private string $hls = '';
-    private string $downloadFilename = '';
 
     public bool $complete = false;
 
@@ -32,16 +29,6 @@ class Item
     public function setTitle(string $title): Item
     {
         $this->title = htmlentities($title);
-        return $this;
-    }
-
-    /**
-     * @param string $hls
-     * @return Item
-     */
-    public function setHls(string $hls): Item
-    {
-        $this->hls = htmlentities($hls);
         return $this;
     }
 
@@ -94,16 +81,6 @@ class Item
     public function setDescription(string $description): Item
     {
         $this->description = $description;
-        return $this;
-    }
-
-    /**
-     * @param string $thumbnail
-     * @return Item
-     */
-    public function setThumbnail(string $thumbnail): Item
-    {
-        $this->thumbnail = htmlentities($thumbnail);
         return $this;
     }
 
@@ -179,6 +156,14 @@ class Item
     }
 
     /**
+     * @return string
+     */
+    public function getVideoUrl(): string
+    {
+        return $this->videoUrl;
+    }
+
+    /**
      * @param string $size
      * @return Item
      */
@@ -206,21 +191,13 @@ class Item
         $this->complete = $complete;
     }
 
-    /**
-     * @param string $downloadFilename
-     */
-    public function setDownloadFilename(string $downloadFilename): void
-    {
-        $this->downloadFilename = $downloadFilename;
-    }
-
     public function __toString()
     {
 
         $videoLink = '';
-        if ($this->complete && $this->downloadFilename && $this->videoUrl) {
+        if ($this->complete && $this->videoUrl) {
             $videoLink = <<<HTML
-<a href="$this->videoUrl" target="_blank" download="$this->downloadFilename">Herunterladen ⬇️</a>
+<a href="$this->videoUrl" target="_blank">Herunterladen ⬇️</a>
 <br>
 HTML;
         }
