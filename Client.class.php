@@ -161,7 +161,7 @@ class Client
      * @return Item[]
      * @throws Exception
      */
-    public function items(array $videos, int $limit = 10): array
+    public function items(array $videos, int $limit = 20): array
     {
         $downloader = new Downloader();
 
@@ -249,20 +249,25 @@ class Client
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
             }
 
+            $item->setSize((string)$downloader->size($videoFilename));
+
             if (!$this->downloadVideos) {
                 $item->setComplete(true);
                 $downloader->delete($videoFilename);
+                $items[] = $item;
             } elseif ($downloader->done($videoFilename)) {
                 $item->setVideoUrl("https://$this->ownHost" . $downloader->path($videoFilename));
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
                 $item->setComplete(true);
                 $item->setDownloaded(true);
+                $items[] = $item;
             } else {
                 $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '', "/channel/$channelId.new");
+                if (empty($items)) {
+                    $item->setVideoUrl('');
+                    $items[] = $item;
+                }
             }
-            $item->setSize((string)$downloader->size($videoFilename));
-
-            $items[] = $item;
         }
 
         return $items;
