@@ -21,6 +21,7 @@ class Item
     private string $url = '';
 
     public bool $complete = false;
+    public bool $downloaded = false;
 
     /**
      * @param string $title
@@ -191,11 +192,19 @@ class Item
         $this->complete = $complete;
     }
 
+    /**
+     * @param bool $downloaded
+     */
+    public function setDownloaded(bool $downloaded): void
+    {
+        $this->downloaded = $downloaded;
+    }
+
     public function __toString()
     {
 
         $videoLink = '';
-        if ($this->complete && $this->videoUrl) {
+        if ($this->complete && $this->downloaded && $this->videoUrl) {
             $videoLink = <<<HTML
 <a href="$this->videoUrl" target="_blank">Herunterladen ⬇️</a>
 <br>

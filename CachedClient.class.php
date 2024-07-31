@@ -10,9 +10,12 @@ class CachedClient
 {
     private Log $log;
 
+    public const CHANNEL_FOLDER = __DIR__ . '/channel/';
+    public const DOWNLOAD_CHANNEL_FOLDER = __DIR__ . '/download/channel/';
+
     public function __construct(
         private Client $client,
-        private string $channelFolder = __DIR__ . '/channel/',
+        private string $channelFolder = self::CHANNEL_FOLDER,
         private string $playlistFolder = __DIR__ . '/playlist/'
     )
     {

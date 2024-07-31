@@ -10,6 +10,8 @@ require_once "Rss.class.php";
 
 class Client
 {
+    private bool $downloadVideos = false;
+
     public function __construct(
         private string $ownHost,
         private string $apiHost = 'pipedapi.kavin.rocks', //'pipedapi.kavin.rocks', 'piped-api.lunar.icu'
@@ -20,6 +22,11 @@ class Client
         if (!is_dir(__DIR__ . '/chapters')) {
             mkdir(__DIR__ . '/chapters');
         }
+    }
+
+    public function setDownloadVideos(bool $downloadVideos): void
+    {
+        $this->downloadVideos = $downloadVideos;
     }
 
     public function fetch(string $path, array $header = null): ?array
@@ -154,7 +161,7 @@ class Client
      * @return Item[]
      * @throws Exception
      */
-    public function items(array $videos, int $limit = 5, int $downloadLimit = 3): array
+    public function items(array $videos, int $limit = 10): array
     {
         $downloader = new Downloader();
 
@@ -242,13 +249,14 @@ class Client
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
             }
 
-            if (count($items) >= $downloadLimit || $duration > 120 && count($items)) {
+            if (!$this->downloadVideos) {
                 $item->setComplete(true);
                 $downloader->delete($videoFilename);
             } elseif ($downloader->done($videoFilename)) {
                 $item->setVideoUrl("https://$this->ownHost" . $downloader->path($videoFilename));
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
                 $item->setComplete(true);
+                $item->setDownloaded(true);
             } else {
                 $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '', "/channel/$channelId.new");
             }
