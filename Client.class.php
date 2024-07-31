@@ -139,7 +139,11 @@ class Client
             $channel->setLanguage('en');
             $channel->setFrontend("https://$this->frontendHost/channel/$channelId");
             $items = $this->items($data['relatedStreams']);
-            $channel->setItems(implode(array_map('strval', $items)));
+            $completeItems = array_filter($items, fn(Item $item) => $item->complete);
+            if (empty($completeItems)) {
+                $completeItems = $items;
+            }
+            $channel->setItems(implode(array_map('strval', $completeItems)));
             $complete = null;
             foreach ($items as $item) {
                 if ($complete === null) {
