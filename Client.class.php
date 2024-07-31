@@ -242,7 +242,7 @@ class Client
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
             }
 
-            if (count($items) >= $downloadLimit || $duration > 300 && count($items)) {
+            if (count($items) >= $downloadLimit || $duration > 120 && count($items)) {
                 $item->setComplete(true);
                 $downloader->delete($videoFilename);
             } elseif ($downloader->done($videoFilename)) {
