@@ -20,10 +20,10 @@ class CachedClient
     )
     {
         if (!is_dir($this->channelFolder)) {
-            mkdir($this->channelFolder);
+            mkdir($this->channelFolder, 0777, true);
         }
         if (!is_dir($this->playlistFolder)) {
-            mkdir($this->playlistFolder);
+            mkdir($this->playlistFolder, 0777, true);
         }
 
         $this->log = new Log();
