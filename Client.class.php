@@ -140,19 +140,11 @@ class Client
             $channel->setFrontend("https://$this->frontendHost/channel/$channelId");
             $items = $this->items($data['relatedStreams']);
             $completeItems = array_filter($items, fn(Item $item) => $item->complete);
+            $channel->complete = count($items) === count($completeItems) && isset($data['avatarUrl']);
             if (empty($completeItems)) {
                 $completeItems = $items;
             }
             $channel->setItems(implode(array_map('strval', $completeItems)));
-            $complete = null;
-            foreach ($items as $item) {
-                if ($complete === null) {
-                    $complete = $item->complete;
-                } else {
-                    $complete = $complete && $item->complete;
-                }
-            }
-            $channel->complete = $complete && isset($data['avatarUrl']);
             return $channel;
         }
 
