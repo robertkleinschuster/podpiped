@@ -14,7 +14,7 @@ class Channel
     private string $items = '';
     private string $author = '';
     public bool $complete = false;
-
+    public bool $downloadEnabled = false;
     /**
      * @param string $title
      * @return Channel
@@ -106,15 +106,46 @@ class Channel
         return $this;
     }
 
+    /**
+     * @param bool $downloadEnabled
+     */
+    public function setDownloadEnabled(bool $downloadEnabled): void
+    {
+        $this->downloadEnabled = $downloadEnabled;
+    }
+
 
     public function __toString()
     {
+        $info = '';
+        $date = date('Y-m-d H:i:s');
+
+        if ($this->downloadEnabled) {
+            $info .= <<<HTML
+<br>
+Videos werden Serverseitig gespeichert.
+HTML;
+        }
+        if ($this->complete) {
+            $info .= <<<HTML
+<br>
+Aktualisiert: $date
+HTML;
+        } else {
+            $info .= <<<HTML
+<br>
+Aktualisierung läuft: $date
+HTML;
+        }
         return <<<XML
   <channel>
    <title><![CDATA[$this->title]]></title>   
    <link>$this->frontend</link>   
    <language>$this->language</language>   
-   <description><![CDATA[$this->description<br>Feed: $this->feedUrl]]></description>   
+   <description><![CDATA[
+$this->description
+$info
+]]></description>   
    <copyright><![CDATA[$this->copyright]]></copyright>
    <itunes:author>$this->author</itunes:author>
    <image>
