@@ -254,20 +254,16 @@ class Client
             if (!$this->downloadVideos) {
                 $item->setComplete(true);
                 $downloader->delete($videoFilename);
-                $items[] = $item;
             } elseif ($downloader->done($videoFilename)) {
                 $item->setVideoUrl("https://$this->ownHost" . $downloader->path($videoFilename));
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
                 $item->setComplete(true);
                 $item->setDownloaded(true);
-                $items[] = $item;
             } else {
                 $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '', "/channel/$channelId.new");
-                if (empty($items)) {
-                    $item->setVideoUrl('');
-                    $items[] = $item;
-                }
             }
+
+            $items[] = $item;
         }
 
         return $items;
