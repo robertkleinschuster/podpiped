@@ -257,7 +257,9 @@ class Client
 
             if (!$this->downloadVideos) {
                 $item->setComplete(true);
-                $downloader->delete($videoFilename);
+                if (!file_exists(__DIR__ . '/download/channel/' . $channelId)) {
+                    $downloader->delete($videoFilename);
+                }
             } elseif ($downloader->done($videoFilename)) {
                 $item->setVideoUrl("https://$this->ownHost" . $downloader->path($videoFilename));
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
