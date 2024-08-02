@@ -130,7 +130,7 @@ class Client
             $channel->setLanguage('en');
             $channel->setFrontend("https://$this->frontendHost/channel/$channelId");
             $channel->setDownloadEnabled($downloadVideos);
-            $channel->setToggleDownloadUrl("https://$this->ownHost" . PATH_DOWNLOAD_CHANNEL);
+            $channel->setToggleDownloadUrl("https://$this->ownHost/download/channel/$channelId");
             $items = $this->items($data['relatedStreams'], 20, $downloadVideos);
             $completeItems = array_filter($items, fn(Item $item) => $item->complete);
             $channel->complete = count($items) === count($completeItems) && isset($data['avatarUrl']);
@@ -241,7 +241,7 @@ class Client
             $item->setSize((string)$downloader->size($videoFilename));
 
             $item->setDownloadEnabled($downloadVideos);
-            $item->setToggleDownloadUrl("https://$this->ownHost" . PATH_DOWNLOAD_CHANNEL);
+            $item->setToggleDownloadUrl("https://$this->ownHost/download/channel/$channelId");
             if (!$downloadVideos) {
                 $item->setComplete(true);
                 $downloader->delete($videoFilename);
