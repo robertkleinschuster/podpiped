@@ -232,11 +232,13 @@ HTML;
 Videos werden Serverseitig gespeichert.
 <br>
 <a href="$this->toggleDownloadUrl">Download deaktivieren.</a>
+<br>
 HTML;
         } else {
             $info .= <<<HTML
 <br>
 <a href="$this->toggleDownloadUrl">Download aktivieren.</a>
+<br>
 HTML;
         }
 
@@ -255,6 +257,7 @@ HTML;
     <br>
     <a href="$this->uploaderFeedUrl">Kanal Podcast</a>
     $info
+    <br>
     </center>
     ]]></description>  
     <itunes:duration>$this->duration</itunes:duration>
