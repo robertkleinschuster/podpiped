@@ -131,7 +131,7 @@ class Client
             $channel->setFrontend("https://$this->frontendHost/channel/$channelId");
             $channel->setDownloadEnabled($downloadVideos);
             $channel->setToggleDownloadUrl("https://$this->ownHost/download/channel/$channelId");
-            $items = $this->items($data['relatedStreams'], 20, $downloadVideos);
+            $items = $this->items($data['relatedStreams'], 5, $downloadVideos);
             $completeItems = array_filter($items, fn(Item $item) => $item->complete);
             $channel->complete = count($items) === count($completeItems) && isset($data['avatarUrl']);
             if (empty($completeItems)) {
@@ -150,7 +150,7 @@ class Client
      * @return Item[]
      * @throws Exception
      */
-    public function items(array $videos, int $limit = 20, bool $downloadVideos = false): array
+    public function items(array $videos, int $limit, bool $downloadVideos = false): array
     {
         $downloader = new Downloader();
 
