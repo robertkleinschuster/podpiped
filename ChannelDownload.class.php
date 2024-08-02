@@ -10,7 +10,7 @@ class ChannelDownload
 
 
     public function __construct(
-        private string $folder = __DIR__ . '/download/channel/',
+        private string $folder = __DIR__ . '/download/channel/enabled/',
     )
     {
         if (!is_dir($this->folder)) {
