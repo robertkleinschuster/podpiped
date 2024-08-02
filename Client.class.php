@@ -10,8 +10,6 @@ require_once "Rss.class.php";
 
 class Client
 {
-    private bool $downloadVideos = false;
-
     public function __construct(
         private string $ownHost,
         private string $apiHost = 'pipedapi.kavin.rocks', //'pipedapi.kavin.rocks', 'piped-api.lunar.icu'
@@ -22,11 +20,6 @@ class Client
         if (!is_dir(__DIR__ . '/chapters')) {
             mkdir(__DIR__ . '/chapters');
         }
-    }
-
-    public function setDownloadVideos(bool $downloadVideos): void
-    {
-        $this->downloadVideos = $downloadVideos;
     }
 
     public function fetch(string $path, array $header = null): ?array
@@ -73,7 +66,6 @@ class Client
         if (!empty($data)) {
             $channel = new Channel();
             $channel->setTitle($data['name']);
-            $channel->setDownloadEnabled($this->downloadVideos);
             $downloader = new Downloader();
             $imageConvert = new ImageConverter();
             $avatarFilename = $playlistId;
@@ -112,14 +104,13 @@ class Client
         return null;
     }
 
-    public function channel(string $channelId): ?Channel
+    public function channel(string $channelId, bool $downloadVideos): ?Channel
     {
         $data = $this->fetch("/channel/$channelId");
 
         if (!empty($data)) {
             $channel = new Channel();
             $channel->setTitle($data['name']);
-            $channel->setDownloadEnabled($this->downloadVideos);
             $downloader = new Downloader();
             $imageConvert = new ImageConverter();
             $avatarFilename = $channelId;
@@ -138,7 +129,9 @@ class Client
             $channel->setDescription($data['description'] ?? '');
             $channel->setLanguage('en');
             $channel->setFrontend("https://$this->frontendHost/channel/$channelId");
-            $items = $this->items($data['relatedStreams']);
+            $channel->setDownloadEnabled($downloadVideos);
+            $channel->setToggleDownloadUrl("https://$this->ownHost" . PATH_DOWNLOAD_CHANNEL);
+            $items = $this->items($data['relatedStreams'], 20, $downloadVideos);
             $completeItems = array_filter($items, fn(Item $item) => $item->complete);
             $channel->complete = count($items) === count($completeItems) && isset($data['avatarUrl']);
             if (empty($completeItems)) {
@@ -157,7 +150,7 @@ class Client
      * @return Item[]
      * @throws Exception
      */
-    public function items(array $videos, int $limit = 20): array
+    public function items(array $videos, int $limit = 20, bool $downloadVideos = false): array
     {
         $downloader = new Downloader();
 
@@ -247,11 +240,11 @@ class Client
 
             $item->setSize((string)$downloader->size($videoFilename));
 
-            if (!$this->downloadVideos) {
+            $item->setDownloadEnabled($downloadVideos);
+            $item->setToggleDownloadUrl("https://$this->ownHost" . PATH_DOWNLOAD_CHANNEL);
+            if (!$downloadVideos) {
                 $item->setComplete(true);
-                if (!file_exists(__DIR__ . '/download/channel/' . $channelId)) {
-                    $downloader->delete($videoFilename);
-                }
+                $downloader->delete($videoFilename);
             } elseif ($downloader->done($videoFilename)) {
                 $item->setVideoUrl("https://$this->ownHost" . $downloader->path($videoFilename));
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');

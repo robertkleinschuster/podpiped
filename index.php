@@ -7,6 +7,7 @@ require_once 'Item.class.php';
 require_once 'Rss.class.php';
 require_once 'Client.class.php';
 require_once 'CachedClient.class.php';
+require_once 'ChannelDownload.class.php';
 
 global $time;
 $time = time();
@@ -17,10 +18,8 @@ const SHORTCUT_FILE = '/Podcast aus YouTube-Link.shortcut';
 const PATH_CHANNEL = '/channel';
 const PATH_DOWNLOAD_CHANNEL = '/download/channel';
 const PATH_PLAYLIST = '/playlist';
-const PATH_OPML = '/opml';
 const PATH_SUGGESTIONS = '/suggestions';
 const PATH_SHORTCUT = '/shortcut';
-
 
 set_time_limit(TIMEOUT);
 ini_set('max_execution_time', (string)TIMEOUT);
@@ -63,10 +62,11 @@ function main(array $server, array $get): void
         return;
     }
 
+    $client = new Client($_SERVER['HTTP_HOST']);
+    $cachedClient = new CachedClient($client);
+
     if (strpos($path, PATH_CHANNEL) === 0) {
         $channelId = $get['id'] ?? basename($path);
-        $client = new Client($_SERVER['HTTP_HOST']);
-        $cachedClient = new CachedClient($client);
         $retry = 0;
         while (!isset($channel) && $retry <= 5) {
             $channel = $cachedClient->channel($channelId);
@@ -84,31 +84,21 @@ function main(array $server, array $get): void
 
         return;
     }
-
 
     if (strpos($path, PATH_DOWNLOAD_CHANNEL) === 0) {
+        header('content-type: text/plain');
         $channelId = $get['id'] ?? basename($path);
-        $client = new Client($_SERVER['HTTP_HOST']);
-        $client->setDownloadVideos(true);
-        $cachedClient = new CachedClient($client, CachedClient::DOWNLOAD_CHANNEL_FOLDER);
-        $retry = 0;
-        while (!isset($channel) && $retry <= 5) {
-            $channel = $cachedClient->channel($channelId);
-            if ($channel) {
-                header('content-type: application/xml');
-                echo $channel;
-            } else {
-                $retry++;
-            }
-        }
-
-        if (!isset($channel)) {
-            http_response_code(404);
+        $channelDownload = new ChannelDownload();
+        if ($channelDownload->toggle($channelId)) {
+            $cachedClient->refreshChannel($channelId);
+            echo 'Download aktiviert.';
+        } else {
+            $cachedClient->refreshChannel($channelId);
+            echo 'Download deaktiviert.';
         }
 
         return;
     }
-
 
     if (strpos($path, PATH_SHORTCUT) === 0) {
         handle_shortcut($_GET['version'] ?? '1', $_GET['payload'] ?? null);

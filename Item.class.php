@@ -23,6 +23,9 @@ class Item
     public bool $complete = false;
     public bool $downloaded = false;
 
+    private bool $downloadEnabled = false;
+    private string $toggleDownloadUrl = '';
+
     /**
      * @param string $title
      * @return Item
@@ -200,6 +203,18 @@ class Item
         $this->downloaded = $downloaded;
     }
 
+    public function setDownloadEnabled(bool $downloadEnabled): Item
+    {
+        $this->downloadEnabled = $downloadEnabled;
+        return $this;
+    }
+
+    public function setToggleDownloadUrl(string $toggleDownloadUrl): Item
+    {
+        $this->toggleDownloadUrl = $toggleDownloadUrl;
+        return $this;
+    }
+
     public function __toString()
     {
 
@@ -210,6 +225,21 @@ class Item
 <br>
 HTML;
         }
+        $info = '';
+        if ($this->downloadEnabled) {
+            $info .= <<<HTML
+<br>
+Videos werden Serverseitig gespeichert.
+<br>
+<a href="$this->toggleDownloadUrl">Download deaktivieren.</a>
+HTML;
+        } else {
+            $info .= <<<HTML
+<br>
+<a href="$this->toggleDownloadUrl">Download aktivieren.</a>
+HTML;
+        }
+
         return <<<XML
 <item>
     <title><![CDATA[$this->title]]></title>   
@@ -224,6 +254,7 @@ HTML;
     <a href="$this->uploaderUrl">$this->summary</a>
     <br>
     <a href="$this->uploaderFeedUrl">Kanal Podcast</a>
+    $info
     </center>
     ]]></description>  
     <itunes:duration>$this->duration</itunes:duration>

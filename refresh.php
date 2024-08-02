@@ -20,13 +20,6 @@ $cachedClient->refreshChannels();
 $status = require "status.php";
 file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'status', $status);
 
-$downloadClient = clone $client;
-$downloadClient->setDownloadVideos(true);
-$cachedClient = new CachedClient($downloadClient, CachedClient::DOWNLOAD_CHANNEL_FOLDER);
-$cachedClient->refreshChannels();
-$status = require "status.php";
-file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'status', $status);
-
 sleep(10);
 if (time() - $start < 250) {
     try {

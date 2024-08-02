@@ -8,7 +8,7 @@ class Channel
     private string $frontend = '';
     private string $language = '';
     private string $description = '';
-    private string $feedUrl = '';
+    private string $toggleDownloadUrl = '';
     private string $copyright = '';
     private string $cover = '';
     private string $items = '';
@@ -67,16 +67,6 @@ class Channel
     }
 
     /**
-     * @param string $feedUrl
-     * @return Channel
-     */
-    public function setFeedUrl(string $feedUrl): Channel
-    {
-        $this->feedUrl = $feedUrl;
-        return $this;
-    }
-
-    /**
      * @param string $copyright
      * @return Channel
      */
@@ -114,6 +104,14 @@ class Channel
         $this->downloadEnabled = $downloadEnabled;
     }
 
+    /**
+     * @param string $toggleDownloadUrl
+     */
+    public function setToggleDownloadUrl(string $toggleDownloadUrl): void
+    {
+        $this->toggleDownloadUrl = $toggleDownloadUrl;
+    }
+
 
     public function __toString()
     {
@@ -124,6 +122,13 @@ class Channel
             $info .= <<<HTML
 <br>
 Videos werden Serverseitig gespeichert.
+<br>
+<a href="$this->toggleDownloadUrl">Download deaktivieren.</a>
+HTML;
+        } else {
+            $info .= <<<HTML
+<br>
+<a href="$this->toggleDownloadUrl">Download aktivieren.</a>
 HTML;
         }
         if ($this->complete) {
@@ -144,7 +149,9 @@ HTML;
    <language>$this->language</language>   
    <description><![CDATA[
 $this->description
+<center>
 $info
+</center>
 ]]></description>   
    <copyright><![CDATA[$this->copyright]]></copyright>
    <itunes:author>$this->author</itunes:author>

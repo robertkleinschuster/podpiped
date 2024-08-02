@@ -5,13 +5,13 @@ declare(strict_types=1);
 require_once 'Client.class.php';
 require_once 'Rss.class.php';
 require_once 'Log.class.php';
+require_once 'ChannelDownload.class.php';
 
 class CachedClient
 {
     private Log $log;
 
     public const CHANNEL_FOLDER = __DIR__ . '/channel/';
-    public const DOWNLOAD_CHANNEL_FOLDER = __DIR__ . '/download/channel/';
 
     public function __construct(
         private Client $client,
@@ -41,6 +41,12 @@ class CachedClient
         return $age < $ttl;
     }
 
+    public function refreshChannel(string $channelId): void
+    {
+        touch($this->channelFolder . $channelId . '.new');
+        $this->log->append("Refresh triggered for channel: $channelId");
+    }
+
     public function channel(string $channelId): ?string
     {
         $cacheFile = $this->channelFolder . $channelId;
@@ -60,7 +66,8 @@ class CachedClient
     {
         $cacheFile = $this->channelFolder . $channelId;
         try {
-            $channel = $this->client->channel($channelId);
+            $channelDownload = new ChannelDownload();
+            $channel = $this->client->channel($channelId, $channelDownload->isEnabled($channelId));
             if ($channel) {
                 if ($channel->complete) {
                     @unlink("$cacheFile.new");
