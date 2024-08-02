@@ -107,7 +107,11 @@ function main(array $server, array $get): void
 
     if (!trim($path, '/')) {
         output_help();
+        return;
     }
+    header('content-type: text/plain');
+    http_response_code(404);
+    echo '404 Not Found';
 }
 
 function handle_shortcut(string $version, string $payload = null)
