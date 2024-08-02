@@ -25,4 +25,11 @@ $result .= "\n";
 $result .= "download in progress: " . count($locked);
 $result .= "\n";
 
+$bytes = disk_free_space(__DIR__);
+$si_prefix = array( 'B', 'KB', 'MB', 'GB', 'TB', 'EB', 'ZB', 'YB' );
+$base = 1024;
+$class = min((int)log($bytes , $base) , count($si_prefix) - 1);
+$result .= sprintf('disk free: %1.2f', $bytes / pow($base, $class)) . ' ' . $si_prefix[$class];
+$result .= "\n";
+
 return $result;
