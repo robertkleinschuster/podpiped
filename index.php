@@ -87,7 +87,6 @@ function main(array $server, array $get): void
     }
 
     if (strpos($path, PATH_SETTINGS) === 0) {
-        header('content-type: text/plain');
         $channelId = $get['id'] ?? basename($path);
         $channelId = preg_replace('/[^a-zA-Z0-9_\-.]/', '', $channelId);
         $_GET['id'] = $channelId;

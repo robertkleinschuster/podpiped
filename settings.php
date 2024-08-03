@@ -13,6 +13,8 @@ if (!$channelId) {
     exit;
 }
 
+header('Content-Type: text/html; charset=utf-8');
+
 $settings = new Settings();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
