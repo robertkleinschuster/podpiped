@@ -26,7 +26,7 @@ $channels = array_map(function (string $id) use ($settings, $cachedClient) {
         'id' => $id,
         'name' => (string)$xml->channel->title,
         'downloadEnabled' => $settings->isDownloadEnabled($id),
-        'refreshing' => !$cachedClient->isValid($id, 3600),
+        'refreshing' => !$cachedClient->isChannelValid($id),
         'lastUpdate' => date('Y-m-d H:i:s', filemtime(__DIR__ . '/channel/' . $id))
     ];
 

@@ -44,6 +44,11 @@ class CachedClient
         return $age < $ttl;
     }
 
+    public function isChannelValid(string $channelId): bool
+    {
+        return $this->isValid($this->channelFolder . $channelId, 3600);
+    }
+
     public function refreshChannel(string $channelId): void
     {
         touch($this->channelFolder . $channelId . '.new');
@@ -52,12 +57,11 @@ class CachedClient
 
     public function channel(string $channelId): ?string
     {
-        $cacheFile = $this->channelFolder . $channelId;
-
-        if (!$this->isValid($cacheFile, 3600)) {
+        if (!$this->isChannelValid($channelId)) {
             $this->loadChannel($channelId);
         }
 
+        $cacheFile = $this->channelFolder . $channelId;
         if (!file_exists($cacheFile)) {
             return null;
         }
