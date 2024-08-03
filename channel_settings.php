@@ -177,10 +177,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </fieldset>
 </form>
 <section>
-    <span>Speicher: <?= $channel->getSizeFormatted() ?> GB</span>
     <span>Videos: <?= $channel->getItemCount() ?> / <?= $channel->getItemLimit() ?></span>
     <?php if ($channel->isDownloadEnabled()): ?>
-        <span>Geladen: <?= $channel->getDownloadedItemCount() ?> / <?= $channel->getDownloadedItemLimit() ?></span>
+        <span>Geladen: <?= $channel->getDownloadedItemCount() ?> / <?= $channel->getDownloadedItemLimit() ?> (<?= $channel->getSizeFormatted() ?> GB)</span>
     <?php endif; ?>
     <span>Aktualisiert: <span style="white-space: nowrap"><?= $lastUpdate ?></span></span>
     <span>Nächste Aktualisierung: <span style="white-space: nowrap"><?= $nextUpdate ?></span></span>
