@@ -13,6 +13,10 @@ if (!$channelId) {
     exit;
 }
 
+$client = new Client($_SERVER['HTTP_HOST']);
+$data = $client->fetch("/channel/$channelId");
+$channelName = $data['name'];
+
 header('Content-Type: text/html; charset=utf-8');
 
 $settings = new Settings();
@@ -30,7 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $settings->disableDownload($channelId);
     }
 
-    $client = new Client($_SERVER['HTTP_HOST']);
     $cachedClient = new CachedClient($client);
     $cachedClient->refreshChannel($channelId);
 
@@ -45,9 +48,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Einstellungen</title>
+    <title><?= $channelName ?> - Einstellungen</title>
 </head>
 <body>
+<h1>Einstellungen</h1>
+<h2><?= $channelName ?></h2>
 <form method="post">
     <p>
         <label>
