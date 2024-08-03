@@ -105,7 +105,7 @@ class Client
         return null;
     }
 
-    public function channel(string $channelId, int $limit, bool $downloadVideos, int $downloadLimit): ?Channel
+    public function channel(string $channelId, int $limit, bool $downloadVideos, int $downloadLimit, bool $downloadHq): ?Channel
     {
         $data = $this->fetch("/channel/$channelId");
 
@@ -131,7 +131,7 @@ class Client
             $channel->setLanguage('en');
             $channel->setFrontend("https://$this->frontendHost/channel/$channelId");
             $channel->setSettingsUrl("https://$this->ownHost" . Path::PATH_SETTINGS . "/$channelId");
-            $items = $this->items($data['relatedStreams'], $limit, $downloadVideos, $downloadLimit);
+            $items = $this->items($data['relatedStreams'], $limit, $downloadVideos, $downloadLimit, $downloadHq);
             $completeItems = array_filter($items, fn(Item $item) => $item->complete);
             $channel->complete = count($items) === count($completeItems) && isset($data['avatarUrl']);
             if (empty($completeItems)) {
@@ -152,7 +152,7 @@ class Client
      * @return Item[]
      * @throws Exception
      */
-    public function items(array $videos, int $limit, bool $downloadVideos = false, int $downloadLimit = null): array
+    public function items(array $videos, int $limit, bool $downloadVideos = false, int $downloadLimit = null, bool $downloadHq = false): array
     {
         $downloader = new Downloader();
 
@@ -252,7 +252,8 @@ class Client
                 $item->setComplete(true);
                 $item->setDownloaded(true);
             } else {
-                $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '', Path::PATH_CHANNEL . "/$channelId.new");
+                $url = $downloadHq && isset($fileInfo720['url']) ? $fileInfo720['url'] : $fileInfo['url'];
+                $downloader->schedule($url, $videoFilename, $video['title'] ?? '', Path::PATH_CHANNEL . "/$channelId.new");
             }
 
             $items[] = $item;

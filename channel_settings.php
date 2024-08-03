@@ -61,6 +61,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $settings->disableDownload($channelId);
     }
 
+    if (isset($_POST['download_hq'])) {
+        if ($_POST['download_hq']) {
+            $settings->enableDownloadHq($channelId);
+        } else {
+            $settings->disableDownloadHq($channelId);
+        }
+    }
 
     $cachedClient->refreshChannel($channelId);
 
@@ -156,6 +163,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Herunterladen:
                 <input type="number" name="download_limit" value="<?= $settings->getDownloadLimit($channelId) ?>">
                 <?= $settings->isDownloadEnabled($channelId) ? '&check;' : '' ?>
+            </label>
+            <input type="hidden" name="download_hq" value="0">
+            <label>
+                720p Laden:
+                <input type="checkbox" name="download_hq"
+                       value="1"<?= $settings->isDownloadHqEnabled($channelId) ? ' checked' : '' ?>>
             </label>
         </p>
         <button type="submit">Speichern</button>

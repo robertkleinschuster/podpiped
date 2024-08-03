@@ -117,7 +117,8 @@ class CachedClient
             $limit = $settings->getLimit($channelId);
             $downloadEnabled = $settings->isDownloadEnabled($channelId);
             $downloadLimit = $settings->getDownloadLimit($channelId);
-            $channel = $this->client->channel($channelId, $limit, $downloadEnabled, $downloadLimit);
+            $downloadHq = $settings->isDownloadHqEnabled($channelId);
+            $channel = $this->client->channel($channelId, $limit, $downloadEnabled, $downloadLimit, $downloadHq);
             if ($channel) {
                 if ($channel->complete) {
                     @unlink("$cacheFile.new");

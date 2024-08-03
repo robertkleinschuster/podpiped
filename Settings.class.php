@@ -9,6 +9,7 @@ class Settings
     private Log $log;
 
     private const SUFFIX_DOWNLOAD = '.download';
+    private const SUFFIX_DOWNLOAD_HQ = '.download_hq';
     private const SUFFIX_DOWNLOAD_LIMIT = '.download_limit';
     private const SUFFIX_LIMIT = '.limit';
 
@@ -38,6 +39,23 @@ class Settings
     public function isDownloadEnabled(string $channelId): bool
     {
         return file_exists($this->folder . $this->filterChannelId($channelId) . self::SUFFIX_DOWNLOAD);
+    }
+
+    public function enableDownloadHq(string $channelId): void
+    {
+        touch($this->folder . $this->filterChannelId($channelId) . self::SUFFIX_DOWNLOAD_HQ);
+        $this->log->append("Channel download hq enabled: $channelId");
+    }
+
+    public function disableDownloadHq(string $channelId): void
+    {
+        unlink($this->folder . $this->filterChannelId($channelId) . self::SUFFIX_DOWNLOAD_HQ);
+        $this->log->append("Channel download hq disabled: $channelId");
+    }
+
+    public function isDownloadHqEnabled(string $channelId): bool
+    {
+        return file_exists($this->folder . $this->filterChannelId($channelId) . self::SUFFIX_DOWNLOAD_HQ);
     }
 
     public function getDownloadLimit(string $channelId): int
