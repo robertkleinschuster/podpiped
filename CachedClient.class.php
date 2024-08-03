@@ -47,15 +47,7 @@ class CachedClient
 
     public function isChannelValid(string $channelId): bool
     {
-        $valid = $this->isValid($this->channelFolder . $channelId, 3600);
-        if (!$valid) {
-            return false;
-        }
-
-        return true;
-        $channel = $this->channelInfo($channelId);
-        return $channel->getItemCount() === $channel->getItemLimit()
-            && (!$channel->isDownloadEnabled() || $channel->getDownloadedItemCount() === $channel->getDownloadedItemLimit());
+        return $this->isValid($this->channelFolder . $channelId, 3600);
     }
 
     public function refreshChannel(string $channelId): void
@@ -200,6 +192,14 @@ class CachedClient
             foreach ($files as $cacheFile) {
                 if (!str_ends_with($cacheFile, '.new')) {
                     $channelId = basename($cacheFile);
+                    $channel = $this->channelInfo($channelId);
+                    if (
+                        $channel->getItemCount() < $channel->getItemLimit()
+                        || $channel->isDownloadEnabled() && $channel->getDownloadedItemCount() < $channel->getDownloadedItemLimit()
+                    ) {
+                        $this->refreshChannel($channelId);
+                    }
+
                     if (!$this->isChannelValid($channelId)) {
                         if ($this->loadChannel($channelId)) {
                             $this->log->append("refreshed channel: " . $channelId);
