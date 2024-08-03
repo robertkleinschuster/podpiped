@@ -29,7 +29,7 @@ if ($channel === null) {
 $channelName = $channel->getTitle();
 
 $lastUpdate = date('Y-m-d H:i:s', filemtime(__DIR__ . '/channel/' . $channelId));
-if (file_exists(__DIR__ . '/channel/' . $channelId . '.new')) {
+if ($channel->isRefreshing()) {
     $nextUpdate = 'in Bearbeitung...';
 } else {
     $nextUpdate = (new DateTime())
