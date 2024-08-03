@@ -192,15 +192,16 @@ class CachedClient
             foreach ($files as $cacheFile) {
                 if (!str_ends_with($cacheFile, '.new')) {
                     $channelId = basename($cacheFile);
-                    $channel = $this->channelInfo($channelId);
-                    if (
-                        $channel->getItemCount() < $channel->getItemLimit()
-                        || $channel->isDownloadEnabled() && $channel->getDownloadedItemCount() < $channel->getDownloadedItemLimit()
-                    ) {
-                        $this->refreshChannel($channelId);
-                    }
 
-                    if (!$this->isChannelValid($channelId)) {
+                    if ($this->isChannelValid($channelId)) {
+                        $channel = $this->channelInfo($channelId);
+                        if (
+                            $channel->getItemCount() < $channel->getItemLimit()
+                            || $channel->isDownloadEnabled() && $channel->getDownloadedItemCount() < $channel->getDownloadedItemLimit()
+                        ) {
+                            $this->refreshChannel($channelId);
+                        }
+                    } else {
                         if ($this->loadChannel($channelId)) {
                             $this->log->append("refreshed channel: " . $channelId);
                         } else {
