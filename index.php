@@ -100,6 +100,7 @@ function main(array $server, array $get): void
     }
 
     if (!trim($path, '/')) {
+        header('content-type: text/html; charset=utf-8');
         output_help();
         return;
     }
