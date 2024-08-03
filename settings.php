@@ -2,6 +2,8 @@
 
 require_once "Settings.class.php";
 require_once "CachedClient.class.php";
+require_once "DiskSpace.class.php";
+
 locale_set_default('de_AT');
 date_default_timezone_set('Europe/Vienna');
 
@@ -13,38 +15,8 @@ if ($channelId) {
     exit;
 }
 
-function getFolderSize($dir) {
-    $size = 0;
-
-    // Check if the directory exists
-    if (is_dir($dir)) {
-        // Open the directory
-        $directory = opendir($dir);
-
-        // Iterate through the directory contents
-        while (($file = readdir($directory)) !== false) {
-            // Skip the current directory (.) and parent directory (..)
-            if ($file !== '.' && $file !== '..') {
-                $path = $dir . '/' . $file;
-
-                // Recursively calculate the size of subdirectories
-                if (is_dir($path)) {
-                    $size += getFolderSize($path);
-                } else {
-                    // Add the file size to the total size
-                    $size += filesize($path);
-                }
-            }
-        }
-
-        // Close the directory
-        closedir($directory);
-    }
-
-    return $size;
-}
-
-$folderSize = number_format((getFolderSize(__DIR__) / 1024 / 1024 / 1024), 2, ',', '.');
+$diskSpace = new DiskSpace();
+$folderSize = number_format($diskSpace->getSize(__DIR__), 2, ',', '.');
 
 $channels = array_filter(
     array_map('basename', glob(__DIR__ . '/channel/*')),
