@@ -8,13 +8,13 @@ class Channel
     private string $frontend = '';
     private string $language = '';
     private string $description = '';
-    private string $toggleDownloadUrl = '';
+    private string $settingsUrl = '';
     private string $copyright = '';
     private string $cover = '';
     private string $items = '';
     private string $author = '';
     public bool $complete = false;
-    public bool $downloadEnabled = false;
+
     /**
      * @param string $title
      * @return Channel
@@ -97,51 +97,28 @@ class Channel
     }
 
     /**
-     * @param bool $downloadEnabled
+     * @param string $settingsUrl
      */
-    public function setDownloadEnabled(bool $downloadEnabled): void
+    public function setSettingsUrl(string $settingsUrl): void
     {
-        $this->downloadEnabled = $downloadEnabled;
+        $this->settingsUrl = $settingsUrl;
     }
-
-    /**
-     * @param string $toggleDownloadUrl
-     */
-    public function setToggleDownloadUrl(string $toggleDownloadUrl): void
-    {
-        $this->toggleDownloadUrl = $toggleDownloadUrl;
-    }
-
 
     public function __toString()
     {
         $info = '';
         $date = date('Y-m-d H:i:s');
 
-        if ($this->downloadEnabled) {
-            $info .= <<<HTML
-<br>
-Videos werden Serverseitig gespeichert.
-<br>
-<a href="$this->toggleDownloadUrl">Download deaktivieren.</a>
-HTML;
-        } else {
-            $info .= <<<HTML
-<br>
-<a href="$this->toggleDownloadUrl">Download aktivieren.</a>
-HTML;
-        }
         if ($this->complete) {
             $info .= <<<HTML
-<br>
 Aktualisiert: $date
 HTML;
         } else {
             $info .= <<<HTML
-<br>
 Aktualisierung läuft: $date
 HTML;
         }
+
         return <<<XML
   <channel>
    <title><![CDATA[$this->title]]></title>   
@@ -150,7 +127,11 @@ HTML;
    <description><![CDATA[
 $this->description
 <center>
+<br>
 $info
+<br>
+<a href="$this->settingsUrl">Einstellungen</a>
+<br>
 </center>
 ]]></description>   
    <copyright><![CDATA[$this->copyright]]></copyright>

@@ -19,12 +19,10 @@ class Item
     private string $size = '';
     private string $mimeType;
     private string $url = '';
+    private string $settingsUrl = '';
 
     public bool $complete = false;
     public bool $downloaded = false;
-
-    private bool $downloadEnabled = false;
-    private string $toggleDownloadUrl = '';
 
     /**
      * @param string $title
@@ -203,15 +201,9 @@ class Item
         $this->downloaded = $downloaded;
     }
 
-    public function setDownloadEnabled(bool $downloadEnabled): Item
+    public function setSettingsUrl(string $toggleDownloadUrl): Item
     {
-        $this->downloadEnabled = $downloadEnabled;
-        return $this;
-    }
-
-    public function setToggleDownloadUrl(string $toggleDownloadUrl): Item
-    {
-        $this->toggleDownloadUrl = $toggleDownloadUrl;
+        $this->settingsUrl = $toggleDownloadUrl;
         return $this;
     }
 
@@ -222,22 +214,6 @@ class Item
         if ($this->complete && $this->downloaded && $this->videoUrl) {
             $videoLink = <<<HTML
 <a href="$this->videoUrl" target="_blank">Herunterladen ⬇️</a>
-<br>
-HTML;
-        }
-        $info = '';
-        if ($this->downloadEnabled) {
-            $info .= <<<HTML
-<br>
-Videos werden Serverseitig gespeichert.
-<br>
-<a href="$this->toggleDownloadUrl">Download deaktivieren.</a>
-<br>
-HTML;
-        } else {
-            $info .= <<<HTML
-<br>
-<a href="$this->toggleDownloadUrl">Download aktivieren.</a>
 <br>
 HTML;
         }
@@ -253,10 +229,11 @@ HTML;
     <br>
     <br>
     $videoLink
-    <a href="$this->uploaderUrl">$this->summary</a>
+    <a href="$this->uploaderUrl">$this->uploaderName</a>
     <br>
     <a href="$this->uploaderFeedUrl">Kanal Podcast</a>
-    $info
+    <br>
+    <a href="$this->settingsUrl">Einstellungen</a>
     <br>
     </center>
     ]]></description>  

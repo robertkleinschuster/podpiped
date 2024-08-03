@@ -7,19 +7,18 @@ require_once 'Item.class.php';
 require_once 'Rss.class.php';
 require_once 'Client.class.php';
 require_once 'CachedClient.class.php';
-require_once 'ChannelDownload.class.php';
+require_once 'Settings.class.php';
+require_once 'Path.class.php';
 
-global $time;
-$time = time();
 const TIMEOUT = 30;
 const SHORTCUT_LINK = 'https://www.icloud.com/shortcuts/e06ffcf132b4407da80d0b78220574f1';
 const SHORTCUT_FILE = '/Podcast aus YouTube-Link.shortcut';
 
-const PATH_CHANNEL = '/channel';
-const PATH_DOWNLOAD_CHANNEL = '/download/channel';
-const PATH_PLAYLIST = '/playlist';
-const PATH_SUGGESTIONS = '/suggestions';
-const PATH_SHORTCUT = '/shortcut';
+const PATH_CHANNEL = Path::PATH_CHANNEL;
+const PATH_SETTINGS = Path::PATH_SETTINGS;
+const PATH_PLAYLIST = Path::PATH_PLAYLIST;
+const PATH_SUGGESTIONS = Path::PATH_SUGGESTIONS;
+const PATH_SHORTCUT = Path::PATH_SHORTCUT;
 
 set_time_limit(TIMEOUT);
 ini_set('max_execution_time', (string)TIMEOUT);
@@ -42,6 +41,7 @@ function main(array $server, array $get): void
 
     if (strpos($path, PATH_PLAYLIST) === 0) {
         $playlistId = $get['id'] ?? basename($path);
+        $playlistId = preg_replace('/[^a-zA-Z0-9_\-.]/', '', $playlistId);
         $client = new Client($_SERVER['HTTP_HOST']);
         $cachedClient = new CachedClient($client);
         $retry = 0;
@@ -67,6 +67,7 @@ function main(array $server, array $get): void
 
     if (strpos($path, PATH_CHANNEL) === 0) {
         $channelId = $get['id'] ?? basename($path);
+        $channelId = preg_replace('/[^a-zA-Z0-9_\-.]/', '', $channelId);
         $retry = 0;
         while (!isset($channel) && $retry <= 5) {
             $channel = $cachedClient->channel($channelId);
@@ -85,18 +86,12 @@ function main(array $server, array $get): void
         return;
     }
 
-    if (strpos($path, PATH_DOWNLOAD_CHANNEL) === 0) {
+    if (strpos($path, PATH_SETTINGS) === 0) {
         header('content-type: text/plain');
         $channelId = $get['id'] ?? basename($path);
-        $channelDownload = new ChannelDownload();
-        if ($channelDownload->toggle($channelId)) {
-            $cachedClient->refreshChannel($channelId);
-            echo 'Download aktiviert.';
-        } else {
-            $cachedClient->refreshChannel($channelId);
-            echo 'Download deaktiviert.';
-        }
-
+        $channelId = preg_replace('/[^a-zA-Z0-9_\-.]/', '', $channelId);
+        $_GET['id'] = $channelId;
+        require "settings.php";
         return;
     }
 

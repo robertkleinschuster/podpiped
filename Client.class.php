@@ -7,6 +7,7 @@ require_once "ImageConverter.class.php";
 require_once "Channel.class.php";
 require_once "Item.class.php";
 require_once "Rss.class.php";
+require_once "Path.class.php";
 
 class Client
 {
@@ -104,7 +105,7 @@ class Client
         return null;
     }
 
-    public function channel(string $channelId, bool $downloadVideos): ?Channel
+    public function channel(string $channelId, int $limit, bool $downloadVideos, int $downloadLimit): ?Channel
     {
         $data = $this->fetch("/channel/$channelId");
 
@@ -129,9 +130,8 @@ class Client
             $channel->setDescription($data['description'] ?? '');
             $channel->setLanguage('en');
             $channel->setFrontend("https://$this->frontendHost/channel/$channelId");
-            $channel->setDownloadEnabled($downloadVideos);
-            $channel->setToggleDownloadUrl("https://$this->ownHost/download/channel/$channelId");
-            $items = $this->items($data['relatedStreams'], 5, $downloadVideos);
+            $channel->setSettingsUrl("https://$this->ownHost" . Path::PATH_SETTINGS . "/$channelId");
+            $items = $this->items($data['relatedStreams'], $limit, $downloadVideos, $downloadLimit);
             $completeItems = array_filter($items, fn(Item $item) => $item->complete);
             $channel->complete = count($items) === count($completeItems) && isset($data['avatarUrl']);
             if (empty($completeItems)) {
@@ -147,10 +147,12 @@ class Client
     /**
      * @param array $videos
      * @param int $limit
+     * @param bool $downloadVideos
+     * @param int|null $downloadLimit
      * @return Item[]
      * @throws Exception
      */
-    public function items(array $videos, int $limit, bool $downloadVideos = false): array
+    public function items(array $videos, int $limit, bool $downloadVideos = false, int $downloadLimit = null): array
     {
         $downloader = new Downloader();
 
@@ -204,7 +206,7 @@ class Client
             $fileInfo720 = $streamData['fileInfo_720p'] ?? null;
 
             $channelId = basename($video['uploaderUrl'] ?? '');
-            $uploaderFeed = 'https://' . $this->ownHost . "/channel/$channelId";
+            $uploaderFeed = 'https://' . $this->ownHost . Path::PATH_CHANNEL . "/$channelId";
 
             $uploaderName = $video['uploaderName'] ?? '';
 
@@ -239,10 +241,9 @@ class Client
             }
 
             $item->setSize((string)$downloader->size($videoFilename));
+            $item->setSettingsUrl("https://$this->ownHost" . Path::PATH_SETTINGS . "/$channelId");
 
-            $item->setDownloadEnabled($downloadVideos);
-            $item->setToggleDownloadUrl("https://$this->ownHost/download/channel/$channelId");
-            if (!$downloadVideos) {
+            if (!$downloadVideos || isset($downloadLimit) && count($items) > $downloadLimit) {
                 $item->setComplete(true);
                 $downloader->delete($videoFilename);
             } elseif ($downloader->done($videoFilename)) {
@@ -251,7 +252,7 @@ class Client
                 $item->setComplete(true);
                 $item->setDownloaded(true);
             } else {
-                $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '', "/channel/$channelId.new");
+                $downloader->schedule($fileInfo['url'], $videoFilename, $video['title'] ?? '', Path::PATH_CHANNEL . "/$channelId.new");
             }
 
             $items[] = $item;

@@ -5,18 +5,20 @@ declare(strict_types=1);
 require_once 'Client.class.php';
 require_once 'Rss.class.php';
 require_once 'Log.class.php';
-require_once 'ChannelDownload.class.php';
+require_once 'Settings.class.php';
+require_once 'Path.class.php';
 
 class CachedClient
 {
     private Log $log;
 
-    public const CHANNEL_FOLDER = __DIR__ . '/channel/';
+    public const CHANNEL_FOLDER = __DIR__ . Path::PATH_CHANNEL . '/';
+    public const PLAYLIST_FOLDER = __DIR__ . Path::PATH_PLAYLIST . '/';
 
     public function __construct(
         private Client $client,
         private string $channelFolder = self::CHANNEL_FOLDER,
-        private string $playlistFolder = __DIR__ . '/playlist/'
+        private string $playlistFolder = self::PLAYLIST_FOLDER
     )
     {
         if (!is_dir($this->channelFolder)) {
@@ -66,8 +68,11 @@ class CachedClient
     {
         $cacheFile = $this->channelFolder . $channelId;
         try {
-            $channelDownload = new ChannelDownload();
-            $channel = $this->client->channel($channelId, $channelDownload->isEnabled($channelId));
+            $settings = new Settings();
+            $limit = $settings->getLimit($channelId);
+            $downloadEnabled = $settings->isDownloadEnabled($channelId);
+            $downloadLimit = $settings->getDownloadLimit($channelId);
+            $channel = $this->client->channel($channelId, $limit, $downloadEnabled, $downloadLimit);
             if ($channel) {
                 if ($channel->complete) {
                     @unlink("$cacheFile.new");
