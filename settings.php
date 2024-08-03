@@ -2,6 +2,8 @@
 
 require_once "Settings.class.php";
 require_once "CachedClient.class.php";
+locale_set_default('de_AT');
+date_default_timezone_set('Europe/Vienna');
 
 $channelId = trim($_GET['id'] ?? '');
 $channelId = preg_replace('/[^a-zA-Z0-9_\-.]/', '', $channelId);
