@@ -92,8 +92,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         summary {
+            display: flex;
+            align-items: baseline;
             border-bottom: 1px solid var(--text);
             padding: .5rem;
+        }
+
+        summary > a {
+            flex-grow: 1;
         }
 
         details p {
@@ -127,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php foreach ($channels as $channel): ?>
     <details>
         <summary>
-            <a href="/settings/<?= $channel['id'] ?>"><?= $channel['name'] ?></a><?= $channel['downloadEnabled'] ? ' 💾' : ' 🌐' ?><?= $channel['refreshing'] ? ' <div class="spinner"/>' : ' ✅' ?>
+            <a href="/settings/<?= $channel['id'] ?>"><?= $channel['name'] ?></a><span><?= $channel['downloadEnabled'] ? ' 💾' : ' 🌐' ?><?= $channel['refreshing'] ? ' <span class="spinner"/>' : ' ✅' ?></span>
         </summary>
         <p>
             <span>Aktualisiert: <?= $channel['lastUpdate'] ?></span>
