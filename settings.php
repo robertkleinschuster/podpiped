@@ -16,8 +16,6 @@ $channels = array_filter(
     fn(string $id) => !str_ends_with($id, '.new')
 );
 
-sort($channels, SORT_LOCALE_STRING);
-
 $settings = new Settings();
 
 $channels = array_map(function (string $id) use ($settings) {
@@ -30,6 +28,8 @@ $channels = array_map(function (string $id) use ($settings) {
     ];
 
 }, $channels);
+
+usort($channels, fn($a, $b) => strcasecmp($a['name'], $b['name']));
 
 header('Content-Type: text/html; charset=utf-8');
 
