@@ -8,6 +8,7 @@ require_once 'Rss.class.php';
 require_once 'Log.class.php';
 require_once 'Settings.class.php';
 require_once 'Path.class.php';
+require_once 'DiskSpace.class.php';
 
 class CachedClient
 {
@@ -67,6 +68,45 @@ class CachedClient
         }
 
         return file_get_contents($cacheFile);
+    }
+
+    public function channelInfo(string $channelId): ?Channel
+    {
+        $cacheFile = $this->channelFolder . $channelId;
+        if (!file_exists($cacheFile)) {
+            return null;
+        }
+        $xml = @simplexml_load_file($cacheFile);
+        if (!$xml) {
+            return null;
+        }
+        $settings = new Settings();
+        $diskSpace = new DiskSpace();
+        $size = 0;
+        $downloaded = 0;
+        $count = 0;
+        foreach ($xml->channel->item as $item) {
+            $guid = (string) $item->guid;
+            $count++;
+            if (file_exists(__DIR__ . '/static/' . $guid . '.mp4')) {
+                $downloaded++;
+            }
+            $size += $diskSpace->getSize(__DIR__ . '/static/' . $guid . '.mp4');
+        }
+
+        $channel = new Channel();
+        $channel->setTitle((string)$xml->channel->title);
+        $channel->setId($channelId);
+        $channel->setSize($size);
+        $channel->setDownloadedItemCount($downloaded);
+        $channel->setDownloadedItemLimit($settings->getDownloadLimit($channelId));
+        $channel->setDownloadEnabled($settings->isDownloadEnabled($channelId));
+        $channel->setItemCount($count);
+        $channel->setItemLimit($settings->getLimit($channelId));
+        $channel->setRefreshing($this->isChannelValid($channelId));
+        $channel->setLastUpdate(date('Y-m-d H:i:s', filemtime($cacheFile)));
+
+        return $channel;
     }
 
     private function loadChannel(string $channelId): bool

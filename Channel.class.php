@@ -14,6 +14,27 @@ class Channel
     private string $items = '';
     private string $author = '';
     public bool $complete = false;
+    private string $id = '';
+    private bool $refreshing = false;
+    private string $lastUpdate = '';
+    private bool $downloadEnabled = false;
+    private int $itemCount = 0;
+    private int $itemLimit = 0;
+    private int $downloadedItemCount = 0;
+    private int $downloadedItemLimit = 0;
+    private float $size = 0;
+
+    public function getId(): string
+    {
+        return $this->id;
+    }
+
+    public function setId(string $id): Channel
+    {
+        $this->id = $id;
+        return $this;
+    }
+
 
     /**
      * @param string $title
@@ -24,6 +45,108 @@ class Channel
         $this->title = $title;
         return $this;
     }
+
+    /**
+     * @return string
+     */
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+
+    public function isRefreshing(): bool
+    {
+        return $this->refreshing;
+    }
+
+    public function setRefreshing(bool $refreshing): Channel
+    {
+        $this->refreshing = $refreshing;
+        return $this;
+    }
+
+    public function getLastUpdate(): string
+    {
+        return $this->lastUpdate;
+    }
+
+    public function setLastUpdate(string $lastUpdate): Channel
+    {
+        $this->lastUpdate = $lastUpdate;
+        return $this;
+    }
+
+    public function isDownloadEnabled(): bool
+    {
+        return $this->downloadEnabled;
+    }
+
+    public function setDownloadEnabled(bool $downloadEnabled): Channel
+    {
+        $this->downloadEnabled = $downloadEnabled;
+        return $this;
+    }
+
+    public function getItemCount(): int
+    {
+        return $this->itemCount;
+    }
+
+    public function setItemCount(int $itemCount): Channel
+    {
+        $this->itemCount = $itemCount;
+        return $this;
+    }
+
+    public function getItemLimit(): int
+    {
+        return $this->itemLimit;
+    }
+
+    public function setItemLimit(int $itemLimit): Channel
+    {
+        $this->itemLimit = $itemLimit;
+        return $this;
+    }
+
+    public function getSize(): float
+    {
+        return $this->size;
+    }
+
+    public function getSizeFormatted(): string
+    {
+        return number_format($this->getSize(), 2, ',', '.');
+    }
+
+    public function setSize(float $size): Channel
+    {
+        $this->size = $size;
+        return $this;
+    }
+
+    public function getDownloadedItemCount(): int
+    {
+        return $this->downloadedItemCount;
+    }
+
+    public function setDownloadedItemCount(int $downloadedItemCount): Channel
+    {
+        $this->downloadedItemCount = $downloadedItemCount;
+        return $this;
+    }
+
+    public function getDownloadedItemLimit(): int
+    {
+        return $this->downloadedItemLimit;
+    }
+
+    public function setDownloadedItemLimit(int $downloadedItemLimit): Channel
+    {
+        $this->downloadedItemLimit = $downloadedItemLimit;
+        return $this;
+    }
+
 
     /**
      * @param string $author

@@ -3,6 +3,7 @@
 require_once "Settings.class.php";
 require_once "CachedClient.class.php";
 require_once "DiskSpace.class.php";
+require_once "Channel.class.php";
 
 locale_set_default('de_AT');
 date_default_timezone_set('Europe/Vienna');
@@ -23,45 +24,14 @@ $channels = array_filter(
     fn(string $id) => !str_ends_with($id, '.new')
 );
 
-$settings = new Settings();
 $client = new Client($_SERVER['HTTP_HOST']);
 $cachedClient = new CachedClient($client);
+$settings = new Settings();
 
-$channels = array_map(function (string $id) use ($settings, $cachedClient, $diskSpace) {
-    $xml = @simplexml_load_file(__DIR__ . '/channel/' . $id);
+/** @var Channel[] $channels */
+$channels = array_filter(array_map(fn(string $id) => $cachedClient->channelInfo($id), $channels));
 
-    $size = 0;
-    $downloaded = 0;
-    $count = 0;
-    try {
-        if ($xml) {
-            foreach ($xml->channel->item as $item) {
-                $guid = (string) $item->guid;
-                $count++;
-                if (file_exists(__DIR__ . '/static/' . $guid . '.mp4')) {
-                    $downloaded++;
-                }
-                $size += $diskSpace->getSize(__DIR__ . '/static/' . $guid . '.mp4');
-            }
-        }
-    } catch (Throwable $throwable) {
-        error_log($throwable);
-    }
-
-    return [
-        'id' => $id,
-        'size' => number_format($size, 2, ',', '.'),
-        'downloaded' => $downloaded,
-        'videoCount' => $count,
-        'name' => $xml ? (string)$xml->channel->title : '',
-        'downloadEnabled' => $settings->isDownloadEnabled($id),
-        'refreshing' => !$cachedClient->isChannelValid($id),
-        'lastUpdate' => date('Y-m-d H:i:s', filemtime(__DIR__ . '/channel/' . $id))
-    ];
-
-}, $channels);
-
-usort($channels, fn($a, $b) => strcasecmp($a['name'], $b['name']));
+usort($channels, fn(Channel $a, Channel $b) => strcasecmp($a->getTitle(), $b->getTitle()));
 
 header('Content-Type: text/html; charset=utf-8');
 
@@ -127,8 +97,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: .5rem;
         }
 
-        summary > a {
+        summary > span {
+            display: inline-flex;
             flex-grow: 1;
+            align-items: baseline;
+            justify-content: space-between;
         }
 
         details p {
@@ -163,12 +136,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php foreach ($channels as $channel): ?>
     <details>
         <summary>
-            <a href="/settings/<?= $channel['id'] ?>"><?= $channel['name'] ?></a><span><?= $channel['downloadEnabled'] ? "($channel[size] GB) 💾" : ' 🌐' ?><?= $channel['refreshing'] ? ' <span class="spinner"/>' : ' ✅' ?></span>
+            <span>
+                <span><?= $channel->getTitle() ?></span>
+                <span><?= $channel->isDownloadEnabled() ? "({$channel->getSizeFormatted()} GB) 💾" : ' 🌐' ?><?= $channel->isRefreshing() ? ' <span class="spinner"/>' : ' ✅' ?></span>
+            </span>
         </summary>
         <p>
-            <span>Aktualisiert: <?= $channel['lastUpdate'] ?></span>
-            <span>Videos: <?= $channel['videoCount'] ?></span>
-            <span>Download: <?= $channel['downloadEnabled'] ? "&checkmark; aktiviert ($channel[downloaded] / $channel[videoCount])" : '&cross; deaktivert' ?></span>
+            <span>Aktualisiert: <?= $channel->getLastUpdate() ?></span>
+            <span>Videos: <?= $channel->getItemCount() ?> / <?= $channel->getItemLimit() ?></span>
+            <span>Laden: <?= $channel->isDownloadEnabled() ? "&checkmark; aktiviert ({$channel->getDownloadedItemCount()} / {$channel->getDownloadedItemLimit()})" : '&cross; deaktivert' ?></span>
+        </p>
+        <p>
+            <a href="/settings/<?= $channel->getId() ?>">&rightarrow; Einstellungen</a>
         </p>
     </details>
 <?php endforeach; ?>

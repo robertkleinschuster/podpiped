@@ -243,7 +243,7 @@ class Client
             $item->setSize((string)$downloader->size($videoFilename));
             $item->setSettingsUrl("https://$this->ownHost" . Path::PATH_SETTINGS . "/$channelId");
 
-            if (!$downloadVideos || isset($downloadLimit) && count($items) > $downloadLimit) {
+            if (!$downloadVideos || isset($downloadLimit) && count($items) >= $downloadLimit) {
                 $item->setComplete(true);
                 $downloader->delete($videoFilename);
             } elseif ($downloader->done($videoFilename)) {

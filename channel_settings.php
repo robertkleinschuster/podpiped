@@ -15,16 +15,18 @@ if (!$channelId) {
     exit;
 }
 
-$xml = simplexml_load_file(__DIR__ . '/channel/' . $channelId);
+$client = new Client($_SERVER['HTTP_HOST']);
+$cachedClient = new CachedClient($client);
+$channel = $cachedClient->channelInfo($channelId);
 
-if ($xml === false) {
+if ($channel === null) {
     header('Content-Type: text/plain');
     http_response_code(404);
     echo '404 Not Found';
     exit;
 }
 
-$channelName = (string)$xml->channel->title;
+$channelName = $channel->getTitle();
 
 $lastUpdate = date('Y-m-d H:i:s', filemtime(__DIR__ . '/channel/' . $channelId));
 if (file_exists(__DIR__ . '/channel/' . $channelId . '.new')) {
@@ -40,9 +42,6 @@ header('Content-Type: text/html; charset=utf-8');
 $settings = new Settings();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $client = new Client($_SERVER['HTTP_HOST']);
-    $cachedClient = new CachedClient($client);
-
     if (!empty($_POST['remove_channel'])) {
         $cachedClient->removeChannel($channelId);
         header('Location: https://' . $_SERVER['HTTP_HOST'] . '/settings.php');
@@ -133,6 +132,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         fieldset {
             border-radius: 8px;
         }
+
+        section {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
     </style>
 </head>
 <body>
@@ -171,8 +176,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </label>
     </fieldset>
 </form>
-<p>Aktualisiert: <span style="white-space: nowrap"><?= $lastUpdate ?></span></p>
-<p>Nächste Aktualisierung: <span style="white-space: nowrap"><?= $nextUpdate ?></span></p>
-<p><a href="/settings.php">&leftarrow; alle Kanäle</a></p>
+<section>
+    <span>Speicher: <?= $channel->getSizeFormatted() ?> GB</span>
+    <span>Videos: <?= $channel->getItemCount() ?> / <?= $channel->getItemLimit() ?></span>
+    <?php if ($channel->isDownloadEnabled()): ?>
+        <span>Geladen: <?= $channel->getDownloadedItemCount() ?> / <?= $channel->getDownloadedItemLimit() ?></span>
+    <?php endif; ?>
+    <span>Aktualisiert: <span style="white-space: nowrap"><?= $lastUpdate ?></span></span>
+    <span>Nächste Aktualisierung: <span style="white-space: nowrap"><?= $nextUpdate ?></span></span>
+</section>
+
+<p>
+    <a href="/settings.php">&leftarrow; alle Kanäle</a>
+</p>
 </body>
 </html>
