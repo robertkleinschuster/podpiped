@@ -52,6 +52,7 @@ class CachedClient
             return false;
         }
 
+        return true;
         $channel = $this->channelInfo($channelId);
         return $channel->getItemCount() === $channel->getItemLimit()
             && (!$channel->isDownloadEnabled() || $channel->getDownloadedItemCount() === $channel->getDownloadedItemLimit());
