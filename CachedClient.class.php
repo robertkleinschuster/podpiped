@@ -103,7 +103,7 @@ class CachedClient
         $channel->setDownloadEnabled($settings->isDownloadEnabled($channelId));
         $channel->setItemCount($count);
         $channel->setItemLimit($settings->getLimit($channelId));
-        $channel->setRefreshing($this->isChannelValid($channelId));
+        $channel->setRefreshing(!$this->isChannelValid($channelId));
         $channel->setLastUpdate(date('Y-m-d H:i:s', filemtime($cacheFile)));
 
         return $channel;
