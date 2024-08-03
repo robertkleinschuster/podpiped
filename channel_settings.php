@@ -171,6 +171,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </form>
 <p>Aktualisiert: <span style="white-space: nowrap"><?= $lastUpdate ?></span></p>
 <p>Nächste Aktualisierung: <span style="white-space: nowrap"><?= $nextUpdate ?></span></p>
-<p><a href="/settings.php">>&leftarrow; alle Kanäle</a></p>
+<p><a href="/settings.php">&leftarrow; alle Kanäle</a></p>
 </body>
 </html>
