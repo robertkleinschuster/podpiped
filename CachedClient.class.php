@@ -32,7 +32,7 @@ class CachedClient
         $this->log = new Log();
     }
 
-    private function isValid(string $cacheFile, int $ttl): bool
+    public function isValid(string $cacheFile, int $ttl): bool
     {
         if (file_exists("$cacheFile.new")) {
             return false;

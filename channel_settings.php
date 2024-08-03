@@ -23,8 +23,16 @@ if ($xml === false) {
 }
 
 $channelName = (string)$xml->channel->title;
-$lastUpdate = date('Y-m-d H:i:s', filemtime(__DIR__ . '/channel/' . $channelId));
 
+$lastUpdate = date('Y-m-d H:i:s', filemtime(__DIR__ . '/channel/' . $channelId));
+if (file_exists(__DIR__ . '/channel/' . $channelId . '.new')) {
+    $nextUpdate = 'in Bearbeitung...';
+} else {
+    $nextUpdate = (new DateTime())
+        ->setTimestamp(filemtime(__DIR__ . '/channel/' . $channelId))
+        ->add(new DateInterval('PT1H'))
+        ->format('Y-m-d H:i:s');
+}
 header('Content-Type: text/html; charset=utf-8');
 
 $settings = new Settings();
@@ -149,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button class="remove" type="submit" name="remove_channel" value="1">Entfernen</button>
         </p>
         <p>
-            <button type="submit" name="refresh_channel" value="1">Kanal aktualisieren</button>
+            <button type="submit" name="refresh_channel" value="1">Aktualisierung starten</button>
         </p>
         <label>
             <input type="checkbox" required>
@@ -157,6 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </label>
     </fieldset>
 </form>
-<div>Aktualisiert: <span style="white-space: nowrap"><?= $lastUpdate ?></span></div>
+<p>Aktualisiert: <span style="white-space: nowrap"><?= $lastUpdate ?></span></p>
+<p>Nächste Aktualisierung: <span style="white-space: nowrap"><?= $nextUpdate ?></span></p>
 </body>
 </html>

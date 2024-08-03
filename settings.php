@@ -17,13 +17,16 @@ $channels = array_filter(
 );
 
 $settings = new Settings();
+$client = new Client($_SERVER['HTTP_HOST']);
+$cachedClient = new CachedClient($client);
 
-$channels = array_map(function (string $id) use ($settings) {
+$channels = array_map(function (string $id) use ($settings, $cachedClient) {
     $xml = simplexml_load_file(__DIR__ . '/channel/' . $id);
     return [
         'id' => $id,
         'name' => (string)$xml->channel->title,
         'downloadEnabled' => $settings->isDownloadEnabled($id),
+        'refreshing' => !$cachedClient->isValid($id, 3600),
         'lastUpdate' => date('Y-m-d H:i:s', filemtime(__DIR__ . '/channel/' . $id))
     ];
 
@@ -34,8 +37,6 @@ usort($channels, fn($a, $b) => strcasecmp($a['name'], $b['name']));
 header('Content-Type: text/html; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $client = new Client($_SERVER['HTTP_HOST']);
-    $cachedClient = new CachedClient($client);
     //   $cachedClient->refreshChannel($channelId);
 
     header('Location: ' . $_SERVER['HTTP_REFERER']);
@@ -107,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php foreach ($channels as $channel): ?>
     <details>
         <summary>
-            <a href="/settings/<?= $channel['id'] ?>"><?= $channel['name'] ?></a><?= $channel['downloadEnabled'] ? ' &downarrow;' : '' ?>
+            <a href="/settings/<?= $channel['id'] ?>"><?= $channel['name'] ?></a><?= $channel['downloadEnabled'] ? ' &downarrow;' : '' ?><?= $channel['refreshing'] ? ' &#10227;' : '' ?>
         </summary>
         <p>
             <span>Aktualisiert: <?= $channel['lastUpdate'] ?></span>
