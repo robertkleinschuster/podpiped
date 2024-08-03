@@ -13,15 +13,18 @@ if (!$channelId) {
     exit;
 }
 
-$client = new Client($_SERVER['HTTP_HOST']);
-$data = $client->fetch("/channel/$channelId");
-$channelName = $data['name'];
-if (!$channelName) {
+$xml = simplexml_load_file(__DIR__ . '/channel/' . $channelId);
+
+if ($xml === false) {
     header('Content-Type: text/plain');
     http_response_code(404);
     echo '404 Not Found';
     exit;
 }
+
+$channelName = (string)$xml->channel->title;
+$lastUpdate = date('Y-m-d H:i:s', filemtime(__DIR__ . '/channel/' . $channelId));
+
 header('Content-Type: text/html; charset=utf-8');
 
 $settings = new Settings();
@@ -38,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $settings->disableDownload($channelId);
     }
-
+    
+    $client = new Client($_SERVER['HTTP_HOST']);
     $cachedClient = new CachedClient($client);
     $cachedClient->refreshChannel($channelId);
 
@@ -58,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         * {
             box-sizing: border-box;
         }
+
         body {
             font-size: 16px;
             font-family: sans-serif;
@@ -84,16 +89,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-<h1>Einstellungen</h1>
-<h2><?= $channelName ?></h2>
+<h1><?= $channelName ?></h1>
+<p>Zuletzt aktualisiert: <?= $lastUpdate ?></p>
 <form method="post">
-    <p>
-        <label>
-            Angezeigte Videos
-            <input type="number" name="limit" value="<?= $settings->getLimit($channelId) ?>">
-        </label>
-    </p>
-    <p>
+    <fieldset>
+        <legend>Einstellungen</legend>
+        <p>
+            <label>
+                Angezeigte Videos
+                <input type="number" name="limit" value="<?= $settings->getLimit($channelId) ?>">
+            </label>
+        </p>
         <label>
             Videos Herunterladen
             <input type="checkbox" name="download"
@@ -103,10 +109,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Anzahl
             <input type="number" name="download_limit" value="<?= $settings->getDownloadLimit($channelId) ?>">
         </label>
-    </p>
-    <p>
-        <button type="submit">Speichern</button>
-    </p>
+        <p>
+            <button type="submit">Speichern</button>
+        </p>
+    </fieldset>
 </form>
 </body>
 </html>
