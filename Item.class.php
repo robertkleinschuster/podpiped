@@ -229,11 +229,12 @@ HTML;
     <br>
     <br>
     $videoLink
+    <a href="$this->settingsUrl">Einstellungen</a>
+    <br>
     <a href="$this->uploaderUrl">$this->uploaderName</a>
     <br>
     <a href="$this->uploaderFeedUrl">Kanal Podcast</a>
     <br>
-    <a href="$this->settingsUrl">Einstellungen</a>
     <br>
     </center>
     ]]></description>  

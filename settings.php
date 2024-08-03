@@ -36,12 +36,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['download_limit'])) {
         $settings->setDownloadLimit($channelId, (int)$_POST['download_limit']);
     }
-    if (isset($_POST['download']) && $_POST['download'] === '1') {
+    if ($settings->getDownloadLimit($channelId)) {
         $settings->enableDownload($channelId);
     } else {
         $settings->disableDownload($channelId);
     }
-    
+
     $client = new Client($_SERVER['HTTP_HOST']);
     $cachedClient = new CachedClient($client);
     $cachedClient->refreshChannel($channelId);
@@ -63,18 +63,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-sizing: border-box;
         }
 
-        body {
-            font-size: 16px;
-            font-family: sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-        }
-
-        button {
-            font-size: 16px;
-            padding: .5rem;
-        }
-
         :root {
             --text: #000;
             --bg: #fff;
@@ -86,33 +74,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 --bg: #000;
             }
         }
+
+        body {
+            font-size: 16px;
+            font-family: sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            display: flex;
+            gap: .5rem;
+        }
+
+        button {
+            font-size: 16px;
+            padding: .5rem;
+            border-radius: 8px;
+            border: none;
+            background: #2146d5;
+            color: white;
+            width: 100%;
+        }
+
+        input[type=number] {
+            width: 2.5rem;
+        }
+
+        fieldset {
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
 <h1><?= $channelName ?></h1>
-<p>Zuletzt aktualisiert: <?= $lastUpdate ?></p>
 <form method="post">
     <fieldset>
-        <legend>Einstellungen</legend>
+        <legend>Video-Einstellungen</legend>
         <p>
             <label>
-                Angezeigte Videos
+                Anzeigen:
                 <input type="number" name="limit" value="<?= $settings->getLimit($channelId) ?>">
             </label>
         </p>
-        <label>
-            Videos Herunterladen
-            <input type="checkbox" name="download"
-                   value="1"<?= $settings->isDownloadEnabled($channelId) ? ' checked' : '' ?>>
-        </label>
-        <label id="download_limit">
-            Anzahl
-            <input type="number" name="download_limit" value="<?= $settings->getDownloadLimit($channelId) ?>">
-        </label>
         <p>
-            <button type="submit">Speichern</button>
+            <label>
+                Herunterladen:
+                <input type="number" name="download_limit" value="<?= $settings->getDownloadLimit($channelId) ?>">
+                <?= $settings->isDownloadEnabled($channelId) ? '&check;' : '' ?>
+            </label>
         </p>
+        <button type="submit">Speichern</button>
     </fieldset>
 </form>
+<div>Aktualisiert: <span style="white-space: nowrap"><?= $lastUpdate ?></span></div>
 </body>
 </html>
