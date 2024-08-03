@@ -6,45 +6,35 @@ require_once "CachedClient.class.php";
 $channelId = trim($_GET['id'] ?? '');
 $channelId = preg_replace('/[^a-zA-Z0-9_\-.]/', '', $channelId);
 
-if (!$channelId) {
-    header('Content-Type: text/plain');
-    http_response_code(404);
-    echo '404 Not Found';
+if ($channelId) {
+    require_once "channel_settings.php";
     exit;
 }
 
-$xml = simplexml_load_file(__DIR__ . '/channel/' . $channelId);
-
-if ($xml === false) {
-    header('Content-Type: text/plain');
-    http_response_code(404);
-    echo '404 Not Found';
-    exit;
-}
-
-$channelName = (string)$xml->channel->title;
-$lastUpdate = date('Y-m-d H:i:s', filemtime(__DIR__ . '/channel/' . $channelId));
-
-header('Content-Type: text/html; charset=utf-8');
+$channels = array_filter(
+    array_map('basename', glob(__DIR__ . '/channel/*')),
+    fn(string $id) => !str_ends_with($id, '.new')
+);
 
 $settings = new Settings();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['limit'])) {
-        $settings->setLimit($channelId, (int)$_POST['limit']);
-    }
-    if (isset($_POST['download_limit'])) {
-        $settings->setDownloadLimit($channelId, (int)$_POST['download_limit']);
-    }
-    if ($settings->getDownloadLimit($channelId)) {
-        $settings->enableDownload($channelId);
-    } else {
-        $settings->disableDownload($channelId);
-    }
+$channels = array_map(function (string $id) use ($settings) {
+    $xml = simplexml_load_file(__DIR__ . '/channel/' . $id);
+    return [
+        'id' => $id,
+        'name' => (string)$xml->channel->title,
+        'downloadEnabled' => $settings->isDownloadEnabled($id),
+        'lastUpdate' => date('Y-m-d H:i:s', filemtime(__DIR__ . '/channel/' . $id))
+    ];
 
+}, $channels);
+
+header('Content-Type: text/html; charset=utf-8');
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $client = new Client($_SERVER['HTTP_HOST']);
     $cachedClient = new CachedClient($client);
-    $cachedClient->refreshChannel($channelId);
+    //   $cachedClient->refreshChannel($channelId);
 
     header('Location: ' . $_SERVER['HTTP_REFERER']);
     exit;
@@ -57,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title><?= $channelName ?> - Einstellungen</title>
+    <title>Einstellungen</title>
     <style>
         * {
             box-sizing: border-box;
@@ -84,11 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flex-direction: column;
         }
 
-        label {
-            display: flex;
-            gap: .5rem;
-        }
-
         button {
             font-size: 16px;
             padding: .5rem;
@@ -99,36 +84,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             width: 100%;
         }
 
-        input[type=number] {
-            width: 2.5rem;
-        }
-
-        fieldset {
-            border-radius: 8px;
-        }
     </style>
 </head>
 <body>
-<h1><?= $channelName ?></h1>
-<form method="post">
-    <fieldset>
-        <legend>Video-Einstellungen</legend>
-        <p>
-            <label>
-                Anzeigen:
-                <input type="number" name="limit" value="<?= $settings->getLimit($channelId) ?>">
-            </label>
-        </p>
-        <p>
-            <label>
-                Herunterladen:
-                <input type="number" name="download_limit" value="<?= $settings->getDownloadLimit($channelId) ?>">
-                <?= $settings->isDownloadEnabled($channelId) ? '&check;' : '' ?>
-            </label>
-        </p>
-        <button type="submit">Speichern</button>
-    </fieldset>
-</form>
-<div>Aktualisiert: <span style="white-space: nowrap"><?= $lastUpdate ?></span></div>
+<h1>Einstellungen</h1>
+<ul>
+    <?php foreach ($channels as $channel): ?>
+        <li>
+            <a href="/settings/<?= $channel['id'] ?>"><?= $channel['name'] ?></a>
+            <ul>
+                <li>Aktualisiert: <?= $channel['lastUpdate'] ?></li>
+                <li><?= $channel['downloadEnabled'] ? 'Download aktiviert' : 'Download deaktivert' ?></li>
+            </ul>
+        </li>
+    <?php endforeach; ?>
+</ul>
 </body>
 </html>
+
