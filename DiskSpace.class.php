@@ -2,7 +2,8 @@
 
 class DiskSpace
 {
-    private function getFolderSize($dir) {
+    private function getFolderSize($dir)
+    {
         $size = 0;
 
         // Check if the directory exists
@@ -33,8 +34,18 @@ class DiskSpace
         return $size;
     }
 
-    public function getSize($dir): float
+    public function getSize($resource): float
     {
-        return $this->getFolderSize($dir) / 1024 / 1024 / 1024;
+        $size = 0;
+        if (is_dir($resource)) {
+            $size = $this->getFolderSize($resource);
+        }
+        if (is_file($resource)) {
+            return filesize($resource);
+        }
+        if ($size) {
+            return $size / 1024 / 1024 / 1024;
+        }
+        return 0;
     }
 }

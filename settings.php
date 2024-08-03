@@ -27,11 +27,33 @@ $settings = new Settings();
 $client = new Client($_SERVER['HTTP_HOST']);
 $cachedClient = new CachedClient($client);
 
-$channels = array_map(function (string $id) use ($settings, $cachedClient) {
-    $xml = simplexml_load_file(__DIR__ . '/channel/' . $id);
+$channels = array_map(function (string $id) use ($settings, $cachedClient, $diskSpace) {
+    $xml = @simplexml_load_file(__DIR__ . '/channel/' . $id);
+
+    $size = 0;
+    $downloaded = 0;
+    $count = 0;
+    try {
+        if ($xml) {
+            foreach ($xml->channel->item as $item) {
+                $guid = (string) $item->guid;
+                $count++;
+                if (file_exists(__DIR__ . '/static/' . $guid . '.mp4')) {
+                    $downloaded++;
+                }
+                $size += $diskSpace->getSize(__DIR__ . '/static/' . $guid . '.mp4');
+            }
+        }
+    } catch (Throwable $throwable) {
+        error_log($throwable);
+    }
+
     return [
         'id' => $id,
-        'name' => (string)$xml->channel->title,
+        'size' => number_format($size, 2, ',', '.'),
+        'downloaded' => $downloaded,
+        'videoCount' => $count,
+        'name' => $xml ? (string)$xml->channel->title : '',
         'downloadEnabled' => $settings->isDownloadEnabled($id),
         'refreshing' => !$cachedClient->isChannelValid($id),
         'lastUpdate' => date('Y-m-d H:i:s', filemtime(__DIR__ . '/channel/' . $id))
@@ -141,11 +163,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php foreach ($channels as $channel): ?>
     <details>
         <summary>
-            <a href="/settings/<?= $channel['id'] ?>"><?= $channel['name'] ?></a><span><?= $channel['downloadEnabled'] ? ' 💾' : ' 🌐' ?><?= $channel['refreshing'] ? ' <span class="spinner"/>' : ' ✅' ?></span>
+            <a href="/settings/<?= $channel['id'] ?>"><?= $channel['name'] ?></a><span><?= $channel['downloadEnabled'] ? "($channel[size] GB) 💾" : ' 🌐' ?><?= $channel['refreshing'] ? ' <span class="spinner"/>' : ' ✅' ?></span>
         </summary>
         <p>
             <span>Aktualisiert: <?= $channel['lastUpdate'] ?></span>
-            <span>Download: <?= $channel['downloadEnabled'] ? '&checkmark; aktiviert' : '&cross; deaktivert' ?></span>
+            <span>Videos: <?= $channel['videoCount'] ?></span>
+            <span>Download: <?= $channel['downloadEnabled'] ? "&checkmark; aktiviert ($channel[downloaded] / $channel[videoCount])" : '&cross; deaktivert' ?></span>
         </p>
     </details>
 <?php endforeach; ?>
