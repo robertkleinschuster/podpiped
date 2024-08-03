@@ -30,20 +30,29 @@ header('Content-Type: text/html; charset=utf-8');
 $settings = new Settings();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $client = new Client($_SERVER['HTTP_HOST']);
+    $cachedClient = new CachedClient($client);
+
+    if (!empty($_POST['remove_channel'])) {
+        $cachedClient->removeChannel($channelId);
+        header('Location: https://' . $_SERVER['HTTP_HOST'] . '/settings.php');
+        exit;
+    }
+
     if (isset($_POST['limit'])) {
         $settings->setLimit($channelId, (int)$_POST['limit']);
     }
     if (isset($_POST['download_limit'])) {
         $settings->setDownloadLimit($channelId, (int)$_POST['download_limit']);
     }
+
     if ($settings->getDownloadLimit($channelId)) {
         $settings->enableDownload($channelId);
     } else {
         $settings->disableDownload($channelId);
     }
 
-    $client = new Client($_SERVER['HTTP_HOST']);
-    $cachedClient = new CachedClient($client);
+
     $cachedClient->refreshChannel($channelId);
 
     header('Location: ' . $_SERVER['HTTP_REFERER']);
@@ -99,6 +108,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             width: 100%;
         }
 
+        button.remove {
+            background: #d52121;
+        }
+
         input[type=number] {
             width: 2.5rem;
         }
@@ -127,6 +140,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </label>
         </p>
         <button type="submit">Speichern</button>
+    </fieldset>
+</form>
+<form method="post">
+    <fieldset>
+        <legend>Kanal-Einstellungen</legend>
+        <p>
+            <button class="remove" type="submit" name="remove_channel" value="1">Entfernen</button>
+        </p>
+        <p>
+            <button type="submit" name="refresh_channel" value="1">Kanal aktualisieren</button>
+        </p>
+        <label>
+            <input type="checkbox" required>
+            Ja ich möchte diese Aktion wirklich durchführen.
+        </label>
     </fieldset>
 </form>
 <div>Aktualisiert: <span style="white-space: nowrap"><?= $lastUpdate ?></span></div>

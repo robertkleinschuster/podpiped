@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once 'Client.class.php';
+require_once 'Downloader.class.php';
 require_once 'Rss.class.php';
 require_once 'Log.class.php';
 require_once 'Settings.class.php';
@@ -188,5 +189,25 @@ class CachedClient
             $this->log->append($exception->getMessage());
             return true;
         }
+    }
+
+    public function removeChannel(string $channelId): void
+    {
+        $cacheFile = $this->channelFolder . $channelId;
+        $xml = simplexml_load_file($cacheFile);
+        $downloader = new Downloader();
+        $downloader->delete($channelId);
+        $downloader->delete("$channelId.jpg");
+        $channelName = '';
+        if ($xml) {
+            $channelName = (string)$xml->channel->title;
+            foreach ($xml->channel->item as $item) {
+                $videoId = (string)$item->guid;
+                $downloader->delete("$videoId.mp4");
+            }
+        }
+        @unlink($cacheFile);
+        @unlink("$cacheFile.new");
+        $this->log->append("removed channel: " . $channelId . ' ' . $channelName);
     }
 }
