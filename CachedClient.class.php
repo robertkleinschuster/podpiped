@@ -236,10 +236,23 @@ class CachedClient
         }
     }
 
+    public function removeVideoDownloads(string $channelId): void
+    {
+        $cacheFile = $this->channelFolder . $channelId;
+        $downloader = new Downloader();
+        $xml = @simplexml_load_file($cacheFile);
+        if ($xml) {
+            foreach ($xml->channel->item as $item) {
+                $videoId = (string)$item->guid;
+                $downloader->delete("$videoId.mp4");
+            }
+        }
+    }
+
     public function removeChannel(string $channelId): void
     {
         $cacheFile = $this->channelFolder . $channelId;
-        $xml = simplexml_load_file($cacheFile);
+        $xml = @simplexml_load_file($cacheFile);
         $downloader = new Downloader();
         $downloader->delete($channelId);
         $downloader->delete("$channelId.jpg");

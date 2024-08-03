@@ -59,13 +59,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $settings->enableDownload($channelId);
     } else {
         $settings->disableDownload($channelId);
+        $cachedClient->removeVideoDownloads($channelId);
     }
 
     if (isset($_POST['download_hq'])) {
+        $prevState = $settings->isDownloadHqEnabled($channelId);
         if ($_POST['download_hq']) {
             $settings->enableDownloadHq($channelId);
         } else {
             $settings->disableDownloadHq($channelId);
+        }
+        if ($prevState !== $settings->isDownloadHqEnabled($channelId)) {
+            $cachedClient->removeVideoDownloads($channelId);
         }
     }
 
