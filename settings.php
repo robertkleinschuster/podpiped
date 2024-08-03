@@ -16,7 +16,12 @@ if (!$channelId) {
 $client = new Client($_SERVER['HTTP_HOST']);
 $data = $client->fetch("/channel/$channelId");
 $channelName = $data['name'];
-
+if (!$channelName) {
+    header('Content-Type: text/plain');
+    http_response_code(404);
+    echo '404 Not Found';
+    exit;
+}
 header('Content-Type: text/html; charset=utf-8');
 
 $settings = new Settings();
@@ -49,6 +54,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title><?= $channelName ?> - Einstellungen</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-size: 16px;
+            font-family: sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+        }
+
+        button {
+            font-size: 16px;
+            padding: .5rem;
+        }
+
+        :root {
+            --text: #000;
+            --bg: #fff;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --text: #fff;
+                --bg: #000;
+            }
+        }
+    </style>
 </head>
 <body>
 <h1>Einstellungen</h1>
