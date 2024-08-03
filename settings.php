@@ -102,13 +102,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding-left: 1rem;
         }
     </style>
+    <style>
+        .spinner {
+            display: inline-block;
+            vertical-align: middle;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            border: 3.8px solid;
+            border-color: #ffffff;
+            border-right-color: #496fff;
+            animation: spinner-d3wgkg 1s infinite linear;
+        }
+
+        @keyframes spinner-d3wgkg {
+            to {
+                transform: rotate(1turn);
+            }
+        }
+    </style>
 </head>
 <body>
 <h1>Einstellungen</h1>
 <?php foreach ($channels as $channel): ?>
     <details>
         <summary>
-            <a href="/settings/<?= $channel['id'] ?>"><?= $channel['name'] ?></a><?= $channel['downloadEnabled'] ? ' &downarrow;' : '' ?><?= $channel['refreshing'] ? ' &#10227;' : '' ?>
+            <a href="/settings/<?= $channel['id'] ?>"><?= $channel['name'] ?></a><?= $channel['downloadEnabled'] ? ' 💾' : ' 🌐' ?><?= $channel['refreshing'] ? ' <div class="spinner"/>' : ' ✅' ?>
         </summary>
         <p>
             <span>Aktualisiert: <?= $channel['lastUpdate'] ?></span>
