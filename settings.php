@@ -84,21 +84,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             width: 100%;
         }
 
+        a, a:visited {
+            color: inherit;
+        }
+
+        summary {
+            border-bottom: 1px solid var(--text);
+            padding: .5rem;
+        }
+
+        details p {
+            display: flex;
+            flex-direction: column;
+            padding-left: 1rem;
+        }
     </style>
 </head>
 <body>
 <h1>Einstellungen</h1>
-<ul>
-    <?php foreach ($channels as $channel): ?>
-        <li>
-            <a href="/settings/<?= $channel['id'] ?>"><?= $channel['name'] ?></a>
-            <ul>
-                <li>Aktualisiert: <?= $channel['lastUpdate'] ?></li>
-                <li><?= $channel['downloadEnabled'] ? 'Download aktiviert' : 'Download deaktivert' ?></li>
-            </ul>
-        </li>
-    <?php endforeach; ?>
-</ul>
+<?php foreach ($channels as $channel): ?>
+    <details>
+        <summary>
+            <a href="/settings/<?= $channel['id'] ?>"><?= $channel['name'] ?></a><?= $channel['downloadEnabled'] ? ' &downarrow;' : '' ?>
+        </summary>
+        <p>
+            <span>Aktualisiert: <?= $channel['lastUpdate'] ?></span>
+            <span>Download: <?= $channel['downloadEnabled'] ? '&checkmark; aktiviert' : '&cross; deaktivert' ?></span>
+        </p>
+    </details>
+<?php endforeach; ?>
 </body>
 </html>
 
