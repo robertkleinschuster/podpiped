@@ -41,7 +41,7 @@ class DiskSpace
             $size = $this->getFolderSize($resource);
         }
         if (is_file($resource)) {
-            return filesize($resource);
+            $size = filesize($resource);
         }
         if ($size) {
             return $size / 1024 / 1024 / 1024;
