@@ -47,7 +47,14 @@ class CachedClient
 
     public function isChannelValid(string $channelId): bool
     {
-        return $this->isValid($this->channelFolder . $channelId, 3600);
+        $valid = $this->isValid($this->channelFolder . $channelId, 3600);
+        if (!$valid) {
+            return false;
+        }
+
+        $channel = $this->channelInfo($channelId);
+        return $channel->getItemCount() === $channel->getItemLimit()
+            && (!$channel->isDownloadEnabled() || $channel->getDownloadedItemCount() === $channel->getDownloadedItemLimit());
     }
 
     public function refreshChannel(string $channelId): void
@@ -86,7 +93,7 @@ class CachedClient
         $downloaded = 0;
         $count = 0;
         foreach ($xml->channel->item as $item) {
-            $guid = (string) $item->guid;
+            $guid = (string)$item->guid;
             $count++;
             if (file_exists(__DIR__ . '/static/' . $guid . '.mp4')) {
                 $downloaded++;
@@ -191,8 +198,8 @@ class CachedClient
             $complete = true;
             foreach ($files as $cacheFile) {
                 if (!str_ends_with($cacheFile, '.new')) {
-                    if (!$this->isValid($cacheFile, 3600)) {
-                        $channelId = basename($cacheFile);
+                    $channelId = basename($cacheFile);
+                    if (!$this->isChannelValid($channelId)) {
                         if ($this->loadChannel($channelId)) {
                             $this->log->append("refreshed channel: " . $channelId);
                         } else {
