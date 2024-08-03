@@ -120,6 +120,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: #d52121;
         }
 
+        button.back {
+            width: auto;
+        }
+
         input[type=number] {
             width: 2.5rem;
         }
@@ -167,5 +171,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </form>
 <p>Aktualisiert: <span style="white-space: nowrap"><?= $lastUpdate ?></span></p>
 <p>Nächste Aktualisierung: <span style="white-space: nowrap"><?= $nextUpdate ?></span></p>
+<p><a href="/settings.php"><button class="back">&leftarrow; alle Kanäle</button></a></p>
 </body>
 </html>
