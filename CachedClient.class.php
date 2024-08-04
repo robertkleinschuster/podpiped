@@ -194,7 +194,18 @@ class CachedClient
     {
         $files = glob($this->channelFolder . '*');
 
-        usort($files, fn($a, $b) => filemtime($b) <=> filemtime($a));
+        usort($files, function ($a, $b) {
+            $aTime = filemtime($a);
+            $bTime = filemtime($b);
+            if (str_ends_with($a, '.new')) {
+                $bTime = filemtime($a);
+            }
+
+            if (str_ends_with($b, '.new')) {
+                $aTime = filemtime($b);
+            }
+            return $aTime <=> $bTime;
+        });
 
         $channels = [];
         foreach ($files as $file) {
