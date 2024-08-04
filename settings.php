@@ -42,6 +42,9 @@ foreach ($channels as $channel) {
 
 $channelCount = count($channels);
 
+/** @var Channel[] $refreshQueue */
+$refreshQueue = array_filter(array_map(fn(string $id) => $cachedClient->channelInfo($id), $cachedClient->listChannels()), fn(Channel $channel) => $channel->isRefreshing());
+
 header('Content-Type: text/html; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -161,6 +164,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </p>
     </details>
 <?php endforeach; ?>
+<h2>Warteschlange</h2>
+<ol>
+    <?php foreach ($refreshQueue as $channel): ?>
+        <li><?= $channel->getTitle() ?> (<?= $channel->getLastUpdate() ?>)</li>
+    <?php endforeach; ?>
+</ol>
 </body>
 </html>
 

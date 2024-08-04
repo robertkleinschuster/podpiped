@@ -190,38 +190,51 @@ class CachedClient
         return false;
     }
 
+    public function listChannels(): array
+    {
+        $files = glob($this->channelFolder . '*');
+
+        usort($files, fn($a, $b) => filemtime($b) <=> filemtime($a));
+
+        $channels = [];
+        foreach ($files as $file) {
+            $channelId = basename($file, '.new');
+            if (!in_array($channelId, $channels)) {
+                $channels[] = $channelId;
+            }
+        }
+
+        return $channels;
+    }
+
     public function refreshChannels(): void
     {
         try {
-
-            $files = glob($this->channelFolder . '*');
-            foreach ($files as $cacheFile) {
-                if (!str_ends_with($cacheFile, '.new')) {
-                    try {
-                        $channelId = basename($cacheFile);
-                        if ($this->isChannelValid($channelId)) {
-                            $channel = $this->channelInfo($channelId);
-                            if (!$channel) {
-                                $this->refreshChannel($channelId);
-                            }
-                            if (
-                                $channel->getItemCount() < $channel->getItemLimit()
-                                || $channel->isDownloadEnabled() && $channel->getDownloadedItemCount() < $channel->getDownloadedItemLimit()
-                            ) {
-                                $this->refreshChannel($channelId);
-                            }
-                        } else {
-                            if ($this->loadChannel($channelId)) {
-                                $this->log->append("refreshed channel: " . $channelId);
-                            }
-                            sleep(10);
+            foreach ($this->listChannels() as $channelId) {
+                try {
+                    if ($this->isChannelValid($channelId)) {
+                        $channel = $this->channelInfo($channelId);
+                        if (!$channel) {
+                            $this->refreshChannel($channelId);
                         }
-                    } catch (Throwable $exception) {
-                        error_log($exception->getMessage());
-                        $this->log->append($exception->getMessage());
+                        if (
+                            $channel->getItemCount() < $channel->getItemLimit()
+                            || $channel->isDownloadEnabled() && $channel->getDownloadedItemCount() < $channel->getDownloadedItemLimit()
+                        ) {
+                            $this->refreshChannel($channelId);
+                        }
+                    } else {
+                        if ($this->loadChannel($channelId)) {
+                            $this->log->append("refreshed channel: " . $channelId);
+                        }
                         sleep(10);
                     }
+                } catch (Throwable $exception) {
+                    error_log($exception->getMessage());
+                    $this->log->append($exception->getMessage());
+                    sleep(10);
                 }
+
             }
         } catch (Throwable $exception) {
             error_log($exception->getMessage());
