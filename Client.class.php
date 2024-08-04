@@ -26,7 +26,7 @@ class Client
 
     public function fetch(string $path, array $header = null): ?array
     {
-        usleep(rand(0, 2000000));
+        usleep(rand(1500000, 2500000));
         $path = ltrim($path, '/');
         $url = "https://$this->apiHost/$path";
 
