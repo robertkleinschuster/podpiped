@@ -49,9 +49,12 @@ class Client
                     throw new Exception("Error fetching: $path Message: {$data['error']}");
                 }
                 return $data;
+            } else {
+                throw new Exception("Error fetching, error decoding response: $path}");
             }
+        } else {
+            throw new Exception("Error fetching, empty response: $path");
         }
-        return null;
     }
 
     /**
@@ -194,8 +197,8 @@ class Client
 
             $streamData = $this->stream($videoId);
 
-            if (empty($streamData['fileInfo'])) {
-                continue;
+            if (empty($streamData['fileInfo']) && empty($streamData['fileInfo_720p'])) {
+                throw new Exception('No file info: ' . $videoId);
             }
 
             $fileInfo = $streamData['fileInfo'];
@@ -286,7 +289,7 @@ class Client
             }
         }
 
-        if (isset($streamData['fileInfo'])) {
+        if (isset($streamData['fileInfo']) || isset($streamData['fileInfo_720p'])) {
             return $streamData;
         }
 
