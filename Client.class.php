@@ -131,8 +131,9 @@ class Client
             $channel->setLanguage('en');
             $channel->setFrontend("https://$this->frontendHost/channel/$channelId");
             $channel->setSettingsUrl("https://$this->ownHost" . Path::PATH_SETTINGS . "/$channelId");
-            $items = $this->items($data['relatedStreams'], $limit, $downloadVideos, $downloadLimit, $downloadHq);
-            if (count($items) < $limit && count($data['relatedStreams']) >= $limit) {
+            $streams = $this->filterStreams($data['relatedStreams']);
+            $items = $this->items($streams, $limit, $downloadVideos, $downloadLimit, $downloadHq);
+            if (count($items) < $limit && count($streams) >= $limit) {
                 return null;
             }
             $completeItems = array_filter($items, fn(Item $item) => $item->complete);
@@ -147,6 +148,29 @@ class Client
         return null;
     }
 
+    private function filterStreams(array $streams): array
+    {
+        $result = [];
+        foreach ($streams as $stream) {
+            if ($stream['type'] !== 'stream') {
+                continue;
+            }
+            $isShort = (bool)($stream['isShort'] ?? false);
+            if ($isShort) {
+                continue;
+            }
+            if (!isset($stream['url'])) {
+                continue;
+            }
+            parse_str(parse_url($stream['url'], PHP_URL_QUERY), $params);
+            if (!isset($params['v'])) {
+                continue;
+            }
+            $result[] = $stream;
+        }
+        return $result;
+    }
+
     /**
      * @param array $videos
      * @param int $limit
@@ -157,24 +181,12 @@ class Client
      */
     public function items(array $videos, int $limit, bool $downloadVideos = false, int $downloadLimit = null, bool $downloadHq = false): array
     {
+        $videos = $this->filterStreams($videos);
         $downloader = new Downloader();
 
         $items = [];
         foreach ($videos as $video) {
-            if ($video['type'] !== 'stream') {
-                continue;
-            }
-            $isShort = (bool)($video['isShort'] ?? false);
-            if ($isShort) {
-                continue;
-            }
-            if (!isset($video['url'])) {
-                continue;
-            }
             parse_str(parse_url($video['url'], PHP_URL_QUERY), $params);
-            if (!isset($params['v'])) {
-                continue;
-            }
             $videoId = $params['v'];
             $videoFilename = "$videoId.mp4";
 
