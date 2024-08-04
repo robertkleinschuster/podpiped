@@ -199,6 +199,9 @@ class CachedClient
 
                     if ($this->isChannelValid($channelId)) {
                         $channel = $this->channelInfo($channelId);
+                        if (!$channel) {
+                            continue;
+                        }
                         if (
                             $channel->getItemCount() < $channel->getItemLimit()
                             || $channel->isDownloadEnabled() && $channel->getDownloadedItemCount() < $channel->getDownloadedItemLimit()
