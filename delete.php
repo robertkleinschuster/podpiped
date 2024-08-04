@@ -8,6 +8,7 @@ require_once "Downloader.class.php";
 
 $log = new Log();
 $log->clear();
+$log->clearError();
 
 $downloader = new Downloader();
 $downloader->cleanup();
