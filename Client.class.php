@@ -18,9 +18,6 @@ class Client
         private string $proxyHost = 'pipedproxy.kavin.rocks', //'pipedproxy.kavin.rocks', 'piped-proxy.lunar.icu'
     )
     {
-        if (!is_dir(__DIR__ . '/chapters')) {
-            mkdir(__DIR__ . '/chapters');
-        }
     }
 
     public function fetch(string $path, array $header = null): ?array
@@ -200,22 +197,6 @@ class Client
             if (empty($streamData['fileInfo'])) {
                 continue;
             }
-            $chaptersFile = '/chapters/' . $videoId . '.json';
-            if (isset($streamData['chapters']) && is_array($streamData['chapters']) && !file_exists(__DIR__ . $chaptersFile)) {
-                $chapters = [
-                    'version' => "1.2.0",
-                    'chapters' => array_map(
-                        fn(array $chapter) => [
-                            'title' => $chapter['title'],
-                            'img' => $chapter['image'],
-                            'startTime' => $chapter['start']
-                        ],
-                        $streamData['chapters']
-                    ),
-                ];
-                $chaptersJson = json_encode($chapters);
-                file_put_contents(__DIR__ . $chaptersFile, $chaptersJson);
-            }
 
             $fileInfo = $streamData['fileInfo'];
             $fileInfo720 = $streamData['fileInfo_720p'] ?? null;
@@ -236,9 +217,6 @@ class Client
             $item->setDescription($description);
             $duration = (int)$video['duration'];
             $item->setDuration((string)$duration);
-            if (isset($chaptersJson)) {
-                $item->setChaptersUrl("https://$this->ownHost$chaptersFile");
-            }
             $item->setUploaderName($uploaderName);
 
             $date = new DateTime($streamData['uploadDate']);
