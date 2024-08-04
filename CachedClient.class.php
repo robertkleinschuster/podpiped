@@ -132,6 +132,8 @@ class CachedClient
                 $rss = new Rss($channel);
                 file_put_contents($cacheFile, (string)$rss);
                 return true;
+            } else {
+                $this->log->append('failed to refresh channel: ' . $channelId);
             }
         } catch (Throwable $exception) {
             if (str_contains($exception->getMessage(), 'This channel does not exist.')) {
