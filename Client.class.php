@@ -130,7 +130,7 @@ class Client
             $channel->setSettingsUrl("https://$this->ownHost" . Path::PATH_SETTINGS . "/$channelId");
             $streams = $this->filterStreams($data['relatedStreams']);
             $items = $this->items($streams, $limit, $downloadVideos, $downloadLimit, $downloadHq);
-            if (count($items) < $limit && count($streams) >= $limit) {
+            if (!count($items)) {
                 return null;
             }
             $completeItems = array_filter($items, fn(Item $item) => $item->complete);
