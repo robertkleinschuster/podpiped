@@ -43,7 +43,7 @@ foreach ($channels as $channel) {
 $channelCount = count($channels);
 
 /** @var Channel[] $refreshQueue */
-$refreshQueue = array_filter(array_map(fn(string $id) => $cachedClient->channelInfo($id), $cachedClient->listChannels()), fn(Channel $channel) => $channel->isRefreshing());
+$refreshQueue = array_filter(array_map(fn(string $id) => $cachedClient->channelInfo($id), $cachedClient->listChannels()), fn(?Channel $channel) => $channel?->isRefreshing());
 
 header('Content-Type: text/html; charset=utf-8');
 
