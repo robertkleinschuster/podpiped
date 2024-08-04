@@ -34,7 +34,7 @@ if ($channel->isRefreshing()) {
 } else {
     $nextUpdate = (new DateTime())
         ->setTimestamp(filemtime(__DIR__ . '/channel/' . $channelId))
-        ->add(new DateInterval('PT1H'))
+        ->add(new DateInterval('PT6H'))
         ->format('Y-m-d H:i:s');
 }
 header('Content-Type: text/html; charset=utf-8');

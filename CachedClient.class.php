@@ -47,7 +47,7 @@ class CachedClient
 
     public function isChannelValid(string $channelId): bool
     {
-        return $this->isValid($this->channelFolder . $channelId, 3600);
+        return $this->isValid($this->channelFolder . $channelId, 3600 * 6);
     }
 
     public function refreshChannel(string $channelId): void
@@ -115,6 +115,9 @@ class CachedClient
         try {
             $settings = new Settings();
             $limit = $settings->getLimit($channelId);
+            if (!$limit) {
+                return false;
+            }
             $downloadEnabled = $settings->isDownloadEnabled($channelId);
             $downloadLimit = $settings->getDownloadLimit($channelId);
             $downloadHq = $settings->isDownloadHqEnabled($channelId);
@@ -183,12 +186,11 @@ class CachedClient
         return false;
     }
 
-    public function refreshChannels(): bool
+    public function refreshChannels(): void
     {
         try {
 
             $files = glob($this->channelFolder . '*');
-            $complete = true;
             foreach ($files as $cacheFile) {
                 if (!str_ends_with($cacheFile, '.new')) {
                     $channelId = basename($cacheFile);
@@ -204,18 +206,13 @@ class CachedClient
                     } else {
                         if ($this->loadChannel($channelId)) {
                             $this->log->append("refreshed channel: " . $channelId);
-                        } else {
-                            $complete = false;
                         }
                     }
                 }
             }
-
-            return $complete;
         } catch (Throwable $exception) {
             error_log($exception->getMessage());
             $this->log->append($exception->getMessage());
-            return true;
         }
     }
 
