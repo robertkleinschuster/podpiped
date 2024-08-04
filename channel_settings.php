@@ -48,18 +48,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    $changed = false;
+
     if (isset($_POST['limit'])) {
+        $prevState = $settings->getLimit($channelId);
         $settings->setLimit($channelId, (int)$_POST['limit']);
+        $changed = $changed || $prevState !== $settings->getLimit($channelId);
     }
     if (isset($_POST['download_limit'])) {
+        $prevState = $settings->getDownloadLimit($channelId);
         $settings->setDownloadLimit($channelId, (int)$_POST['download_limit']);
+        $changed = $changed || $prevState !== $settings->getDownloadLimit($channelId);
     }
 
     if ($settings->getDownloadLimit($channelId)) {
-        $settings->enableDownload($channelId);
+        if (!$settings->isDownloadEnabled($channelId)) {
+            $settings->enableDownload($channelId);
+            $changed = true;
+        }
     } else {
-        $settings->disableDownload($channelId);
-        $cachedClient->removeVideoDownloads($channelId);
+        if ($settings->isDownloadEnabled($channelId)) {
+            $settings->disableDownload($channelId);
+            $cachedClient->removeVideoDownloads($channelId);
+            $changed = true;
+        }
     }
 
     if (isset($_POST['download_hq'])) {
@@ -70,11 +82,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $settings->disableDownloadHq($channelId);
         }
         if ($prevState !== $settings->isDownloadHqEnabled($channelId)) {
+            $changed = true;
             $cachedClient->removeVideoDownloads($channelId);
         }
     }
 
-    $cachedClient->refreshChannel($channelId);
+    if ($changed || !empty($_POST['refresh_channel'])) {
+        $cachedClient->refreshChannel($channelId);
+    }
 
     header('Location: ' . $_SERVER['HTTP_REFERER']);
     exit;
