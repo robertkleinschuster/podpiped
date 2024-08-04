@@ -214,6 +214,7 @@ class CachedClient
                             if ($this->loadChannel($channelId)) {
                                 $this->log->append("refreshed channel: " . $channelId);
                             }
+                            sleep(10);
                         }
                     } catch (Throwable $exception) {
                         error_log($exception->getMessage());

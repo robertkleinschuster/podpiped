@@ -20,7 +20,7 @@ $cachedClient->refreshChannels();
 $status = require "status.php";
 file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . 'status', $status);
 
-sleep(10);
+sleep(30);
 if (time() - $start < 270) {
     try {
         $url = "https://$_SERVER[HTTP_HOST]/refresh.php?start=" . $start;
