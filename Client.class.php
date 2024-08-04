@@ -51,14 +51,14 @@ class Client
             $data = @json_decode($response, true);
             if (is_array($data)) {
                 if (isset($data['error'])) {
-                    throw new Exception("Error fetching: $path Message: {$data['error']}");
+                    throw new Exception("Error fetching: $url Message: {$data['error']}");
                 }
                 return $data;
             } else {
-                throw new Exception("Error fetching, error decoding response: $path\n$response");
+                throw new Exception("Error fetching, error decoding response: $url\n$response");
             }
         } else {
-            throw new Exception("Error fetching, empty response: $path");
+            throw new Exception("Error fetching, empty response: $url");
         }
     }
 
