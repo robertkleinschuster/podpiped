@@ -198,11 +198,11 @@ class CachedClient
             $aTime = filemtime($a);
             $bTime = filemtime($b);
             if (str_ends_with($a, '.new')) {
-                $aTime *= 2;
+                $aTime /= 10;
             }
 
             if (str_ends_with($b, '.new')) {
-                $bTime *= 2;
+                $bTime /= 10;
             }
             return $aTime <=> $bTime;
         });
