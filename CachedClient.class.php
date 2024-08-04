@@ -197,23 +197,27 @@ class CachedClient
             $files = glob($this->channelFolder . '*');
             foreach ($files as $cacheFile) {
                 if (!str_ends_with($cacheFile, '.new')) {
-                    $channelId = basename($cacheFile);
-
-                    if ($this->isChannelValid($channelId)) {
-                        $channel = $this->channelInfo($channelId);
-                        if (!$channel) {
-                            $this->refreshChannel($channelId);
+                    try {
+                        $channelId = basename($cacheFile);
+                        if ($this->isChannelValid($channelId)) {
+                            $channel = $this->channelInfo($channelId);
+                            if (!$channel) {
+                                $this->refreshChannel($channelId);
+                            }
+                            if (
+                                $channel->getItemCount() < $channel->getItemLimit()
+                                || $channel->isDownloadEnabled() && $channel->getDownloadedItemCount() < $channel->getDownloadedItemLimit()
+                            ) {
+                                $this->refreshChannel($channelId);
+                            }
+                        } else {
+                            if ($this->loadChannel($channelId)) {
+                                $this->log->append("refreshed channel: " . $channelId);
+                            }
                         }
-                        if (
-                            $channel->getItemCount() < $channel->getItemLimit()
-                            || $channel->isDownloadEnabled() && $channel->getDownloadedItemCount() < $channel->getDownloadedItemLimit()
-                        ) {
-                            $this->refreshChannel($channelId);
-                        }
-                    } else {
-                        if ($this->loadChannel($channelId)) {
-                            $this->log->append("refreshed channel: " . $channelId);
-                        }
+                    } catch (Throwable $exception) {
+                        error_log($exception->getMessage());
+                        $this->log->append($exception->getMessage());
                     }
                 }
             }
