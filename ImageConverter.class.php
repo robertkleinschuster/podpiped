@@ -100,7 +100,7 @@ class ImageConverter
                 imagejpeg($destImage, $outfile);
                 unlink($imageFile);
             } catch (Throwable $exception) {
-                $this->log->append((string)$exception);
+                $this->log->appendError((string)$exception);
                 unlink($imageFile);
             }
 

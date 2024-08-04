@@ -205,7 +205,7 @@ class Client
             try {
                 $streamData = $this->stream($videoId);
             } catch (Exception $exception) {
-                $this->log->append($exception->getMessage());
+                $this->log->appendError($exception->getMessage());
                 break;
             }
 

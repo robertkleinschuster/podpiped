@@ -242,14 +242,14 @@ class CachedClient
                     }
                 } catch (Throwable $exception) {
                     error_log($exception->getMessage());
-                    $this->log->append($exception->getMessage());
+                    $this->log->appendError($exception->getMessage());
                     sleep(10);
                 }
 
             }
         } catch (Throwable $exception) {
             error_log($exception->getMessage());
-            $this->log->append($exception->getMessage());
+            $this->log->appendError($exception->getMessage());
         }
     }
 
@@ -274,7 +274,7 @@ class CachedClient
             return $complete;
         } catch (Throwable $exception) {
             error_log($exception->getMessage());
-            $this->log->append($exception->getMessage());
+            $this->log->appendError($exception->getMessage());
             return true;
         }
     }

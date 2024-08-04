@@ -15,3 +15,7 @@
 <Files log>
    Header set Content-Type "text/plain"
 </Files>
+
+<Files error>
+   Header set Content-Type "text/plain"
+</Files>
