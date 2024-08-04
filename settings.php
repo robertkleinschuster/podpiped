@@ -167,7 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <h2>Warteschlange</h2>
 <ol>
     <?php foreach ($refreshQueue as $channel): ?>
-        <li><?= $channel->getTitle() ?> (<?= $channel->getLastUpdate() ?>)</li>
+        <li><?= $channel->getTitle() ?> <small>(Aktualisiert: <?= $channel->getLastUpdate() ?>)</small></li>
     <?php endforeach; ?>
 </ol>
 </body>
