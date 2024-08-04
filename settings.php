@@ -33,6 +33,15 @@ $channels = array_filter(array_map(fn(string $id) => $cachedClient->channelInfo(
 
 usort($channels, fn(Channel $a, Channel $b) => strcasecmp($a->getTitle(), $b->getTitle()));
 
+$refreshedCount = 0;
+foreach ($channels as $channel) {
+    if (!$channel->isRefreshing()) {
+        $refreshedCount++;
+    }
+}
+
+$channelCount = count($channels);
+
 header('Content-Type: text/html; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -133,6 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <h1>Einstellungen</h1>
 <p>Speicher: <?= $folderSize ?> GB / 9 GB</p>
+<p>Aktualisierte Kanäle: <?= $refreshedCount ?> / <?= $channelCount ?></p>
 <?php foreach ($channels as $channel): ?>
     <details>
         <summary>
