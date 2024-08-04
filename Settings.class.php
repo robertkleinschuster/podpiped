@@ -71,7 +71,7 @@ class Settings
         if (file_exists($this->folder . $this->filterChannelId($channelId) . self::SUFFIX_LIMIT)) {
             return (int)file_get_contents($this->folder . $channelId . self::SUFFIX_LIMIT);
         }
-        return 10;
+        return 5;
     }
 
     public function setDownloadLimit(string $channelId, int $limit): void
