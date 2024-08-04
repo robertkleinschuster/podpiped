@@ -205,7 +205,7 @@ class Client
                 $streamData = $this->stream($videoId);
             } catch (Exception $exception) {
                 $this->log->append($exception->getMessage());
-                continue;
+                break;
             }
 
             if (empty($streamData['fileInfo']) && empty($streamData['fileInfo_720p'])) {
