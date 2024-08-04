@@ -200,7 +200,7 @@ class CachedClient
                     if ($this->isChannelValid($channelId)) {
                         $channel = $this->channelInfo($channelId);
                         if (!$channel) {
-                            continue;
+                            $this->refreshChannel($channelId);
                         }
                         if (
                             $channel->getItemCount() < $channel->getItemLimit()
