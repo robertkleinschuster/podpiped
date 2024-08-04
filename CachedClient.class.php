@@ -219,6 +219,7 @@ class CachedClient
                     } catch (Throwable $exception) {
                         error_log($exception->getMessage());
                         $this->log->append($exception->getMessage());
+                        sleep(10);
                     }
                 }
             }
