@@ -54,7 +54,7 @@ class Client
                 }
                 return $data;
             } else {
-                throw new Exception("Error fetching, error decoding response: $path}");
+                throw new Exception("Error fetching, error decoding response: $path\n$response");
             }
         } else {
             throw new Exception("Error fetching, empty response: $path");
