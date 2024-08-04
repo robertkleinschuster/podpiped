@@ -132,6 +132,9 @@ class Client
             $channel->setFrontend("https://$this->frontendHost/channel/$channelId");
             $channel->setSettingsUrl("https://$this->ownHost" . Path::PATH_SETTINGS . "/$channelId");
             $items = $this->items($data['relatedStreams'], $limit, $downloadVideos, $downloadLimit, $downloadHq);
+            if (count($items) < $limit && count($data['relatedStreams']) >= $limit) {
+                return null;
+            }
             $completeItems = array_filter($items, fn(Item $item) => $item->complete);
             $channel->complete = count($items) === count($completeItems) && isset($data['avatarUrl']);
             if (empty($completeItems)) {
