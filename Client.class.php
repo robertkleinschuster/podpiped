@@ -7,10 +7,13 @@ require_once "ImageConverter.class.php";
 require_once "Channel.class.php";
 require_once "Item.class.php";
 require_once "Rss.class.php";
+require_once "Log.class.php";
 require_once "Path.class.php";
 
 class Client
 {
+    private Log $log;
+
     public function __construct(
         private string $ownHost,
         private string $apiHost = 'pipedapi.kavin.rocks', //'pipedapi.kavin.rocks', 'piped-api.lunar.icu'
@@ -18,6 +21,7 @@ class Client
         private string $proxyHost = 'pipedproxy.kavin.rocks', //'pipedproxy.kavin.rocks', 'piped-proxy.lunar.icu'
     )
     {
+        $this->log = new Log();
     }
 
     public function fetch(string $path, array $header = null): ?array
@@ -133,7 +137,8 @@ class Client
             $channel->setSettingsUrl("https://$this->ownHost" . Path::PATH_SETTINGS . "/$channelId");
             $streams = $this->filterStreams($data['relatedStreams']);
             $items = $this->items($streams, $limit, $downloadVideos, $downloadLimit, $downloadHq);
-            if (!count($items)) {
+            if (count($items) < $limit && count($streams) >= $limit) {
+                $this->log->append('Not enough videos for channel: ' . $channelId);
                 return null;
             }
             $completeItems = array_filter($items, fn(Item $item) => $item->complete);
@@ -194,17 +199,23 @@ class Client
                 $downloader->delete($videoFilename);
                 continue;
             }
+            $channelId = basename($video['uploaderUrl'] ?? '');
 
-            $streamData = $this->stream($videoId);
+            try {
+                $streamData = $this->stream($videoId);
+            } catch (Exception $exception) {
+                $this->log->append($exception->getMessage());
+                continue;
+            }
 
             if (empty($streamData['fileInfo']) && empty($streamData['fileInfo_720p'])) {
-                throw new Exception('No file info: ' . $videoId);
+                $this->log->append(sprintf('Video %s from channel %s has no file info.', $videoId, $channelId));
+                continue;
             }
 
             $fileInfo = $streamData['fileInfo'];
             $fileInfo720 = $streamData['fileInfo_720p'] ?? null;
 
-            $channelId = basename($video['uploaderUrl'] ?? '');
             $uploaderFeed = 'https://' . $this->ownHost . Path::PATH_CHANNEL . "/$channelId";
 
             $uploaderName = $video['uploaderName'] ?? '';
