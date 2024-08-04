@@ -116,6 +116,8 @@ class CachedClient
             $settings = new Settings();
             $limit = $settings->getLimit($channelId);
             if (!$limit) {
+                touch($cacheFile);
+                @unlink("$cacheFile.new");
                 return false;
             }
             $downloadEnabled = $settings->isDownloadEnabled($channelId);
