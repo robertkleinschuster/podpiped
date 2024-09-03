@@ -228,7 +228,7 @@ class Client
             $item->setUploaderUrl("https://$this->frontendHost{$video['uploaderUrl']}");
             $item->setUploaderFeedUrl($uploaderFeed);
             $description = $streamData['description'] ?? '';
-            $description = str_replace('www.youtube.com', 'piped.video', $description);
+            $description = str_replace('www.youtube.com', $this->frontendHost, $description);
             $item->setDescription($description);
             $duration = (int)$video['duration'];
             $item->setDuration((string)$duration);
