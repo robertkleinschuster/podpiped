@@ -16,9 +16,9 @@ class Client
 
     public function __construct(
         private string $ownHost,
-        private string $apiHost = 'api.piped.yt', //'pipedapi.kavin.rocks', 'piped-api.lunar.icu'
-        private string $frontendHost = 'piped.yt',
-        private string $proxyHost = 'proxy.piped.yt', //'pipedproxy.kavin.rocks', 'piped-proxy.lunar.icu'
+        private string $apiHost = 'pipedapi.wireway.ch', //'pipedapi.kavin.rocks', 'piped-api.lunar.icu', 'api.piped.y'
+        private string $frontendHost = 'piped.wireway.ch',
+        private string $proxyHost = 'pipedproxy.wireway.ch', //'pipedproxy.kavin.rocks', 'piped-proxy.lunar.icu', 'proxy.piped.yt'
     )
     {
         $this->log = new Log();
