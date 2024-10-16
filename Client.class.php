@@ -278,11 +278,6 @@ class Client
             $urlParts = parse_url($videoUrl);
             parse_str($urlParts['query'], $query);
 
-            if (isset($query['host'])) {
-                $urlParts['host'] = $query['host'];
-                $item->setVideoUrl(unparse_url($urlParts));
-            }
-
             if (isset($query['clen'])) {
                 $item->setSize($query['clen']);
             }
