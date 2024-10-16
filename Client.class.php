@@ -265,17 +265,17 @@ class Client
             $item->setVideoId($videoId);
 
             if ($fileInfo720) {
-                $item->setVideoUrl($fileInfo720['url']);
+                $item->setVideoUrl($videoUrl = $fileInfo720['url']);
                 $item->setMimeType($fileInfo720['mimeType'] ?? 'video/mp4');
             } else {
-                $item->setVideoUrl($fileInfo['url']);
+                $item->setVideoUrl($videoUrl = $fileInfo['url']);
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
             }
 
             $item->setSize((string)$downloader->size($videoFilename));
             $item->setSettingsUrl("https://$this->ownHost" . Path::PATH_SETTINGS . "/$channelId");
 
-            $urlParts = parse_url($item->getVideoUrl());
+            $urlParts = parse_url($videoUrl);
             parse_str($urlParts['query'], $query);
 
             if (isset($query['host'])) {
