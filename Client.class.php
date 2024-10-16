@@ -10,6 +10,30 @@ require_once "Rss.class.php";
 require_once "Log.class.php";
 require_once "Path.class.php";
 
+function unparse_url($parsed_url) {
+
+    $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
+
+    $host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
+
+    $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
+
+    $user     = isset($parsed_url['user']) ? $parsed_url['user'] : '';
+
+    $pass     = isset($parsed_url['pass']) ? ':' . $parsed_url['pass']  : '';
+
+    $pass     = ($user || $pass) ? "$pass@" : '';
+
+    $path     = isset($parsed_url['path']) ? $parsed_url['path'] : '';
+
+    $query    = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
+
+    $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : '';
+
+    return "$scheme$user$pass$host$port$path$query$fragment";
+
+}
+
 class Client
 {
     private Log $log;
@@ -248,8 +272,17 @@ class Client
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
             }
 
-            $item->setSize((string)$size = $downloader->size($videoFilename));
+            $item->setSize((string)$downloader->size($videoFilename));
             $item->setSettingsUrl("https://$this->ownHost" . Path::PATH_SETTINGS . "/$channelId");
+
+            $urlParts = parse_url($item->getVideoUrl());
+            parse_str($urlParts['query'], $query);
+
+            if (isset($query['host'])) {
+                $urlParts['host'] = $query['host'];
+                $item->setVideoUrl(unparse_url($urlParts));
+            }
+
 
        /*     if ($size <= 0) {
                 $ch = curl_init($item->getVideoUrl());
