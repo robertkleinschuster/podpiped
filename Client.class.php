@@ -248,8 +248,20 @@ class Client
                 $item->setMimeType($fileInfo['mimeType'] ?? 'video/mp4');
             }
 
-            $item->setSize((string)$downloader->size($videoFilename));
+            $item->setSize((string)$size = $downloader->size($videoFilename));
             $item->setSettingsUrl("https://$this->ownHost" . Path::PATH_SETTINGS . "/$channelId");
+
+            if ($size <= 0) {
+                $ch = curl_init($item->getVideoUrl());
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HEADER, true);
+                curl_setopt($ch, CURLOPT_NOBODY, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_exec($ch);
+                $contentLength = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+                curl_close($ch);
+                $item->setSize($contentLength);
+            }
 
             if (!$downloadVideos || isset($downloadLimit) && count($items) >= $downloadLimit) {
                 $item->setComplete(true);

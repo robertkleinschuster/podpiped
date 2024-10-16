@@ -53,7 +53,7 @@ class Downloader
     public function size(string $filename): int
     {
         if (!$this->done($filename)) {
-            return 0;
+            return -1;
         }
         $file = $this->pathAbsolute($filename);
         return filesize($file);
