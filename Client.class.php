@@ -283,6 +283,9 @@ class Client
                 $item->setVideoUrl(unparse_url($urlParts));
             }
 
+            if (isset($query['clen'])) {
+                $item->setSize($query['clen']);
+            }
 
        /*     if ($size <= 0) {
                 $ch = curl_init($item->getVideoUrl());
