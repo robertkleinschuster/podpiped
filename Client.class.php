@@ -128,7 +128,7 @@ class Client
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
                 "Content-Length: " . strlen($data),
-                sprintf('Authorization: Token %s', file_get_contents(__DIR__ . '/../tubearchivist_token'))
+                sprintf('Authorization: Token %s', trim(file_get_contents(__DIR__ . '/../tubearchivist_token')))
             ]
         ]);
 
