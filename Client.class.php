@@ -160,6 +160,7 @@ class Client
         ]);
         curl_exec($ch);
         curl_close($ch);
+        $this->log->append("subscribed to channel in tubearchivist: " . $channelId);
     }
 
     public function channel(string $channelId, int $limit, bool $downloadVideos, int $downloadLimit, bool $downloadHq): ?Channel
