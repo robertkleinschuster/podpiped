@@ -116,23 +116,22 @@ class Client
             return;
         }
         $ch = curl_init();
-
+        $data = json_encode([
+        'data' => [
+            ['channel_id' => $channelId, 'channel_subscribed' => true]
+        ]
+    ]);
         curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
             CURLOPT_URL => "https://tubearchivist.robs.tools/api/channel/",
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode([
-                'data' => [
-                    ['channel_id' => $channelId, 'channel_subscribed' => true]
-                ]
-            ])
+            CURLOPT_POSTFIELDS => $data,
+            CURLOPT_HTTPHEADER =>  [
+                'Content-Type: application/json',
+                "Content-Length: " . strlen($data),
+                sprintf('Authorization: Token %s', file_get_contents(__DIR__ . '/../tubearchivist_token'))
+            ]
         ]);
 
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            sprintf('Authorization: Token %s', file_get_contents(__DIR__ . '/../tubearchivist_token'))
-
-        ]);
         curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         if ($status == 200) {
