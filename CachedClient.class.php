@@ -131,6 +131,11 @@ class CachedClient
 
                 $rss = new Rss($channel);
                 file_put_contents($cacheFile, (string)$rss);
+                try {
+                    $this->client->subscribeToChannelInTubeArchivist($channelId);
+                } catch (Throwable $exception) {
+                    $this->log->append("Error subscribing to channel in tubearchivist: " . $exception->getMessage());
+                }
                 return true;
             } else {
                 $this->log->append('failed to refresh channel: ' . $channelId);

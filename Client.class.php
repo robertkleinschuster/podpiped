@@ -134,6 +134,34 @@ class Client
         return null;
     }
 
+    public function subscribeToChannelInTubeArchivist(string $channelId): void
+    {
+        if (!file_exists(__DIR__ . '/../tubearchivist_token')) {
+            return;
+        }
+        $ch = curl_init();
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_URL => "https://tubearchivist.robs.tools/api/channel",
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode([
+                'data' => [
+                    'channel_id' => $channelId,
+                    'channel_subscribed' => true
+                ]
+            ])
+        ]);
+
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            sprintf('Authorization: Token %s', file_get_contents(__DIR__ . '/../tubearchivist_token'))
+
+        ]);
+        curl_exec($ch);
+        curl_close($ch);
+    }
+
     public function channel(string $channelId, int $limit, bool $downloadVideos, int $downloadLimit, bool $downloadHq): ?Channel
     {
         $data = $this->fetch("/channel/$channelId");
