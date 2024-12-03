@@ -119,7 +119,7 @@ class Client
 
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_URL => "https://tubearchivist.robs.tools/api/channel",
+            CURLOPT_URL => "https://tubearchivist.robs.tools/api/channel/",
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => json_encode([
                 'data' => [
