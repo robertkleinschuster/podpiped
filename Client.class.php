@@ -133,9 +133,15 @@ class Client
             sprintf('Authorization: Token %s', file_get_contents(__DIR__ . '/../tubearchivist_token'))
 
         ]);
-        $response = curl_exec($ch);
+        curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if ($status == 200) {
+            $this->log->append("subscribed to channel in tubearchivist: " . $channelId);
+        } else {
+            $this->log->append("Error [$status] subscribing to channel in tubearchivist: $channelId");
+        }
+
         curl_close($ch);
-        $this->log->append("subscribed to channel in tubearchivist: " . $response);
     }
 
     public function channel(string $channelId, int $limit, bool $downloadVideos, int $downloadLimit, bool $downloadHq): ?Channel
