@@ -122,10 +122,9 @@ class Client
             CURLOPT_URL => "https://tubearchivist.robs.tools/api/channel",
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => json_encode([
-                'data' => [[
-                    'channel_id' => $channelId,
-                    'channel_subscribed' => true
-                ]]
+                'data' => [
+                    ['channel_id' => $channelId, 'channel_subscribed' => true]
+                ]
             ])
         ]);
 
