@@ -149,7 +149,7 @@ class Client
 
         if (!empty($data)) {
             $channel = new Channel();
-            $channel->setTitle($data['name'] . ' alt');
+            $channel->setTitle($data['name'] . ' (podpiped)');
             $downloader = new Downloader();
             $imageConvert = new ImageConverter();
             $avatarFilename = $channelId;
