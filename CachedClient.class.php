@@ -226,8 +226,13 @@ class CachedClient
     public function refreshChannels(): void
     {
         try {
+            $pinchflatChannels = require_once 'pinchflat_channels.php';
             foreach ($this->listChannels() as $channelId) {
                 try {
+                    if (isset($pinchflatChannels[$channelId])) {
+                        $this->removeChannel($channelId);
+                        continue;
+                    }
                     if ($this->isChannelValid($channelId)) {
                         $channel = $this->channelInfo($channelId);
                         if (!$channel) {

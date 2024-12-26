@@ -68,6 +68,11 @@ function main(array $server, array $get): void
     if (strpos($path, PATH_CHANNEL) === 0) {
         $channelId = $get['id'] ?? basename($path);
         $channelId = preg_replace('/[^a-zA-Z0-9_\-.]/', '', $channelId);
+        $pinchflatChannels = require_once 'pinchflat_channels.php';
+        if (isset($pinchflatChannels[$channelId])) {
+            header(sprintf('Location: https://pinchflat.robs.tools/sources/%s/feed.xml', $pinchflatChannels[$channelId]));
+            return;
+        }
         $retry = 0;
         while (!isset($channel) && $retry <= 5) {
             $channel = $cachedClient->channel($channelId);
