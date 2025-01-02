@@ -70,7 +70,7 @@ function main(array $server, array $get): void
         $channelId = preg_replace('/[^a-zA-Z0-9_\-.]/', '', $channelId);
         $pinchflatChannels = require_once 'pinchflat_channels.php';
         if (isset($pinchflatChannels[$channelId])) {
-            header(sprintf('Location: https://pinchflat.robs.tools/sources/%s/feed.xml', $pinchflatChannels[$channelId]));
+            header(sprintf('Location: https://pinchflat-kev.robs.tools/sources/%s/feed.xml', $pinchflatChannels[$channelId]));
             return;
         }
         $retry = 0;
